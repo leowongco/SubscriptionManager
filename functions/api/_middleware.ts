@@ -9,6 +9,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         return context.next();
     }
 
+    // If Cloudflare Access is not explicitly required via env var, bypass check
+    if ((context.env as any).REQUIRE_CF_ACCESS !== 'true') {
+        return context.next();
+    }
+
     // Check Cloudflare Access JWT header
     const cfAccessHeader = request.headers.get('Cf-Access-Jwt-Assertion');
 
