@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Mapping from './pages/Mapping';
 import Services from './pages/Services';
+import Recharge from './pages/Recharge';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="mapping" element={<Mapping />} />
           <Route path="services" element={<Services />} />
+          <Route path="recharge" element={<Recharge />} />
         </Route>
       </Routes>
     </BrowserRouter>

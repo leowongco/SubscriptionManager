@@ -37,5 +37,6 @@ CREATE TABLE IF NOT EXISTS history (
   type TEXT CHECK(type IN ('recharge', 'deduction', 'adjustment')) NOT NULL,
   amount REAL NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  memo TEXT,
   FOREIGN KEY (account_id) REFERENCES accounts(id)
 );

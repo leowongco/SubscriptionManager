@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, Users, Settings } from 'lucide-react';
+import { Home, Users, Settings, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Layout() {
@@ -9,6 +9,7 @@ export default function Layout() {
         { name: 'Dashboard', href: '/', icon: Home },
         { name: 'Relationship Mapping', href: '/mapping', icon: Users },
         { name: 'Service Manager', href: '/services', icon: Settings },
+        { name: 'Batch Recharge', href: '/recharge', icon: CreditCard },
     ];
 
     return (

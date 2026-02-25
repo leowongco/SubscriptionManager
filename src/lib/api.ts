@@ -20,5 +20,6 @@ export const api = {
     deleteMember: (id: string) => fetch(`${API_BASE}/members?id=${id}`, { method: 'DELETE' }).then(res => res.json()),
 
     // History
-    getHistory: () => fetch(`${API_BASE}/history`).then(res => res.json())
+    getHistory: () => fetch(`${API_BASE}/history`).then(res => res.json()),
+    batchRecharge: (data: any[]) => fetch(`${API_BASE}/recharge`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json())
 };
