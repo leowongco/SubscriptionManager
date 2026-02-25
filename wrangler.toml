@@ -5,5 +5,5 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "subscription-manager"
-database_id = "00403603-7e1d-48c7-abad-cc06fd2b6fea" # We will use local development
+database_id = "3e52c5ad-772c-4d5e-a93d-3be58c535463" # We will use local development
 migrations_dir = "migrations"
