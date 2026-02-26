@@ -20,6 +20,7 @@ interface Account {
     base_price: number;
     currency: string;
     cycle: string;
+    start_date?: string;
     last_sync_date: string;
 }
 
@@ -79,7 +80,7 @@ export default function Mapping() {
     };
 
     const deleteAccount = async (id: string) => {
-        if (confirm('Delete this account and all associated members?')) {
+        if (confirm('確定要刪除此帳號及所有關聯成員嗎？')) {
             await api.deleteAccount(id);
             mutateAccounts();
             mutateMembers();
@@ -87,7 +88,7 @@ export default function Mapping() {
     };
 
     const deleteMember = async (id: string) => {
-        if (confirm('Remove this member?')) {
+        if (confirm('確定要移除此成員嗎？')) {
             await api.deleteMember(id);
             mutateMembers();
         }
@@ -97,52 +98,56 @@ export default function Mapping() {
         <div className="space-y-8">
             <div className="flex justify-between items-center bg-neutral-900 p-6 border border-neutral-800 rounded-xl shadow-lg">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-neutral-50">Relationship Mapping</h2>
-                    <p className="text-neutral-400 mt-1">Manage Google Accounts, Apple IDs, and Subscribed Members.</p>
+                    <h2 className="text-2xl font-bold tracking-tight text-neutral-50">訂閱關係與帳戶</h2>
+                    <p className="text-neutral-400 mt-1">管理 Google 帳號、Apple ID 與群組成員列表。</p>
                 </div>
 
                 <Dialog open={isAccountOpen} onOpenChange={setIsAccountOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={() => setAccountForm({ balance: 0 })} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button onClick={() => setAccountForm({ balance: 0, start_date: new Date().toISOString().split('T')[0] })} className="bg-indigo-600 hover:bg-indigo-700 text-white">
                             <Plus className="w-4 h-4 mr-2" />
-                            New Account
+                            新增帳號
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px] bg-neutral-900 border-neutral-800 text-neutral-50">
                         <DialogHeader>
-                            <DialogTitle>Add Account</DialogTitle>
+                            <DialogTitle>新增/編輯帳號</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleAccountSubmit} className="space-y-4 pt-4">
                             <div className="space-y-2">
-                                <Label>Google Account (Family Manager)</Label>
+                                <Label>Google 帳號 (家庭管理員)</Label>
                                 <Input value={accountForm.google_account || ''} onChange={e => setAccountForm({ ...accountForm, google_account: e.target.value })} className="bg-neutral-950 border-neutral-800" required />
                             </div>
                             <div className="space-y-2">
-                                <Label>Apple ID (Payer)</Label>
+                                <Label>Apple ID (付款帳號)</Label>
                                 <Input value={accountForm.apple_id || ''} onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })} className="bg-neutral-950 border-neutral-800" required />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Service</Label>
+                                    <Label>訂閱服務</Label>
                                     <Select value={accountForm.service_id} onValueChange={v => setAccountForm({ ...accountForm, service_id: v })}>
-                                        <SelectTrigger className="bg-neutral-950 border-neutral-800"><SelectValue placeholder="Select..." /></SelectTrigger>
+                                        <SelectTrigger className="bg-neutral-950 border-neutral-800"><SelectValue placeholder="請選擇..." /></SelectTrigger>
                                         <SelectContent className="bg-neutral-900 border-neutral-800">
                                             {services?.map(s => <SelectItem key={s.id} value={s.id} className="text-neutral-50">{s.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Initial Balance</Label>
+                                    <Label>初始餘額</Label>
                                     <Input type="number" step="0.01" value={accountForm.balance || ''} onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })} className="bg-neutral-950 border-neutral-800" />
                                 </div>
                             </div>
-                            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">Save Account</Button>
+                            <div className="space-y-2">
+                                <Label>開始扣款日 (每月週期)</Label>
+                                <Input type="date" value={accountForm.start_date?.split('T')[0] || ''} onChange={e => setAccountForm({ ...accountForm, start_date: e.target.value })} className="bg-neutral-950 border-neutral-800" required />
+                            </div>
+                            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">儲存帳號</Button>
                         </form>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {!accounts && <div className="text-neutral-500">Loading mapping data...</div>}
+            {!accounts && <div className="text-neutral-500">讀取關係資料中...</div>}
 
             {Object.entries(groupedAccounts).map(([googleAccount, groupAccounts]) => (
                 <div key={googleAccount} className="space-y-4">
@@ -150,7 +155,7 @@ export default function Mapping() {
                         <h3 className="text-xl font-semibold text-neutral-200">
                             {googleAccount}
                         </h3>
-                        <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10">Family Manager</Badge>
+                        <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10">群組分類</Badge>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -177,8 +182,9 @@ export default function Mapping() {
                                                 <span className="text-sm font-normal text-neutral-500">{account.currency || '$'}</span>
                                                 {account.balance.toFixed(2)}
                                             </div>
-                                            <span className="text-xs text-neutral-500 mt-0.5 whitespace-nowrap overflow-hidden">
-                                                {(account.balance / (account.base_price || 1)).toFixed(1)} months left
+                                            <span className="text-xs flex gap-2 items-center text-neutral-500 mt-0.5 whitespace-nowrap overflow-hidden">
+                                                <span className="bg-neutral-800 px-1 py-0.5 rounded text-[10px]">每月 {account.start_date ? new Date(account.start_date).getDate() : '?'} 日扣款</span>
+                                                {(account.balance / (account.base_price || 1)).toFixed(1)} 個月可用
                                             </span>
                                         </div>
                                     </div>
@@ -186,7 +192,7 @@ export default function Mapping() {
 
                                 <CardContent className="flex-1 px-4 py-2 border-t border-neutral-800/50 bg-neutral-950/20">
                                     <div className="flex justify-between items-center mb-3">
-                                        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Members</span>
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">管理成員</span>
                                         <Dialog open={isMemberOpen && selectedAccountId === account.id} onOpenChange={(open) => {
                                             if (!open) setIsMemberOpen(false);
                                         }}>
@@ -196,23 +202,23 @@ export default function Mapping() {
                                                     setMemberForm({ payment_status: 0 });
                                                     setIsMemberOpen(true);
                                                 }}>
-                                                    <UserPlus className="w-3 h-3 mr-1" /> Add
+                                                    <UserPlus className="w-3 h-3 mr-1" /> 新增
                                                 </Button>
                                             </DialogTrigger>
                                             <DialogContent className="sm:max-w-[400px] bg-neutral-900 border-neutral-800 text-neutral-50">
                                                 <DialogHeader>
-                                                    <DialogTitle>Add Member</DialogTitle>
+                                                    <DialogTitle>新增成員</DialogTitle>
                                                 </DialogHeader>
                                                 <form onSubmit={handleMemberSubmit} className="space-y-4 pt-4">
                                                     <div className="space-y-2">
-                                                        <Label>Email</Label>
+                                                        <Label>電子郵件 (Email)</Label>
                                                         <Input value={memberForm.email || ''} onChange={e => setMemberForm({ ...memberForm, email: e.target.value })} required className="bg-neutral-950 border-neutral-800" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label>Memo (Optional)</Label>
+                                                        <Label>備註 (選填)</Label>
                                                         <Input value={memberForm.memo || ''} onChange={e => setMemberForm({ ...memberForm, memo: e.target.value })} className="bg-neutral-950 border-neutral-800" />
                                                     </div>
-                                                    <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">Add Member</Button>
+                                                    <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">儲存成員</Button>
                                                 </form>
                                             </DialogContent>
                                         </Dialog>
@@ -220,7 +226,7 @@ export default function Mapping() {
 
                                     <div className="space-y-2">
                                         {members?.filter(m => m.account_id === account.id).length === 0 && (
-                                            <div className="text-sm text-neutral-600 italic py-2">No members yet.</div>
+                                            <div className="text-sm text-neutral-600 italic py-2">目前沒有成員。</div>
                                         )}
                                         {members?.filter(m => m.account_id === account.id).map(member => (
                                             <div key={member.id} className="group flex justify-between items-center p-2 rounded-md hover:bg-neutral-800/60 transition-colors border border-transparent hover:border-neutral-700/50">
@@ -243,7 +249,7 @@ export default function Mapping() {
 
                                 <CardFooter className="p-3 border-t border-neutral-800 flex justify-end bg-neutral-900">
                                     <Button variant="ghost" size="sm" onClick={() => deleteAccount(account.id)} className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 text-xs">
-                                        Delete Account
+                                        刪除帳號與成員
                                     </Button>
                                 </CardFooter>
                             </Card>

@@ -6,10 +6,10 @@ export default function Layout() {
     const location = useLocation();
 
     const navigation = [
-        { name: 'Dashboard', href: '/', icon: Home },
-        { name: 'Relationship Mapping', href: '/mapping', icon: Users },
-        { name: 'Service Manager', href: '/services', icon: Settings },
-        { name: 'Batch Recharge', href: '/recharge', icon: CreditCard },
+        { name: '綜合儀表板', href: '/', icon: Home },
+        { name: '訂閱關係對應', href: '/mapping', icon: Users },
+        { name: '服務與定價管理', href: '/services', icon: Settings },
+        { name: '批次禮品卡加值', href: '/recharge', icon: CreditCard },
     ];
 
     return (

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   google_account TEXT,
   balance REAL DEFAULT 0,
   service_id TEXT,
+  start_date DATETIME,
   last_sync_date DATETIME,
   FOREIGN KEY (service_id) REFERENCES services(id)
 );

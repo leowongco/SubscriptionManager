@@ -47,14 +47,14 @@ export default function Dashboard() {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight text-neutral-50">Overview</h2>
-                <p className="text-neutral-400 mt-1">Your subscription snapshot and financial projections.</p>
+                <h2 className="text-3xl font-bold tracking-tight text-neutral-50">總覽儀表板</h2>
+                <p className="text-neutral-400 mt-1">您的訂閱狀況與財務預測。</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <Card className="bg-gradient-to-br from-indigo-900/40 to-neutral-900 border-indigo-500/20 shadow-xl">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium text-indigo-400">Total Available Balance</CardTitle>
+                        <CardTitle className="text-sm font-medium text-indigo-400">總可用餘額</CardTitle>
                         <Wallet className="h-4 w-4 text-indigo-400" />
                     </CardHeader>
                     <CardContent>
@@ -62,13 +62,13 @@ export default function Dashboard() {
                             <span className="text-xl text-neutral-500 mr-1">HK$</span>
                             {totalBalanceHKD.toFixed(2)}
                         </div>
-                        <p className="text-xs text-neutral-500 mt-1">Across all Apple IDs</p>
+                        <p className="text-xs text-neutral-500 mt-1">所有蘋果帳號加總</p>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-emerald-900/30 to-neutral-900 border-emerald-500/20 shadow-xl">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium text-emerald-400">Monthly Projected Expense</CardTitle>
+                        <CardTitle className="text-sm font-medium text-emerald-400">預估每月總開支</CardTitle>
                         <TrendingUp className="h-4 w-4 text-emerald-400" />
                     </CardHeader>
                     <CardContent>
@@ -76,7 +76,7 @@ export default function Dashboard() {
                             <span className="text-xl text-neutral-500 mr-1">HK$</span>
                             {monthlyExpenseHKD.toFixed(2)}
                         </div>
-                        <p className="text-xs text-neutral-500 mt-1">Estimated based on current services</p>
+                        <p className="text-xs text-neutral-500 mt-1">基於目前訂閱服務推算</p>
                     </CardContent>
                 </Card>
             </div>
@@ -84,11 +84,11 @@ export default function Dashboard() {
             <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-4">
                     <h3 className="text-xl font-semibold flex items-center gap-2 text-neutral-200">
-                        <AlertCircle className="w-5 h-5 text-red-500" /> Low Balance Alerts
+                        <AlertCircle className="w-5 h-5 text-red-500" /> 低餘額警告
                     </h3>
                     {lowBalanceAccounts.length === 0 ? (
                         <div className="text-neutral-500 border border-neutral-800/50 rounded-lg p-6 text-center bg-neutral-900/30">
-                            All accounts have sufficient balance.
+                            所有帳號餘額充足。
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -102,7 +102,7 @@ export default function Dashboard() {
                                         <AlertDescription className="text-red-300/80 flex justify-between items-center mt-1">
                                             <span>{acc.service_name} • {acc.currency} {acc.balance.toFixed(2)}</span>
                                             <span className="font-bold bg-red-900/50 px-2 py-0.5 rounded text-red-300 text-xs">
-                                                {monthsLeft < 0.1 ? 'Almost empty' : `${monthsLeft.toFixed(1)} months left`}
+                                                {monthsLeft < 0.1 ? '即將用盡' : `約 ${monthsLeft.toFixed(1)} 個月可用`}
                                             </span>
                                         </AlertDescription>
                                     </Alert>
@@ -114,11 +114,11 @@ export default function Dashboard() {
 
                 <div className="space-y-4">
                     <h3 className="text-xl font-semibold flex items-center gap-2 text-neutral-200">
-                        <BellRing className="w-5 h-5 text-orange-400" /> Upcoming Price Changes
+                        <BellRing className="w-5 h-5 text-orange-400" /> 即將生效的價格調整
                     </h3>
                     {upcomingPriceIncreases.length === 0 ? (
                         <div className="text-neutral-500 border border-neutral-800/50 rounded-lg p-6 text-center bg-neutral-900/30">
-                            No upcoming price adjustments.
+                            目前沒有即將生效的漲價。
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -127,7 +127,7 @@ export default function Dashboard() {
                                     <div>
                                         <div className="font-medium text-orange-200">{s.name}</div>
                                         <div className="text-sm text-orange-400/70 mt-0.5">
-                                            Effective {new Date(s.effective_date!).toLocaleDateString()}
+                                            生效日期 {new Date(s.effective_date!).toLocaleDateString()}
                                         </div>
                                     </div>
                                     <div className="text-right flex flex-col items-end">

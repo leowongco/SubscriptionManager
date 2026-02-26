@@ -17,6 +17,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         for (const acc of accounts) {
             if (!acc.base_price) continue;
 
+            // Date logic: Only deduct if today's day of the month matches the start_date's day of the month
+            const today = new Date();
+            const startDate = acc.start_date ? new Date(acc.start_date) : new Date(acc.created_at || today); // Fallback
+
+            if (today.getDate() !== startDate.getDate()) {
+                // Not the billing day for this account, skip deduction
+                continue;
+            }
+
             // Check if price should be updated
             let currentPrice = acc.base_price;
             if (acc.next_price && acc.effective_date) {

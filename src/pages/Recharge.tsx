@@ -59,18 +59,18 @@ export default function Recharge() {
         const validRows = rows.filter(r => r.account_id && r.amount !== '' && Number(r.amount) > 0);
 
         if (validRows.length === 0) {
-            alert('Please fill in at least one valid recharge entry (Account and Amount are required).');
+            alert('請至少填寫一個有效的加值項目（Apple ID 帳號與餘額金額皆為必填）。');
             return;
         }
 
         setIsSubmitting(true);
         try {
             await api.batchRecharge(validRows);
-            alert(`Success! processed ${validRows.length} recharges.`);
+            alert(`成功！已處理 ${validRows.length} 筆加值紀錄。`);
             setRows([createEmptyRow()]); // Reset form
         } catch (error) {
             console.error(error);
-            alert('Failed to process recharges.');
+            alert('處理加值時發生錯誤，請稍後再試。');
         } finally {
             setIsSubmitting(false);
         }
@@ -83,15 +83,15 @@ export default function Recharge() {
                     <CreditCard className="w-8 h-8 text-indigo-400" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-neutral-50">Batch Recharge Center</h2>
-                    <p className="text-neutral-400 mt-1">Add multiple gift cards or balance top-ups to different Apple IDs simultaneously.</p>
+                    <h2 className="text-2xl font-bold tracking-tight text-neutral-50">批次禮品卡加值中心</h2>
+                    <p className="text-neutral-400 mt-1">同時為多個不同的 Apple ID 執行禮品卡序號自動加值與帳目記錄。</p>
                 </div>
             </div>
 
             <Card className="bg-neutral-900 border-neutral-800 shadow-xl">
                 <CardHeader className="border-b border-neutral-800 pb-4">
-                    <CardTitle className="text-lg">Recharge Entry Form</CardTitle>
-                    <CardDescription>Fill out the details for each gift card. You can add more rows dynamically.</CardDescription>
+                    <CardTitle className="text-lg">禮品卡加值表單</CardTitle>
+                    <CardDescription>請為每張禮品卡填寫詳細資訊，您可以動態新增多筆輸入列。</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -101,10 +101,10 @@ export default function Recharge() {
 
                                     {/* Account Select */}
                                     <div className="col-span-12 md:col-span-3 space-y-2">
-                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">Apple ID Account</Label>
+                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">Apple ID 帳號</Label>
                                         <Select value={row.account_id} onValueChange={(v) => updateRow(row.id, 'account_id', v)}>
                                             <SelectTrigger className="bg-neutral-900 border-neutral-800">
-                                                <SelectValue placeholder="Select Account" />
+                                                <SelectValue placeholder="請選擇帳號" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50">
                                                 {accounts?.map(acc => (
@@ -118,7 +118,7 @@ export default function Recharge() {
 
                                     {/* Date */}
                                     <div className="col-span-12 sm:col-span-6 md:col-span-2 space-y-2">
-                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">Date</Label>
+                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">加值日期</Label>
                                         <Input
                                             type="date"
                                             value={row.date}
@@ -130,11 +130,11 @@ export default function Recharge() {
 
                                     {/* Amount */}
                                     <div className="col-span-12 sm:col-span-6 md:col-span-2 space-y-2">
-                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">Amount</Label>
+                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">金額額度</Label>
                                         <Input
                                             type="number"
                                             step="0.01"
-                                            placeholder="e.g. 500"
+                                            placeholder="例: 500"
                                             value={row.amount}
                                             onChange={(e) => updateRow(row.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
                                             className="bg-neutral-900 border-neutral-800 font-mono"
@@ -144,7 +144,7 @@ export default function Recharge() {
 
                                     {/* Gift Card */}
                                     <div className="col-span-12 md:col-span-4 space-y-2">
-                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">Gift Card # / Memo</Label>
+                                        <Label className="text-xs text-neutral-400 uppercase tracking-wider">禮品卡序號 / 備註</Label>
                                         <Input
                                             placeholder="XXXX-XXXX-XXXX-XXXX"
                                             value={row.gift_card}
@@ -178,7 +178,7 @@ export default function Recharge() {
                                 className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
                             >
                                 <PlusCircle className="w-4 h-4 mr-2" />
-                                Add Another Card
+                                新增輸入列
                             </Button>
 
                             <Button
@@ -186,10 +186,10 @@ export default function Recharge() {
                                 disabled={isSubmitting}
                                 className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 px-8"
                             >
-                                {isSubmitting ? 'Processing...' : (
+                                {isSubmitting ? '處理中...' : (
                                     <>
                                         <Save className="w-4 h-4 mr-2" />
-                                        Submit Recharges
+                                        確認並提交加值
                                     </>
                                 )}
                             </Button>
