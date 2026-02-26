@@ -247,7 +247,13 @@ export default function Mapping() {
                                     </div>
                                 </CardContent>
 
-                                <CardFooter className="p-3 border-t border-neutral-800 flex justify-end bg-neutral-900">
+                                <CardFooter className="p-3 border-t border-neutral-800 flex justify-between bg-neutral-900">
+                                    <Button variant="ghost" size="sm" onClick={() => {
+                                        setAccountForm({ ...account });
+                                        setIsAccountOpen(true);
+                                    }} className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 text-xs">
+                                        編輯設定 / 扣款日
+                                    </Button>
                                     <Button variant="ghost" size="sm" onClick={() => deleteAccount(account.id)} className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 text-xs">
                                         刪除帳號與成員
                                     </Button>
