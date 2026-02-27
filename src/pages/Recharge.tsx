@@ -9,8 +9,7 @@ import {
     Barcode,
     Users,
     ChevronLeft,
-    ChevronRight,
-    Search
+    ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,18 +60,27 @@ export default function Recharge() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        const rechargeData = rows
+            .filter(row => row.account_id && row.amount > 0)
+            .map(row => ({
+                account_id: row.account_id,
+                amount: row.amount,
+                memo: row.gift_card || 'Batch recharge'
+            }));
+
+        if (rechargeData.length === 0) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            for (const row of rows) {
-                if (row.account_id && row.amount > 0) {
-                    await api.rechargeAccount({
-                        account_id: row.account_id,
-                        amount: row.amount,
-                        memo: row.gift_card || 'Batch recharge'
-                    });
-                }
-            }
+            await api.batchRecharge(rechargeData);
             setRows([{ id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }]);
             mutateHistory();
+        } catch (error) {
+            console.error('Batch recharge failed:', error);
+            // Optionally, show an error message to the user
         } finally {
             setLoading(false);
         }
@@ -115,7 +123,7 @@ export default function Recharge() {
                 <CardContent className="pt-6 md:pt-8 px-4 md:px-8">
                     <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
                         <div className="space-y-5 md:space-y-6">
-                            {rows.map((row, index) => (
+                            {rows.map((row) => (
                                 <div key={row.id} className="grid grid-cols-12 gap-4 md:gap-5 items-end bg-neutral-950/50 p-5 md:p-6 rounded-xl md:rounded-2xl border border-neutral-800/50 relative group transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.1)]">
                                     <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-500/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
