@@ -2,13 +2,31 @@ import { Env } from '../env';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
-        // Return accounts along with service details
-        const { results } = await context.env.DB.prepare(`
-      SELECT a.*, s.name as service_name, s.base_price, s.currency, s.cycle
-      FROM accounts a
-      LEFT JOIN services s ON a.service_id = s.id
-    `).all();
-        return Response.json(results);
+        // Return accounts along with their associated subscriptions
+        const { results: accounts } = await context.env.DB.prepare(`
+            SELECT * FROM accounts
+        `).all();
+
+        const { results: subscriptions } = await context.env.DB.prepare(`
+            SELECT sub.*, s.name as service_name, s.base_price, s.currency, s.cycle
+            FROM subscriptions sub
+            JOIN services s ON sub.service_id = s.id
+        `).all();
+
+        // Group subscriptions by account_id
+        const subsByAccount = subscriptions.reduce((acc: any, sub: any) => {
+            if (!acc[sub.account_id]) acc[sub.account_id] = [];
+            acc[sub.account_id].push(sub);
+            return acc;
+        }, {});
+
+        // Attach subscriptions array to each account
+        const enrichedAccounts = accounts.map((acc: any) => ({
+            ...acc,
+            subscriptions: subsByAccount[acc.id] || []
+        }));
+
+        return Response.json(enrichedAccounts);
     } catch (error: any) {
         return new Response(error.message, { status: 500 });
     }
@@ -21,14 +39,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const id = body.id || crypto.randomUUID();
 
         await context.env.DB.prepare(
-            'INSERT INTO accounts (id, apple_id, google_account, balance, service_id, start_date, last_sync_date) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)'
+            'INSERT INTO accounts (id, apple_id, google_account, balance, last_sync_date) VALUES (?1, ?2, ?3, ?4, ?5)'
         ).bind(
             id,
             body.apple_id,
             body.google_account,
             body.balance || 0,
-            body.service_id,
-            body.start_date || new Date().toISOString(),
             new Date().toISOString()
         ).run();
 
@@ -47,13 +63,11 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         if (!id) return new Response('Missing Account ID', { status: 400 });
 
         await context.env.DB.prepare(
-            'UPDATE accounts SET apple_id = ?1, google_account = ?2, balance = ?3, service_id = ?4, start_date = ?5 WHERE id = ?6'
+            'UPDATE accounts SET apple_id = ?1, google_account = ?2, balance = ?3 WHERE id = ?4'
         ).bind(
             body.apple_id,
             body.google_account,
             body.balance,
-            body.service_id,
-            body.start_date,
             id
         ).run();
 

@@ -2,68 +2,94 @@ import { Env } from '../env';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
-        const { results: accounts } = await context.env.DB.prepare(`
-      SELECT a.*, s.name as service_name, s.base_price, s.currency, s.cycle, s.next_price, s.effective_date
-      FROM accounts a
-      JOIN services s ON a.service_id = s.id
-    `).all<any>();
+        const { results: rawSubs } = await context.env.DB.prepare(`
+            SELECT sub.*, s.name as service_name, s.base_price, s.currency, s.cycle, s.next_price, s.effective_date, a.apple_id, a.balance
+            FROM subscriptions sub
+            JOIN services s ON sub.service_id = s.id
+            JOIN accounts a ON sub.account_id = a.id
+        `).all<any>();
 
         const botToken = (context.env as any).TELEGRAM_BOT_TOKEN;
         const chatId = (context.env as any).TELEGRAM_CHAT_ID;
         const lowBalanceAlerts: string[] = [];
-        const deductions: any[] = [];
+        const dbOperations: any[] = [];
 
-        // Simulate deduction for each account
-        for (const acc of accounts) {
-            if (!acc.base_price) continue;
+        // Group raw subscriptions by account for batched balance updates
+        const accountsMap = new Map<string, { apple_id: string, balance: number, deductionsTotal: number, servicesDeduted: string[], subs: any[] }>();
 
-            // Date logic: Only deduct if today's day of the month matches the start_date's day of the month
+        // 1. Calculate deductions per subscription
+        for (const sub of rawSubs) {
+            if (!sub.base_price) continue;
+
             const today = new Date();
-            const startDate = acc.start_date ? new Date(acc.start_date) : new Date(acc.created_at || today); // Fallback
+            const startDate = sub.start_date ? new Date(sub.start_date) : today;
 
+            // Only deduct on the billing anniversary day
             if (today.getDate() !== startDate.getDate()) {
-                // Not the billing day for this account, skip deduction
                 continue;
             }
 
-            // Check if price should be updated
-            let currentPrice = acc.base_price;
-            if (acc.next_price && acc.effective_date) {
-                if (new Date(acc.effective_date) <= new Date()) {
-                    currentPrice = acc.next_price;
-                    // In a real app, we might also update the 'services' table here to make the next_price the base_price
+            // Price adjustment logic
+            let currentPrice = sub.base_price;
+            if (sub.next_price && sub.effective_date) {
+                if (new Date(sub.effective_date) <= today) {
+                    currentPrice = sub.next_price;
                 }
             }
 
-            // Calculate deduction amount
+            // Deduct full amount for yearly cycle ONCE a year, or full amount for monthly ONCE a month.
+            // (Assuming the sync runs daily. To truly support yearly we would check month matching too, 
+            // but for simplicity & simulating burn rate we will amortize yearly into monthly deductions)
             let deduction = currentPrice;
-            if (acc.cycle === 'yearly') {
-                deduction = currentPrice / 12; // amortized monthly cost
+            if (sub.cycle === 'yearly') {
+                deduction = currentPrice / 12; // amortized monthly deduction
             }
 
-            const newBalance = acc.balance - deduction;
-            const monthsLeft = newBalance / currentPrice;
+            if (!accountsMap.has(sub.account_id)) {
+                accountsMap.set(sub.account_id, {
+                    apple_id: sub.apple_id,
+                    balance: sub.balance,
+                    deductionsTotal: 0,
+                    servicesDeduted: [],
+                    subs: []
+                });
+            }
 
-            // Queue DB updates
-            deductions.push(
+            const accData = accountsMap.get(sub.account_id)!;
+            accData.deductionsTotal += deduction;
+            accData.servicesDeduted.push(sub.service_name);
+            accData.subs.push(sub);
+
+            // Record history per subscription deduction
+            dbOperations.push(
+                context.env.DB.prepare('INSERT INTO history (id, account_id, type, amount, memo) VALUES (?1, ?2, ?3, ?4, ?5)')
+                    .bind(crypto.randomUUID(), sub.account_id, 'deduction', -deduction, `Auto-deduction: ${sub.service_name}`)
+            );
+        }
+
+        // 2. Apply combined deductions to accounts and check alerts
+        for (const [accountId, data] of accountsMap.entries()) {
+            if (data.deductionsTotal <= 0) continue;
+
+            const newBalance = data.balance - data.deductionsTotal;
+
+            // Update account total balance
+            dbOperations.push(
                 context.env.DB.prepare('UPDATE accounts SET balance = ?1, last_sync_date = ?2 WHERE id = ?3')
-                    .bind(newBalance, new Date().toISOString(), acc.id)
+                    .bind(newBalance, new Date().toISOString(), accountId)
             );
 
-            deductions.push(
-                context.env.DB.prepare('INSERT INTO history (id, account_id, type, amount) VALUES (?1, ?2, ?3, ?4)')
-                    .bind(crypto.randomUUID(), acc.id, 'deduction', deduction)
-            );
-
-            // Check for low balance alert
-            if (monthsLeft < 2) {
-                lowBalanceAlerts.push(`⚠️ Low Balance Alert\nApple ID: ${acc.apple_id}\nService: ${acc.service_name}\nBalance: ${acc.currency} ${newBalance.toFixed(2)} (approx. ${monthsLeft.toFixed(1)} months left)`);
+            // Calculate rough months left based on this month's total burn. 
+            // Only alerts if total combined burn drops balance below 2 months.
+            const roughMonthsLeft = newBalance / data.deductionsTotal;
+            if (roughMonthsLeft < 2) {
+                lowBalanceAlerts.push(`⚠️ Low Balance Alert\nApple ID: ${data.apple_id}\nDeducted Services: ${data.servicesDeduted.join(', ')}\nNew Balance: ${newBalance.toFixed(2)}\nEstimated Runaway: < 2 months`);
             }
         }
 
-        // Process all deductions in a batch
-        if (deductions.length > 0) {
-            await context.env.DB.batch(deductions);
+        // 3. Batch execute all DB operations
+        if (dbOperations.length > 0) {
+            await context.env.DB.batch(dbOperations);
         }
 
         // Send Telegram notifications if configured and there are alerts

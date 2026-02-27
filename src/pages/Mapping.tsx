@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, UserPlus, Trash2, CheckCircle2, Circle, Calendar } from 'lucide-react';
+import { Plus, UserPlus, Trash2, CheckCircle2, Circle } from 'lucide-react';
+import { ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -22,6 +23,7 @@ interface Account {
     cycle: string;
     start_date?: string;
     last_sync_date: string;
+    subscriptions?: any[];
 }
 
 interface Member {
@@ -44,6 +46,10 @@ export default function Mapping() {
     const [memberForm, setMemberForm] = useState<Partial<Member>>({});
     const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
+    const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+    const [subscriptionForm, setSubscriptionForm] = useState<any>({});
+    const [selectedSubAccountId, setSelectedSubAccountId] = useState<string | null>(null);
+
     // Group accounts by google_account
     const groupedAccounts = accounts?.reduce((acc, account) => {
         const group = account.google_account || 'Unassigned';
@@ -62,7 +68,33 @@ export default function Mapping() {
             await api.createAccount(accountForm);
         }
         setIsAccountOpen(false);
-        mutateAccounts();
+    };
+
+    const handleSubscriptionSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.addSubscription({
+                account_id: selectedSubAccountId,
+                service_id: subscriptionForm.service_id,
+                start_date: subscriptionForm.start_date
+            });
+            setSubscriptionForm({});
+            setIsSubscriptionOpen(false);
+            mutateAccounts();
+        } catch (error) {
+            console.error('Failed to add subscription:', error);
+            alert('新增失敗');
+        }
+    };
+
+    const removeSubscription = async (subId: string) => {
+        if (!confirm('確定要移除此項訂閱嗎？')) return;
+        try {
+            await api.removeSubscription(subId);
+            mutateAccounts();
+        } catch (error) {
+            console.error('Failed to remove subscription', error);
+        }
     };
 
     const handleMemberSubmit = async (e: React.FormEvent) => {
@@ -110,7 +142,7 @@ export default function Mapping() {
 
                 <Dialog open={isAccountOpen} onOpenChange={setIsAccountOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={() => setAccountForm({ balance: 0, start_date: getTodayString() })} className="w-full md:w-auto relative z-10 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl h-11 md:h-12 px-6 shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02]">
+                        <Button onClick={() => setAccountForm({ balance: 0 })} className="w-full md:w-auto relative z-10 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl h-11 md:h-12 px-6 shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02]">
                             <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                             新增帳號
                         </Button>
@@ -128,26 +160,9 @@ export default function Mapping() {
                                 <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Apple ID (付款帳號)</Label>
                                 <Input value={accountForm.apple_id || ''} onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" required />
                             </div>
-                            <div className="grid grid-cols-2 gap-4 md:gap-5">
-                                <div className="space-y-1.5 md:space-y-2">
-                                    <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">訂閱服務</Label>
-                                    <Select value={accountForm.service_id} onValueChange={v => setAccountForm({ ...accountForm, service_id: v })}>
-                                        <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-11 md:h-12 transition-all text-xs"><SelectValue placeholder="選擇..." /></SelectTrigger>
-                                        <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
-                                            {services?.map(s => <SelectItem key={s.id} value={s.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs md:text-sm">{s.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5 md:space-y-2">
-                                    <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">初始餘額</Label>
-                                    <Input type="number" step="0.01" value={accountForm.balance || ''} onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" />
-                                </div>
-                            </div>
-                            <div className="space-y-1.5 md:space-y-2">
-                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider flex items-center gap-1">
-                                    <Calendar className="w-3 h-3 text-emerald-500" /> 每月扣款始日
-                                </Label>
-                                <Input type="date" value={accountForm.start_date?.split('T')[0] || ''} onChange={e => setAccountForm({ ...accountForm, start_date: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all text-xs" required />
+                            <div className="space-y-1.5 md:space-y-2 pb-2">
+                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">初始餘額</Label>
+                                <Input type="number" step="0.01" value={accountForm.balance || ''} onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" />
                             </div>
                             <Button type="submit" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl h-11 md:h-12 text-sm md:text-md font-bold text-white shadow-lg transition-all transform hover:scale-[1.02]">儲存帳號</Button>
                         </form>
@@ -168,7 +183,6 @@ export default function Mapping() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
                         {groupAccounts.map(account => {
-                            const serviceName = services?.find(s => s.id === account.service_id)?.name || '未指定服務';
                             return (
                                 <Card key={account.id} className="bg-neutral-900/40 backdrop-blur-xl border border-neutral-800/60 shadow-xl overflow-hidden relative group hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 flex flex-col">
                                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -180,13 +194,22 @@ export default function Mapping() {
                                                 <CardTitle className="text-lg md:text-xl font-bold text-white flex items-center gap-2 drop-shadow-md truncate">
                                                     {account.apple_id}
                                                 </CardTitle>
-                                                <CardDescription className="text-emerald-400 font-medium mt-1 flex items-center gap-1.5 text-xs">
-                                                    <span className="shrink-0 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                                    {serviceName}
+                                                <CardDescription className="text-emerald-400 font-medium mt-1 flex flex-col gap-1 text-xs">
+                                                    {(account.subscriptions?.length || 0) > 0 ? (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {account.subscriptions?.map((sub: any) => (
+                                                                <span key={sub.id} className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
+                                                                    {sub.service_name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-neutral-500 text-[10px]">無啟用中訂閱</span>
+                                                    )}
                                                 </CardDescription>
                                             </div>
                                             <div className="text-right flex flex-col items-end shrink-0">
-                                                <div className="text-[10px] text-neutral-500 font-semibold tracking-wider font-mono">{account.currency || '$'}</div>
+                                                <div className="text-[10px] text-neutral-500 font-semibold tracking-wider font-mono">{account.subscriptions?.[0]?.currency || '$'}</div>
                                                 <div className="text-xl md:text-2xl font-black text-neutral-100 font-mono drop-shadow-sm cursor-pointer hover:text-emerald-400 transition-colors" title="Click to update balance" onClick={() => {
                                                     const newBal = prompt('Update Balance:', account.balance.toString());
                                                     if (newBal !== null) {
@@ -197,13 +220,63 @@ export default function Mapping() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="mt-3 flex gap-2 items-center text-[10px] text-neutral-500 font-medium">
-                                            <span className="bg-neutral-800 px-1.5 py-0.5 rounded">每月 {account.start_date ? new Date(account.start_date).getDate() : '?'} 日扣款</span>
-                                            <span className="bg-emerald-500/5 text-emerald-500/80 px-1.5 py-0.5 rounded border border-emerald-500/10">
-                                                {typeof account.balance === 'number' && typeof account.base_price === 'number' && account.base_price > 0
-                                                    ? (account.balance / account.base_price).toFixed(1)
-                                                    : '0.0'} 個月可用
-                                            </span>
+
+                                        <div className="mt-4 flex gap-2 items-center justify-between">
+                                            <Dialog open={isSubscriptionOpen && selectedSubAccountId === account.id} onOpenChange={(open) => {
+                                                if (!open) setIsSubscriptionOpen(false);
+                                            }}>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm" className="h-7 px-2 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 text-[10px]" onClick={() => {
+                                                        setSelectedSubAccountId(account.id);
+                                                        setSubscriptionForm({ start_date: getTodayString() });
+                                                        setIsSubscriptionOpen(true);
+                                                    }}>
+                                                        <ListPlus className="w-3.5 h-3.5 mr-1" /> 管理訂閱
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="w-[92vw] max-w-[450px] bg-neutral-900/95 backdrop-blur-3xl border-neutral-800/80 text-neutral-50 rounded-2xl shadow-2xl p-5 md:p-6">
+                                                    <DialogHeader>
+                                                        <DialogTitle className="text-xl font-bold">訂閱管理 - {account.apple_id}</DialogTitle>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4 pt-2">
+                                                        <div className="bg-neutral-950/50 rounded-xl border border-neutral-800/50 p-3 space-y-2 max-h-[200px] overflow-y-auto">
+                                                            {(account.subscriptions?.length || 0) > 0 ? account.subscriptions?.map((sub: any) => (
+                                                                <div key={sub.id} className="flex justify-between items-center bg-neutral-900/50 p-2 rounded-lg border border-neutral-800/40">
+                                                                    <div>
+                                                                        <div className="text-sm font-semibold text-emerald-300">{sub.service_name}</div>
+                                                                        <div className="text-[10px] text-neutral-500 font-mono">
+                                                                            {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
+                                                                            <span className="ml-2 bg-neutral-800 px-1 py-0.5 rounded text-neutral-400">每月 {new Date(sub.start_date).getDate()} 日扣</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => removeSubscription(sub.id)}>
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            )) : <div className="text-center text-xs text-neutral-500 py-4">無訂閱項目</div>}
+                                                        </div>
+
+                                                        <form onSubmit={handleSubscriptionSubmit} className="space-y-4 pt-2 border-t border-neutral-800/80">
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">新增服務</Label>
+                                                                    <Select value={subscriptionForm.service_id} onValueChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v })} required>
+                                                                        <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-10 transition-all text-xs"><SelectValue placeholder="選擇服務" /></SelectTrigger>
+                                                                        <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
+                                                                            {services?.map(s => <SelectItem key={s.id} value={s.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs">{s.name}</SelectItem>)}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">扣款起始日</Label>
+                                                                    <Input type="date" value={subscriptionForm.start_date?.split('T')[0] || ''} onChange={e => setSubscriptionForm({ ...subscriptionForm, start_date: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-10 transition-all text-xs" required />
+                                                                </div>
+                                                            </div>
+                                                            <Button type="submit" className="w-full bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white rounded-xl h-10 text-sm font-bold transition-all">加入訂閱</Button>
+                                                        </form>
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
                                         </div>
                                     </CardHeader>
 

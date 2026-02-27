@@ -24,17 +24,36 @@ export default function Dashboard() {
     }, 0) || 0;
 
     const monthlyExpenseHKD = accounts?.reduce((sum, acc) => {
-        if (!acc.base_price) return sum;
-        const rate = RATES[acc.currency] || 1;
-        let monthlyPrice = acc.base_price;
-        if (acc.cycle === 'yearly') monthlyPrice = acc.base_price / 12;
-        return sum + (monthlyPrice * rate);
+        if (!acc.subscriptions || acc.subscriptions.length === 0) return sum;
+
+        const accMonthlyBurn = acc.subscriptions.reduce((subSum: number, sub: any) => {
+            const rate = RATES[sub.currency] || 1;
+            let monthlyPrice = sub.base_price || 0;
+            if (sub.cycle === 'yearly') monthlyPrice = monthlyPrice / 12;
+            return subSum + (monthlyPrice * rate);
+        }, 0);
+
+        return sum + accMonthlyBurn;
     }, 0) || 0;
 
     // Warnings
     const lowBalanceAccounts = accounts?.filter(acc => {
-        if (!acc.base_price || acc.base_price <= 0) return false;
-        const monthsLeft = acc.balance / acc.base_price;
+        if (!acc.subscriptions || acc.subscriptions.length === 0) return false;
+
+        // Calculate total monthly burn for this account
+        const totalMonthlyBurn = acc.subscriptions.reduce((sum: number, sub: any) => {
+            let monthlyPrice = sub.base_price || 0;
+            if (sub.cycle === 'yearly') monthlyPrice = monthlyPrice / 12;
+            return sum + monthlyPrice;
+        }, 0);
+
+        if (totalMonthlyBurn <= 0) return false;
+
+        const monthsLeft = acc.balance / totalMonthlyBurn;
+        // Also attach calculated data for easy render
+        acc._monthlyBurn = totalMonthlyBurn;
+        acc._monthsLeft = monthsLeft;
+
         return monthsLeft < 2;
     }) || [];
 
@@ -111,19 +130,27 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {lowBalanceAccounts.map(acc => {
-                                const monthsLeft = acc.balance / acc.base_price;
+                            {lowBalanceAccounts.map((acc: any) => {
+                                const monthsLeft = acc._monthsLeft;
                                 return (
                                     <div key={acc.id} className="p-4 rounded-xl border border-red-900/30 bg-red-950/10 backdrop-blur-md flex flex-col gap-2 hover:bg-red-950/20 transition-all">
-                                        <div className="flex justify-between items-start">
+                                        <div className="flex justify-between items-start border-b border-red-900/30 pb-2">
                                             <div className="font-bold text-red-300 text-sm md:text-md truncate pr-2">{acc.apple_id}</div>
                                             <Badge className={monthsLeft < 0.5 ? "bg-red-600 animate-pulse" : "bg-red-900/40 text-red-200 border-red-800"}>
                                                 {monthsLeft.toFixed(1)}M
                                             </Badge>
                                         </div>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <span className="text-xs text-neutral-500">{acc.service_name}</span>
-                                            <span className="font-mono text-sm font-bold text-neutral-200">{acc.currency} {(acc.balance ?? 0).toFixed(2)}</span>
+                                        <div className="space-y-1">
+                                            {acc.subscriptions?.map((sub: any) => (
+                                                <div key={sub.id} className="flex justify-between items-center px-1">
+                                                    <span className="text-xs text-red-400 truncate max-w-[120px]">{sub.service_name}</span>
+                                                    <span className="font-mono text-sm font-bold text-red-300">{sub.currency} {(sub.base_price || 0).toFixed(2)}</span>
+                                                </div>
+                                            ))}
+                                            <div className="flex justify-between items-center px-1 pt-2 border-t border-red-950/50 mt-1">
+                                                <span className="text-xs text-red-500 font-bold">總餘額</span>
+                                                <span className="font-mono text-sm font-bold text-red-200">{acc.subscriptions?.[0]?.currency || '$'} {(acc.balance || 0).toFixed(2)}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 );

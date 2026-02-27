@@ -21,5 +21,10 @@ export const api = {
 
     // History
     getHistory: () => fetch(`${API_BASE}/history`).then(res => res.json()),
-    batchRecharge: (data: any[]) => fetch(`${API_BASE}/recharge`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json())
+    batchRecharge: (data: any[]) => fetch(`${API_BASE}/recharge`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()),
+
+    // Subscriptions
+    getSubscriptions: (accountId?: string) => fetch(`${API_BASE}/subscriptions${accountId ? `?account_id=${accountId}` : ''}`).then(res => res.json()),
+    addSubscription: (data: any) => fetch(`${API_BASE}/subscriptions`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()),
+    removeSubscription: (id: string) => fetch(`${API_BASE}/subscriptions?id=${id}`, { method: 'DELETE' }).then(res => res.json()),
 };
