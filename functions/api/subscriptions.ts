@@ -1,3 +1,4 @@
+/// <reference types="@cloudflare/workers-types" />
 import { Env } from '../env';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
@@ -32,12 +33,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const id = body.id || crypto.randomUUID();
 
         await context.env.DB.prepare(
-            'INSERT INTO subscriptions (id, account_id, service_id, start_date) VALUES (?1, ?2, ?3, ?4)'
+            'INSERT INTO subscriptions (id, account_id, service_id, start_date, group_name) VALUES (?1, ?2, ?3, ?4, ?5)'
         ).bind(
             id,
             body.account_id,
             body.service_id,
-            body.start_date || new Date().toISOString()
+            body.start_date || new Date().toISOString(),
+            body.group_name || '無標題群組'
         ).run();
 
         return Response.json({ id, message: 'Subscription added successfully' }, { status: 201 });

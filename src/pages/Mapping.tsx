@@ -9,26 +9,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+
+interface Subscription {
+    id: string;
+    account_id: string;
+    service_id: string;
+    service_name: string;
+    group_name: string;
+    start_date: string;
+    base_price: number;
+    currency: string;
+    cycle: string;
+    members?: Member[];
+}
 
 interface Account {
     id: string;
     apple_id: string;
-    group_name: string;
     balance: number;
-    service_id: string;
-    service_name: string;
-    base_price: number;
-    currency: string;
-    cycle: string;
-    start_date?: string;
     last_sync_date: string;
-    subscriptions?: any[];
+    subscriptions?: Subscription[];
 }
 
 interface Member {
     id: string;
-    account_id: string;
+    subscription_id: string;
     email: string;
     payment_status: number;
     memo: string | null;
@@ -36,7 +41,6 @@ interface Member {
 
 export default function Mapping() {
     const { data: accounts, mutate: mutateAccounts } = useSWR<Account[]>('accounts', api.getAccounts);
-    const { data: members, mutate: mutateMembers } = useSWR<Member[]>('members', api.getMembers);
     const { data: services } = useSWR<any[]>('services', api.getServices);
 
     const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -44,19 +48,11 @@ export default function Mapping() {
 
     const [isMemberOpen, setIsMemberOpen] = useState(false);
     const [memberForm, setMemberForm] = useState<Partial<Member>>({});
-    const [selectedAccountId, setSelectedAccountId] = useState<string>('');
+    const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string>('');
 
     const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-    const [subscriptionForm, setSubscriptionForm] = useState<any>({});
+    const [subscriptionForm, setSubscriptionForm] = useState<Partial<Subscription>>({});
     const [selectedSubAccountId, setSelectedSubAccountId] = useState<string | null>(null);
-
-    // Group accounts by group_name
-    const groupedAccounts = accounts?.reduce((acc, account) => {
-        const group = account.group_name || 'Unassigned';
-        if (!acc[group]) acc[group] = [];
-        acc[group].push(account);
-        return acc;
-    }, {} as Record<string, Account[]>) || {};
 
     const getTodayString = () => new Date().toISOString().split('T')[0];
 
@@ -76,8 +72,9 @@ export default function Mapping() {
             await api.addSubscription({
                 account_id: selectedSubAccountId,
                 service_id: subscriptionForm.service_id,
-                start_date: subscriptionForm.start_date
-            });
+                start_date: subscriptionForm.start_date,
+                group_name: subscriptionForm.group_name
+            } as any);
             setSubscriptionForm({});
             setIsSubscriptionOpen(false);
             mutateAccounts();
@@ -100,31 +97,30 @@ export default function Mapping() {
     const handleMemberSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (memberForm.id) {
-            await api.updateMember({ ...memberForm, account_id: selectedAccountId });
+            await api.updateMember({ ...memberForm, subscription_id: selectedSubscriptionId });
         } else {
-            await api.createMember({ ...memberForm, account_id: selectedAccountId });
+            await api.createMember({ ...memberForm, subscription_id: selectedSubscriptionId });
         }
         setIsMemberOpen(false);
-        mutateMembers();
+        mutateAccounts(); // members are nested under array, refresh accounts
     };
 
     const togglePaymentStatus = async (member: Member) => {
         await api.updateMember({ ...member, payment_status: member.payment_status ? 0 : 1 });
-        mutateMembers();
+        mutateAccounts();
     };
 
     const deleteAccount = async (id: string) => {
         if (confirm('確定要刪除此帳號及所有關聯成員嗎？')) {
             await api.deleteAccount(id);
             mutateAccounts();
-            mutateMembers();
         }
     };
 
     const deleteMember = async (id: string) => {
         if (confirm('確定要移除此成員嗎？')) {
             await api.deleteMember(id);
-            mutateMembers();
+            mutateAccounts();
         }
     };
 
@@ -153,10 +149,6 @@ export default function Mapping() {
                         </DialogHeader>
                         <form onSubmit={handleAccountSubmit} className="space-y-4 md:space-y-5 pt-4">
                             <div className="space-y-1.5 md:space-y-2">
-                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">群組/主帳號名稱 (Group Name)</Label>
-                                <Input value={accountForm.group_name || ''} onChange={e => setAccountForm({ ...accountForm, group_name: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" required />
-                            </div>
-                            <div className="space-y-1.5 md:space-y-2">
                                 <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Apple ID (付款帳號)</Label>
                                 <Input value={accountForm.apple_id || ''} onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" required />
                             </div>
@@ -172,136 +164,139 @@ export default function Mapping() {
 
             {!accounts && <div className="text-neutral-500 text-center animate-pulse">讀取關係資料中...</div>}
 
-            {Object.entries(groupedAccounts).map(([googleAccount, groupAccounts]) => (
-                <div key={googleAccount} className="space-y-4 md:space-y-6">
-                    <div className="flex items-center gap-3 border-b border-neutral-800/60 pb-3">
-                        <h3 className="text-xl md:text-2xl font-bold text-neutral-100 tracking-tight drop-shadow-sm truncate">
-                            {googleAccount}
-                        </h3>
-                        <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-bold tracking-wider text-[10px]">群組</Badge>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
+                {accounts?.map(account => {
+                    return (
+                        <Card key={account.id} className="bg-neutral-900/40 backdrop-blur-xl border border-neutral-800/60 shadow-xl overflow-hidden relative group hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 flex flex-col">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                            <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500"></div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
-                        {groupAccounts.map(account => {
-                            return (
-                                <Card key={account.id} className="bg-neutral-900/40 backdrop-blur-xl border border-neutral-800/60 shadow-xl overflow-hidden relative group hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 flex flex-col">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                                    <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-
-                                    <CardHeader className="pb-4 relative z-10 border-b border-neutral-800/50 bg-neutral-950/40 px-5">
-                                        <div className="flex justify-between items-start">
-                                            <div className="min-w-0 pr-2">
-                                                <CardTitle className="text-lg md:text-xl font-bold text-white flex items-center gap-2 drop-shadow-md truncate">
-                                                    {account.apple_id}
-                                                </CardTitle>
-                                                <CardDescription className="text-emerald-400 font-medium mt-1 flex flex-col gap-1 text-xs">
-                                                    {(account.subscriptions?.length || 0) > 0 ? (
-                                                        <div className="flex flex-wrap gap-1 mt-1">
-                                                            {account.subscriptions?.map((sub: any) => (
-                                                                <span key={sub.id} className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
-                                                                    {sub.service_name}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-neutral-500 text-[10px]">無啟用中訂閱</span>
-                                                    )}
-                                                </CardDescription>
-                                            </div>
-                                            <div className="text-right flex flex-col items-end shrink-0">
-                                                <div className="text-[10px] text-neutral-500 font-semibold tracking-wider font-mono">{account.subscriptions?.[0]?.currency || '$'}</div>
-                                                <div className="text-xl md:text-2xl font-black text-neutral-100 font-mono drop-shadow-sm cursor-pointer hover:text-emerald-400 transition-colors" title="Click to update balance" onClick={() => {
-                                                    const newBal = prompt('Update Balance:', account.balance.toString());
-                                                    if (newBal !== null) {
-                                                        api.updateAccount({ ...account, balance: parseFloat(newBal) }).then(() => mutateAccounts());
-                                                    }
-                                                }}>
-                                                    {typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
+                            <CardHeader className="pb-4 relative z-10 border-b border-neutral-800/50 bg-neutral-950/40 px-5">
+                                <div className="flex justify-between items-start">
+                                    <div className="min-w-0 pr-2">
+                                        <CardTitle className="text-lg md:text-xl font-bold text-white flex items-center gap-2 drop-shadow-md truncate">
+                                            {account.apple_id}
+                                        </CardTitle>
+                                        <CardDescription className="text-emerald-400 font-medium mt-1 flex flex-col gap-1 text-xs">
+                                            {(account.subscriptions?.length || 0) > 0 ? (
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {account.subscriptions?.map((sub: Subscription) => (
+                                                        <span key={sub.id} className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
+                                                            {sub.service_name} ({sub.group_name})
+                                                        </span>
+                                                    ))}
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                <span className="text-neutral-500 text-[10px]">無啟用中訂閱</span>
+                                            )}
+                                        </CardDescription>
+                                    </div>
+                                    <div className="text-right flex flex-col items-end shrink-0">
+                                        <div className="text-[10px] text-neutral-500 font-semibold tracking-wider font-mono">{account.subscriptions?.[0]?.currency || '$'}</div>
+                                        <div className="text-xl md:text-2xl font-black text-neutral-100 font-mono drop-shadow-sm cursor-pointer hover:text-emerald-400 transition-colors" title="Click to update balance" onClick={() => {
+                                            const newBal = prompt('Update Balance:', account.balance.toString());
+                                            if (newBal !== null) {
+                                                api.updateAccount({ ...account, balance: parseFloat(newBal) }).then(() => mutateAccounts());
+                                            }
+                                        }}>
+                                            {typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <div className="mt-4 flex gap-2 items-center justify-between">
-                                            <Dialog open={isSubscriptionOpen && selectedSubAccountId === account.id} onOpenChange={(open) => {
-                                                if (!open) setIsSubscriptionOpen(false);
+                                <div className="mt-4 flex gap-2 items-center justify-between">
+                                    <Dialog open={isSubscriptionOpen && selectedSubAccountId === account.id} onOpenChange={(open) => {
+                                        if (!open) setIsSubscriptionOpen(false);
+                                    }}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="h-7 px-2 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 text-[10px]" onClick={() => {
+                                                setSelectedSubAccountId(account.id);
+                                                setSubscriptionForm({ start_date: getTodayString() });
+                                                setIsSubscriptionOpen(true);
                                             }}>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="h-7 px-2 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 text-[10px]" onClick={() => {
-                                                        setSelectedSubAccountId(account.id);
-                                                        setSubscriptionForm({ start_date: getTodayString() });
-                                                        setIsSubscriptionOpen(true);
-                                                    }}>
-                                                        <ListPlus className="w-3.5 h-3.5 mr-1" /> 管理訂閱
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="w-[92vw] max-w-[450px] bg-neutral-900/95 backdrop-blur-3xl border-neutral-800/80 text-neutral-50 rounded-2xl shadow-2xl p-5 md:p-6">
-                                                    <DialogHeader>
-                                                        <DialogTitle className="text-xl font-bold">訂閱管理 - {account.apple_id}</DialogTitle>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4 pt-2">
-                                                        <div className="bg-neutral-950/50 rounded-xl border border-neutral-800/50 p-3 space-y-2 max-h-[200px] overflow-y-auto">
-                                                            {(account.subscriptions?.length || 0) > 0 ? account.subscriptions?.map((sub: any) => (
-                                                                <div key={sub.id} className="flex justify-between items-center bg-neutral-900/50 p-2 rounded-lg border border-neutral-800/40">
-                                                                    <div>
-                                                                        <div className="text-sm font-semibold text-emerald-300">{sub.service_name}</div>
-                                                                        <div className="text-[10px] text-neutral-500 font-mono">
-                                                                            {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
-                                                                            <span className="ml-2 bg-neutral-800 px-1 py-0.5 rounded text-neutral-400">每月 {new Date(sub.start_date).getDate()} 日扣</span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => removeSubscription(sub.id)}>
-                                                                        <Trash2 className="w-4 h-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            )) : <div className="text-center text-xs text-neutral-500 py-4">無訂閱項目</div>}
-                                                        </div>
-
-                                                        <form onSubmit={handleSubscriptionSubmit} className="space-y-4 pt-2 border-t border-neutral-800/80">
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div className="space-y-1.5">
-                                                                    <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">新增服務</Label>
-                                                                    <Select value={subscriptionForm.service_id} onValueChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v })} required>
-                                                                        <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-10 transition-all text-xs"><SelectValue placeholder="選擇服務" /></SelectTrigger>
-                                                                        <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
-                                                                            {services?.map(s => <SelectItem key={s.id} value={s.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs">{s.name}</SelectItem>)}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">扣款起始日</Label>
-                                                                    <Input type="date" value={subscriptionForm.start_date?.split('T')[0] || ''} onChange={e => setSubscriptionForm({ ...subscriptionForm, start_date: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-10 transition-all text-xs" required />
+                                                <ListPlus className="w-3.5 h-3.5 mr-1" /> 管理訂閱
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="w-[92vw] max-w-[450px] bg-neutral-900/95 backdrop-blur-3xl border-neutral-800/80 text-neutral-50 rounded-2xl shadow-2xl p-5 md:p-6">
+                                            <DialogHeader>
+                                                <DialogTitle className="text-xl font-bold">訂閱管理 - {account.apple_id}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4 pt-2">
+                                                <div className="bg-neutral-950/50 rounded-xl border border-neutral-800/50 p-3 space-y-2 max-h-[200px] overflow-y-auto">
+                                                    {(account.subscriptions?.length || 0) > 0 ? account.subscriptions?.map((sub: Subscription) => (
+                                                        <div key={sub.id} className="flex justify-between items-center bg-neutral-900/50 p-2 rounded-lg border border-neutral-800/40">
+                                                            <div>
+                                                                <div className="text-sm font-semibold text-emerald-300">{sub.service_name} <span className="text-[10px] text-neutral-400 font-normal">({sub.group_name})</span></div>
+                                                                <div className="text-[10px] text-neutral-500 font-mono">
+                                                                    {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
+                                                                    <span className="ml-2 bg-neutral-800 px-1 py-0.5 rounded text-neutral-400">每月 {new Date(sub.start_date).getDate()} 日扣</span>
                                                                 </div>
                                                             </div>
-                                                            <Button type="submit" className="w-full bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white rounded-xl h-10 text-sm font-bold transition-all">加入訂閱</Button>
-                                                        </form>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
-                                    </CardHeader>
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => removeSubscription(sub.id)}>
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )) : <div className="text-center text-xs text-neutral-500 py-4">無訂閱項目</div>}
+                                                </div>
 
-                                    <CardContent className="flex-1 px-5 py-3 relative z-10 bg-neutral-900/20">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">管理成員</span>
-                                            <Dialog open={isMemberOpen && selectedAccountId === account.id} onOpenChange={(open) => {
+                                                <form onSubmit={handleSubscriptionSubmit} className="space-y-4 pt-2 border-t border-neutral-800/80">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">新增服務</Label>
+                                                            <Select value={subscriptionForm.service_id} onValueChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v })} required>
+                                                                <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-10 transition-all text-xs"><SelectValue placeholder="選擇服務" /></SelectTrigger>
+                                                                <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
+                                                                    {services?.map(s => <SelectItem key={s.id} value={s.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs">{s.name}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">群組名稱</Label>
+                                                            <Input value={subscriptionForm.group_name || ''} onChange={e => setSubscriptionForm({ ...subscriptionForm, group_name: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-10 transition-all text-xs" required placeholder="如：家庭方案、用戶群..." />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">扣款起始日</Label>
+                                                            <Input type="date" value={subscriptionForm.start_date?.split('T')[0] || ''} onChange={e => setSubscriptionForm({ ...subscriptionForm, start_date: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-10 transition-all text-xs" required />
+                                                        </div>
+                                                    </div>
+                                                    <Button type="submit" className="w-full bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white rounded-xl h-10 text-sm font-bold transition-all">加入訂閱</Button>
+                                                </form>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                            </CardHeader>
+
+                            <CardContent className="flex-1 px-4 py-3 relative z-10 bg-neutral-900/20 space-y-6">
+                                {(account.subscriptions?.length || 0) === 0 && (
+                                    <div className="text-neutral-500 text-xs text-center py-4">無啟用中訂閱，請先「管理訂閱」新增服務。</div>
+                                )}
+                                {account.subscriptions?.map(sub => (
+                                    <div key={sub.id} className="space-y-3">
+                                        <div className="flex justify-between items-center border-b border-neutral-800/40 pb-2">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-white tracking-wide">{sub.service_name}</span>
+                                                <span className="text-[10px] text-emerald-400/80 font-mono">{sub.group_name}</span>
+                                            </div>
+                                            <Dialog open={isMemberOpen && selectedSubscriptionId === sub.id} onOpenChange={(open) => {
                                                 if (!open) setIsMemberOpen(false);
                                             }}>
                                                 <DialogTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-7 px-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10" onClick={() => {
-                                                        setSelectedAccountId(account.id);
+                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-[10px]" onClick={() => {
+                                                        setSelectedSubscriptionId(sub.id);
                                                         setMemberForm({ payment_status: 0 });
                                                         setIsMemberOpen(true);
                                                     }}>
-                                                        <UserPlus className="w-3.5 h-3.5 mr-1" /> 新增
+                                                        <UserPlus className="w-3 h-3 mr-1" /> 加人
                                                     </Button>
                                                 </DialogTrigger>
                                                 <DialogContent className="w-[92vw] max-w-[400px] bg-neutral-900/90 backdrop-blur-3xl border-neutral-800/80 text-neutral-50 rounded-2xl shadow-2xl p-5 md:p-6">
                                                     <DialogHeader>
-                                                        <DialogTitle className="text-xl font-bold">新增成員</DialogTitle>
+                                                        <DialogTitle className="text-xl font-bold">新增 {sub.service_name} 成員</DialogTitle>
                                                     </DialogHeader>
                                                     <form onSubmit={handleMemberSubmit} className="space-y-4 md:space-y-5 pt-4">
                                                         <div className="space-y-1.5 md:space-y-2">
-                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">電子郵件 (Email)</Label>
+                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">電子郵件 (Email) / 代號</Label>
                                                             <Input value={memberForm.email || ''} onChange={e => setMemberForm({ ...memberForm, email: e.target.value })} required className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" />
                                                         </div>
                                                         <div className="space-y-1.5 md:space-y-2">
@@ -311,12 +306,12 @@ export default function Mapping() {
                                                         <div className="flex items-center space-x-2 pt-2">
                                                             <input
                                                                 type="checkbox"
-                                                                id="payment_status"
+                                                                id={`payment_status_${sub.id}`}
                                                                 checked={memberForm.payment_status === 1}
                                                                 onChange={e => setMemberForm({ ...memberForm, payment_status: e.target.checked ? 1 : 0 })}
                                                                 className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-neutral-900 cursor-pointer accent-emerald-500"
                                                             />
-                                                            <Label htmlFor="payment_status" className="cursor-pointer font-medium text-xs md:text-sm text-neutral-300 hover:text-white transition-colors">初始狀態為「已繳費」</Label>
+                                                            <Label htmlFor={`payment_status_${sub.id}`} className="cursor-pointer font-medium text-xs md:text-sm text-neutral-300 hover:text-white transition-colors">初始狀態為「已繳費」</Label>
                                                         </div>
                                                         <Button type="submit" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl h-11 md:h-12 text-sm md:text-md font-bold text-white shadow-lg transition-all transform hover:scale-[1.02]">儲存成員</Button>
                                                     </form>
@@ -324,47 +319,46 @@ export default function Mapping() {
                                             </Dialog>
                                         </div>
 
-                                        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
-                                            {members?.filter(m => m.account_id === account.id).length === 0 && (
-                                                <div className="text-[10px] text-neutral-500 text-center py-4 bg-neutral-950/30 rounded-lg border border-neutral-800/50 font-medium">目前無附屬成員</div>
+                                        <div className="space-y-1.5">
+                                            {sub.members?.length === 0 && (
+                                                <div className="text-[9px] text-neutral-500 text-center py-2 bg-neutral-950/30 rounded-lg border border-neutral-800/50">尚無成員</div>
                                             )}
-                                            {members?.filter(m => m.account_id === account.id).map(member => (
-                                                <div key={member.id} className="group flex justify-between items-center py-2 px-3 bg-neutral-950/50 rounded-lg border border-neutral-800/50 hover:border-emerald-500/30 hover:bg-neutral-900/80 transition-all">
-                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                            {sub.members?.map(member => (
+                                                <div key={member.id} className="group flex justify-between items-center py-1.5 px-3 bg-neutral-950/50 rounded-lg border border-neutral-800/50 hover:border-emerald-500/30 hover:bg-neutral-900/80 transition-all">
+                                                    <div className="flex items-center gap-2 overflow-hidden">
                                                         <button onClick={() => togglePaymentStatus(member)} className={`flex-shrink-0 transition-colors ${member.payment_status ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'text-neutral-600 hover:text-neutral-500'}`}>
-                                                            {member.payment_status ? <CheckCircle2 className="w-5 h-5 fill-emerald-500/20" /> : <Circle className="w-5 h-5" />}
+                                                            {member.payment_status ? <CheckCircle2 className="w-4 h-4 fill-emerald-500/20" /> : <Circle className="w-4 h-4" />}
                                                         </button>
                                                         <div className="flex flex-col truncate">
-                                                            <span className="text-xs font-bold text-neutral-200 truncate font-mono tracking-tighter">{member.email}</span>
+                                                            <span className="text-xs font-bold text-neutral-300 truncate font-mono tracking-tighter">{member.email}</span>
                                                             {member.memo && <span className="text-[9px] text-neutral-500 truncate">{member.memo}</span>}
                                                         </div>
                                                     </div>
-                                                    <button onClick={() => deleteMember(member.id)} className="opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all p-1.5 shrink-0 ml-1">
+                                                    <button onClick={() => deleteMember(member.id)} className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all p-1.5 shrink-0 ml-1">
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             ))}
                                         </div>
-                                    </CardContent>
+                                    </div>
+                                ))}
+                            </CardContent>
 
-                                    <CardFooter className="p-4 border-t border-neutral-800/50 flex justify-between bg-neutral-950/60 backdrop-blur-md relative z-10">
-                                        <Button variant="ghost" size="sm" onClick={() => {
-                                            setAccountForm({ ...account });
-                                            setIsAccountOpen(true);
-                                        }} className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-[10px] md:text-xs font-bold tracking-wider">
-                                            編輯設定
-                                        </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => deleteAccount(account.id)} className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 text-[10px] md:text-xs font-bold tracking-wider">
-                                            刪除帳號組
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                </div>
-            ))
-            }
+                            <CardFooter className="p-4 border-t border-neutral-800/50 flex justify-between bg-neutral-950/60 backdrop-blur-md relative z-10">
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    setAccountForm({ ...account });
+                                    setIsAccountOpen(true);
+                                }} className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-[10px] md:text-xs font-bold tracking-wider">
+                                    編輯帳號
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => deleteAccount(account.id)} className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 text-[10px] md:text-xs font-bold tracking-wider">
+                                    移除帳號卡
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    );
+                })}
+            </div>
         </div >
     );
 }

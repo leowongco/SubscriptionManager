@@ -1,8 +1,19 @@
+/// <reference types="@cloudflare/workers-types" />
 import { Env } from '../env';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
-        const { results } = await context.env.DB.prepare('SELECT * FROM members').all();
+        const url = new URL(context.request.url);
+        const subscriptionId = url.searchParams.get('subscription_id');
+
+        let query = 'SELECT * FROM members';
+        let params: any[] = [];
+        if (subscriptionId) {
+            query += ' WHERE subscription_id = ?1';
+            params = [subscriptionId];
+        }
+
+        const { results } = await context.env.DB.prepare(query).bind(...params).all();
         return Response.json(results);
     } catch (error: any) {
         return new Response(error.message, { status: 500 });
@@ -16,10 +27,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const id = body.id || crypto.randomUUID();
 
         await context.env.DB.prepare(
-            'INSERT INTO members (id, account_id, email, payment_status, memo) VALUES (?1, ?2, ?3, ?4, ?5)'
+            'INSERT INTO members (id, subscription_id, email, payment_status, memo) VALUES (?1, ?2, ?3, ?4, ?5)'
         ).bind(
             id,
-            body.account_id,
+            body.subscription_id,
             body.email,
             body.payment_status ? 1 : 0,
             body.memo || null
@@ -40,9 +51,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         if (!id) return new Response('Missing Member ID', { status: 400 });
 
         await context.env.DB.prepare(
-            'UPDATE members SET account_id = ?1, email = ?2, payment_status = ?3, memo = ?4 WHERE id = ?5'
+            'UPDATE members SET subscription_id = ?1, email = ?2, payment_status = ?3, memo = ?4 WHERE id = ?5'
         ).bind(
-            body.account_id,
+            body.subscription_id,
             body.email,
             body.payment_status ? 1 : 0,
             body.memo || null,

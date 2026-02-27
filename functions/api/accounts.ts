@@ -1,3 +1,4 @@
+/// <reference types="@cloudflare/workers-types" />
 import { Env } from '../env';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
@@ -13,8 +14,25 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             JOIN services s ON sub.service_id = s.id
         `).all();
 
+        const { results: members } = await context.env.DB.prepare(`
+            SELECT * FROM members
+        `).all();
+
+        // Group members by subscription_id
+        const memsBySub = members.reduce((acc: any, mem: any) => {
+            if (!acc[mem.subscription_id]) acc[mem.subscription_id] = [];
+            acc[mem.subscription_id].push(mem);
+            return acc;
+        }, {});
+
+        // Attach members to each subscription
+        const enrichedSubscriptions = subscriptions.map((sub: any) => ({
+            ...sub,
+            members: memsBySub[sub.id] || []
+        }));
+
         // Group subscriptions by account_id
-        const subsByAccount = subscriptions.reduce((acc: any, sub: any) => {
+        const subsByAccount = enrichedSubscriptions.reduce((acc: any, sub: any) => {
             if (!acc[sub.account_id]) acc[sub.account_id] = [];
             acc[sub.account_id].push(sub);
             return acc;
