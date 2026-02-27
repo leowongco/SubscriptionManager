@@ -3,7 +3,7 @@ import { Env } from '../env';
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
         const { results } = await context.env.DB.prepare(`
-      SELECT h.*, a.apple_id, a.google_account 
+      SELECT h.*, a.apple_id, a.group_name 
       FROM history h
       JOIN accounts a ON h.account_id = a.id
       ORDER BY h.created_at DESC

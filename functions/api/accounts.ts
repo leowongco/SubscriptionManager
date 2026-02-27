@@ -39,11 +39,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const id = body.id || crypto.randomUUID();
 
         await context.env.DB.prepare(
-            'INSERT INTO accounts (id, apple_id, google_account, balance, last_sync_date) VALUES (?1, ?2, ?3, ?4, ?5)'
+            'INSERT INTO accounts (id, apple_id, group_name, balance, last_sync_date) VALUES (?1, ?2, ?3, ?4, ?5)'
         ).bind(
             id,
             body.apple_id,
-            body.google_account,
+            body.group_name,
             body.balance || 0,
             new Date().toISOString()
         ).run();
@@ -63,10 +63,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         if (!id) return new Response('Missing Account ID', { status: 400 });
 
         await context.env.DB.prepare(
-            'UPDATE accounts SET apple_id = ?1, google_account = ?2, balance = ?3 WHERE id = ?4'
+            'UPDATE accounts SET apple_id = ?1, group_name = ?2, balance = ?3 WHERE id = ?4'
         ).bind(
             body.apple_id,
-            body.google_account,
+            body.group_name,
             body.balance,
             id
         ).run();

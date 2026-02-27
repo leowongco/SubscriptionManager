@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 interface Account {
     id: string;
     apple_id: string;
-    google_account: string;
+    group_name: string;
     balance: number;
     service_id: string;
     service_name: string;
@@ -50,9 +50,9 @@ export default function Mapping() {
     const [subscriptionForm, setSubscriptionForm] = useState<any>({});
     const [selectedSubAccountId, setSelectedSubAccountId] = useState<string | null>(null);
 
-    // Group accounts by google_account
+    // Group accounts by group_name
     const groupedAccounts = accounts?.reduce((acc, account) => {
-        const group = account.google_account || 'Unassigned';
+        const group = account.group_name || 'Unassigned';
         if (!acc[group]) acc[group] = [];
         acc[group].push(account);
         return acc;
@@ -153,8 +153,8 @@ export default function Mapping() {
                         </DialogHeader>
                         <form onSubmit={handleAccountSubmit} className="space-y-4 md:space-y-5 pt-4">
                             <div className="space-y-1.5 md:space-y-2">
-                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Google 帳號 (家庭管理員)</Label>
-                                <Input value={accountForm.google_account || ''} onChange={e => setAccountForm({ ...accountForm, google_account: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" required />
+                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">群組/主帳號名稱 (Group Name)</Label>
+                                <Input value={accountForm.group_name || ''} onChange={e => setAccountForm({ ...accountForm, group_name: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" required />
                             </div>
                             <div className="space-y-1.5 md:space-y-2">
                                 <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Apple ID (付款帳號)</Label>

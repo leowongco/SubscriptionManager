@@ -5,7 +5,7 @@ Subscription Master 是一個基於 Cloudflare 生態系統（Pages Functions + 
 ## 🌟 核心功能 (Features)
 
 *   **📊 總覽儀表板 (Dashboard)**：即時掌握所有蘋果帳號總餘額，自動加總各個 Apple ID 下的「多個訂閱服務」推算本月預期支出，當餘額不足 2 個月時自動發出紅色預警聲明。
-*   **🔗 訂閱關係對應 (Relationship Mapping)**：視覺化的卡片層級，展示 `[Google 子帳號] -> [群組成員] -> [Apple ID 付款人] -> [多項訂閱服務]` 之間的脈絡。支援在單一 Apple ID 下綁定多個擁有獨立「扣款日」及「計費週期（月/年）」的服務。
+*   **🔗 訂閱關係對應 (Relationship Mapping)**：視覺化的卡片層級，展示 `[群組/主帳號名稱] -> [群組成員] -> [Apple ID 付款人] -> [多項訂閱服務]` 之間的脈絡。支援在單一 Apple ID 下綁定多個擁有獨立「扣款日」及「計費週期（月/年）」的服務。
 *   **💳 禮品卡批次加值 (Batch Recharge)**：提供批次表單介面，一次性輸入多張 Apple Gift Card 序號與金額，並寫入對應的蘋果帳號餘額中，附帶歷史紀錄分頁。
 *   **🛠️ 服務定價管理 (Service Manager)**：維護各項訂閱服務（例如 YouTube Premium, iCloud）的價格、計費週期。支援設定**未來漲價日期**，系統時間到達後自動採用新費率。
 *   **🤖 自動化扣款與通知 (Automation & Notifications)**：透過 API 端點模擬每月排程扣費，精準地依照每個獨立訂閱項目的「起始扣款日」與「年/月費」進行分攤扣款。結合 **Telegram Bot**，餘額觸底時第一時間傳送通知。
