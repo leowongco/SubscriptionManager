@@ -1,67 +1,51 @@
 import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { PlusCircle, Trash2, CreditCard, Save, QrCode, Clock, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import {
+    Plus,
+    Trash2,
+    History as HistoryIcon,
+    CreditCard,
+    Barcode,
+    Users,
+    ChevronLeft,
+    ChevronRight,
+    Search
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface Account {
-    id: string;
-    apple_id: string;
-    google_account: string;
-    balance: number;
-    currency: string;
-}
+import { format } from 'date-fns';
 
 interface RechargeRow {
     id: string;
     account_id: string;
-    amount: number | '';
-    gift_card: string;
-    date: string;
-}
-
-interface HistoryLog {
-    id: string;
-    account_id: string;
-    apple_id: string;
-    type: string;
     amount: number;
-    created_at: string;
-    memo?: string;
+    date: string;
+    gift_card?: string;
 }
 
 export default function Recharge() {
-    const { data: accounts } = useSWR<Account[]>('accounts', api.getAccounts);
-    const { data: history, mutate: mutateHistory } = useSWR<HistoryLog[]>('history', api.getHistory);
+    const { data: accounts } = useSWR<any[]>('accounts', api.getAccounts);
+    const { data: history, mutate: mutateHistory } = useSWR<any[]>('history', api.getHistory);
 
-    const createEmptyRow = (): RechargeRow => ({
-        id: crypto.randomUUID(),
-        account_id: '',
-        amount: '',
-        gift_card: '',
-        date: new Date().toISOString().split('T')[0]
-    });
+    const [rows, setRows] = useState<RechargeRow[]>([
+        { id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }
+    ]);
+    const [loading, setLoading] = useState(false);
+    const [isBarcodeOpen, setIsBarcodeOpen] = useState(false);
+    const [selectedGiftCard, setSelectedGiftCard] = useState('');
 
-    const [rows, setRows] = useState<RechargeRow[]>([createEmptyRow()]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Barcode Dialog State
-    const [barcodeOpen, setBarcodeOpen] = useState(false);
-    const [barcodeValue, setBarcodeValue] = useState('');
-
-    // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 10;
 
     const addRow = () => {
-        setRows([...rows, createEmptyRow()]);
+        setRows([...rows, { id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }]);
     };
 
     const removeRow = (id: string) => {
@@ -76,98 +60,81 @@ export default function Recharge() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Filter out empty rows
-        const validRows = rows.filter(r => r.account_id && r.amount !== '' && Number(r.amount) > 0);
-
-        if (validRows.length === 0) {
-            alert('請至少填寫一個有效的加值項目（Apple ID 帳號與餘額金額皆為必填）。');
-            return;
-        }
-
-        setIsSubmitting(true);
+        setLoading(true);
         try {
-            await api.batchRecharge(validRows);
-            alert(`成功！已處理 ${validRows.length} 筆加值紀錄。`);
-            setRows([createEmptyRow()]); // Reset form
-            mutateHistory(); // Refresh history table
-        } catch (error) {
-            console.error(error);
-            alert('處理加值時發生錯誤，請稍後再試。');
+            for (const row of rows) {
+                if (row.account_id && row.amount > 0) {
+                    await api.rechargeAccount({
+                        account_id: row.account_id,
+                        amount: row.amount,
+                        memo: row.gift_card || 'Batch recharge'
+                    });
+                }
+            }
+            setRows([{ id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }]);
+            mutateHistory();
         } finally {
-            setIsSubmitting(false);
+            setLoading(false);
         }
     };
 
-    const openBarcode = (value: string) => {
-        if (!value) return;
-        setBarcodeValue(value);
-        setBarcodeOpen(true);
-    };
-
-    // Calculate Pagination
-    const rechargeHistory = useMemo(() => {
-        return history?.filter(h => h.type === 'recharge') || [];
-    }, [history]);
-
-    const totalPages = Math.ceil(rechargeHistory.length / itemsPerPage);
-    const currentHistory = useMemo(() => {
+    const historyData = useMemo(() => {
+        if (!history) return [];
         const start = (currentPage - 1) * itemsPerPage;
-        return rechargeHistory.slice(start, start + itemsPerPage);
-    }, [rechargeHistory, currentPage]);
+        return history.slice(start, start + itemsPerPage);
+    }, [history, currentPage]);
+
+    const totalPages = Math.ceil((history?.length || 0) / itemsPerPage);
 
     return (
-        <div className="space-y-10 max-w-6xl mx-auto pb-10">
+        <div className="space-y-6 md:space-y-10 max-w-6xl mx-auto pb-10 px-0 sm:px-4">
             {/* Header Section */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900/40 via-purple-900/20 to-neutral-900 border border-neutral-800/80 p-8 shadow-2xl backdrop-blur-xl">
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-blue-900/40 via-indigo-900/20 to-neutral-900 border border-neutral-800/80 p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-48 md:w-64 h-48 md:h-64 bg-blue-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-48 md:w-64 h-48 md:h-64 bg-indigo-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
 
-                <div className="relative z-10 flex items-center gap-5">
-                    <div className="p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg ring-1 ring-white/20">
-                        <CreditCard className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-3xl font-black tracking-tight text-white drop-shadow-md">批次禮品卡加值中心</h2>
-                        <p className="text-indigo-200/80 mt-2 text-sm font-medium">同時為多個不同的 Apple ID 執行禮品卡序號自動加值與帳目記錄，支援一鍵產生條碼。</p>
-                    </div>
+                <div className="relative z-10">
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-md flex items-center gap-3">
+                        <CreditCard className="w-8 h-8 text-blue-400" />
+                        批次加值中心
+                    </h2>
+                    <p className="text-neutral-400 mt-2 text-xs md:text-sm font-medium">快速為多個 Apple ID 批量登錄禮品卡充值紀錄。</p>
                 </div>
             </div>
 
             {/* Recharge Form Card */}
-            <Card className="bg-neutral-900/40 backdrop-blur-xl border-neutral-800/60 shadow-2xl overflow-hidden ring-1 ring-white/5">
-                <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-                <CardHeader className="border-b border-neutral-800/60 pb-5 bg-neutral-950/30">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                        <PlusCircle className="w-5 h-5 text-indigo-400" />
-                        禮品卡加值表單
-                    </CardTitle>
-                    <CardDescription className="text-neutral-400">請為每張禮品卡填寫詳細資訊。您可以點擊「新增輸入列」同時處理多筆帳單。</CardDescription>
+            <Card className="bg-neutral-900/40 backdrop-blur-xl border-neutral-800/60 shadow-2xl overflow-hidden ring-1 ring-white/5 rounded-2xl md:rounded-3xl">
+                <CardHeader className="border-b border-neutral-800/50 bg-neutral-950/20 px-6 py-4 md:py-6">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg md:text-xl font-bold text-neutral-100 flex items-center gap-2">
+                            <Plus className="w-5 h-5 text-blue-500" /> 加值項目單
+                        </CardTitle>
+                        <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 font-mono text-[10px] md:text-xs">{rows.length} 筆記錄</Badge>
+                    </div>
                 </CardHeader>
-                <CardContent className="pt-6">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-5">
+                <CardContent className="pt-6 md:pt-8 px-4 md:px-8">
+                    <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+                        <div className="space-y-5 md:space-y-6">
                             {rows.map((row, index) => (
-                                <div key={row.id} className="grid grid-cols-12 gap-5 items-end bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50 relative group transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.1)]">
-                                    <div className="absolute -left-3 -top-3 w-8 h-8 bg-neutral-800 border-2 border-neutral-900 text-neutral-400 rounded-full flex items-center justify-center text-xs font-bold font-mono z-10">
-                                        {index + 1}
-                                    </div>
-                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div key={row.id} className="grid grid-cols-12 gap-4 md:gap-5 items-end bg-neutral-950/50 p-5 md:p-6 rounded-xl md:rounded-2xl border border-neutral-800/50 relative group transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.1)]">
+                                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-500/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                                     {/* Account Select */}
-                                    <div className="col-span-12 md:col-span-3 space-y-2 relative z-10">
-                                        <Label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider ml-1">Apple ID 帳號</Label>
-                                        <Select value={row.account_id} onValueChange={(v) => updateRow(row.id, 'account_id', v)}>
-                                            <SelectTrigger className="bg-neutral-900/80 border-neutral-700/50 focus:ring-indigo-500/50 rounded-xl h-12 transition-all">
-                                                <SelectValue placeholder="請選擇帳號" />
+                                    <div className="col-span-12 md:col-span-3 space-y-1.5 md:space-y-2 relative z-10">
+                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                            <Users className="w-3 h-3" /> 付款帳號 (Apple ID)
+                                        </Label>
+                                        <Select
+                                            value={row.account_id}
+                                            onValueChange={(val) => updateRow(row.id, 'account_id', val)}
+                                        >
+                                            <SelectTrigger className="bg-neutral-900/80 border-neutral-800 focus:ring-blue-500/50 rounded-xl h-11 md:h-12 transition-all text-xs">
+                                                <SelectValue placeholder="請選擇帳號..." />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-neutral-900 border-neutral-700 text-neutral-50 rounded-xl shadow-2xl backdrop-blur-3xl">
+                                            <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
                                                 {accounts?.map(acc => (
-                                                    <SelectItem key={acc.id} value={acc.id} className="cursor-pointer hover:bg-neutral-800 focus:bg-neutral-800 rounded-lg m-1">
-                                                        <div className="flex justify-between items-center w-full">
-                                                            <span>{acc.apple_id}</span>
-                                                            <span className="text-neutral-500 text-xs ml-2 opacity-70 border border-neutral-700 px-1 rounded">{acc.currency}</span>
-                                                        </div>
+                                                    <SelectItem key={acc.id} value={acc.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs md:text-sm">
+                                                        {acc.apple_id} <span className="text-[10px] opacity-50 ml-1">({acc.currency})</span>
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -175,186 +142,168 @@ export default function Recharge() {
                                     </div>
 
                                     {/* Date */}
-                                    <div className="col-span-12 sm:col-span-6 md:col-span-2 space-y-2 relative z-10">
-                                        <Label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider ml-1">加值日期</Label>
-                                        <div className="relative">
-                                            <Input
-                                                type="date"
-                                                value={row.date}
-                                                onChange={(e) => updateRow(row.id, 'date', e.target.value)}
-                                                className="bg-neutral-900/80 border-neutral-700/50 focus:border-indigo-500/50 rounded-xl h-12 px-4 transition-all"
-                                                required
-                                            />
-                                        </div>
+                                    <div className="col-span-6 md:col-span-2 space-y-1.5 md:space-y-2 relative z-10">
+                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider">加值日期</Label>
+                                        <Input
+                                            type="date"
+                                            value={row.date}
+                                            onChange={(e) => updateRow(row.id, 'date', e.target.value)}
+                                            className="bg-neutral-900/80 border-neutral-800 focus:border-blue-500/50 rounded-xl h-11 md:h-12 transition-all text-xs"
+                                        />
                                     </div>
 
                                     {/* Amount */}
-                                    <div className="col-span-12 sm:col-span-6 md:col-span-2 space-y-2 relative z-10">
-                                        <Label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider ml-1">金額</Label>
+                                    <div className="col-span-6 md:col-span-2 space-y-1.5 md:space-y-2 relative z-10">
+                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider">加值金額</Label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 font-mono text-sm">$</span>
                                             <Input
                                                 type="number"
                                                 step="0.01"
-                                                placeholder="500"
-                                                value={row.amount}
-                                                onChange={(e) => updateRow(row.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
-                                                className="bg-neutral-900/80 border-neutral-700/50 focus:border-indigo-500/50 rounded-xl h-12 pl-8 font-mono transition-all"
-                                                required
+                                                placeholder="0.00"
+                                                value={row.amount || ''}
+                                                onChange={(e) => updateRow(row.id, 'amount', parseFloat(e.target.value))}
+                                                className="bg-neutral-900/80 border-neutral-800 focus:border-blue-500/50 rounded-xl h-11 md:h-12 pl-3 transition-all font-mono text-xs md:text-sm"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Gift Card */}
-                                    <div className="col-span-12 md:col-span-4 space-y-2 relative z-10">
-                                        <Label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider ml-1">禮品卡序號 / 備註</Label>
-                                        <div className="relative flex items-center gap-2">
+                                    <div className="col-span-12 md:col-span-4 space-y-1.5 md:space-y-2 relative z-10">
+                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider">禮品卡序號 / 備註</Label>
+                                        <div className="flex gap-2">
                                             <Input
-                                                placeholder="XXXX-XXXX-XXXX-XXXX"
-                                                value={row.gift_card}
+                                                placeholder="輸入序號..."
+                                                value={row.gift_card || ''}
                                                 onChange={(e) => updateRow(row.id, 'gift_card', e.target.value)}
-                                                className="bg-neutral-900/80 border-neutral-700/50 focus:border-indigo-500/50 rounded-xl h-12 uppercase font-mono tracking-wider transition-all"
+                                                className="bg-neutral-900/80 border-neutral-800 focus:border-blue-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm"
                                             />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                disabled={!row.gift_card}
-                                                onClick={() => openBarcode(row.gift_card)}
-                                                className="h-12 w-12 rounded-xl border-neutral-700/50 hover:bg-indigo-500/10 hover:text-indigo-400 hover:border-indigo-500/30 transition-all text-neutral-400"
-                                                title="顯示條碼"
-                                            >
-                                                <QrCode className="w-5 h-5" />
-                                            </Button>
+                                            {row.gift_card && (
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        setSelectedGiftCard(row.gift_card || '');
+                                                        setIsBarcodeOpen(true);
+                                                    }}
+                                                    className="shrink-0 h-11 w-11 md:h-12 md:w-12 rounded-xl bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 border border-blue-500/20"
+                                                >
+                                                    <Barcode className="w-5 h-5" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Action */}
-                                    <div className="col-span-12 md:col-span-1 flex justify-center pb-1 relative z-10">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => removeRow(row.id)}
-                                            disabled={rows.length === 1}
-                                            className="h-12 w-12 rounded-xl text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-500"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </Button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeRow(row.id)}
+                                        className="absolute -top-2.5 -right-2.5 md:top-3 md:right-3 p-1.5 bg-neutral-900 border border-neutral-800 text-neutral-500 hover:text-red-400 hover:border-red-500/30 rounded-full md:rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-xl md:shadow-none z-20"
+                                        title="移除此列"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="flex justify-between items-center border-t border-neutral-800/60 pt-6 mt-6">
+                        <div className="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-neutral-800/50 gap-4">
                             <Button
                                 type="button"
-                                onClick={addRow}
                                 variant="outline"
-                                className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 rounded-xl h-12 px-6 shadow-sm transition-all"
+                                onClick={addRow}
+                                className="w-full md:w-auto border-neutral-800 hover:bg-neutral-800 hover:text-white rounded-xl h-11 md:h-12 px-6 font-bold transition-all text-xs md:text-sm"
                             >
-                                <PlusCircle className="w-4 h-4 mr-2" />
-                                新增輸入列
+                                <Plus className="w-4 h-4 mr-2" /> 增添一行
                             </Button>
 
-                            <Button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl h-12 px-8 shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)] transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                                {isSubmitting ? '處理中...' : (
-                                    <>
-                                        <Save className="w-4 h-4 mr-2" />
-                                        確認並提交加值
-                                    </>
-                                )}
-                            </Button>
+                            <div className="flex items-center gap-4 w-full md:w-auto">
+                                <Button
+                                    type="submit"
+                                    disabled={loading || rows.length === 0}
+                                    className="flex-1 md:flex-none md:min-w-[160px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl h-11 md:h-12 font-black shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-xs md:text-sm"
+                                >
+                                    {loading ? '提交中...' : '確認並執行批次扣款'}
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </CardContent>
             </Card>
+
             {/* Barcode Modal */}
-            <Dialog open={barcodeOpen} onOpenChange={setBarcodeOpen}>
-                <DialogContent className="sm:max-w-[450px] bg-neutral-900/90 backdrop-blur-xl border-neutral-800 text-neutral-50 rounded-2xl shadow-2xl">
+            <Dialog open={isBarcodeOpen} onOpenChange={setIsBarcodeOpen}>
+                <DialogContent className="w-[92vw] max-w-[400px] bg-neutral-900/95 backdrop-blur-3xl text-neutral-50 border-neutral-800/80 rounded-2xl shadow-2xl p-6">
                     <DialogHeader>
-                        <DialogTitle className="flex justify-center mb-2">禮品卡條碼</DialogTitle>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <Barcode className="w-6 h-6 text-blue-500" /> 禮品卡條碼
+                        </DialogTitle>
                     </DialogHeader>
-                    <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl mx-auto w-full space-y-4 shadow-inner">
+                    <div className="flex flex-col items-center justify-center p-8 bg-white rounded-2xl mt-4 shadow-inner">
                         <img
-                            src={`https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(barcodeValue)}&code=Code128&translate-esc=on`}
-                            alt="Barcode"
-                            className="w-full h-auto max-h-[150px] object-contain"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            src={`https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(selectedGiftCard)}&code=Code128&translate-esc=on`}
+                            alt="Gift Card Barcode"
+                            className="max-w-full"
                         />
-                        <div className="text-black font-mono text-lg tracking-[0.2em] font-bold mt-2 pb-2 text-center w-full border-t border-neutral-200">
-                            {barcodeValue}
+                        <div className="mt-4 text-neutral-950 font-mono font-black tracking-widest text-lg">
+                            {selectedGiftCard}
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
 
             {/* History Table */}
-            <Card className="bg-neutral-900/40 backdrop-blur-xl border-neutral-800/60 shadow-xl overflow-hidden ring-1 ring-white/5 mt-10">
-                <CardHeader className="border-b border-neutral-800/60 pb-5 bg-neutral-950/20 flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="text-xl flex items-center gap-2 text-neutral-200">
-                            <Clock className="w-5 h-5 text-purple-400" />
-                            加值歷史紀錄
-                        </CardTitle>
-                        <CardDescription className="text-neutral-400 mt-1">追蹤最近透過批次表單提交的禮品卡紀錄。</CardDescription>
-                    </div>
-                    <Badge variant="outline" className="border-purple-500/30 text-purple-400 bg-purple-500/10 px-3 py-1">
-                        <Activity className="w-3 h-3 mr-1.5 inline" /> {rechargeHistory.length} 筆
-                    </Badge>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+            <div className="space-y-4 md:space-y-6">
+                <div className="flex items-center justify-between border-b border-neutral-800/60 pb-3">
+                    <h3 className="text-xl md:text-2xl font-bold text-neutral-100 tracking-tight flex items-center gap-3">
+                        <div className="p-2 bg-neutral-800 rounded-lg">
+                            <HistoryIcon className="w-5 h-5 text-neutral-400" />
+                        </div>
+                        歷史加值紀錄
+                    </h3>
+                </div>
+
+                <Card className="bg-neutral-900/40 backdrop-blur-xl border border-neutral-800/60 shadow-2xl overflow-hidden rounded-2xl md:rounded-3xl">
+                    <div className="overflow-x-auto min-w-full custom-scrollbar">
                         <Table>
-                            <TableHeader className="bg-neutral-950/50">
-                                <TableRow className="border-neutral-800 hover:bg-transparent">
-                                    <TableHead className="text-neutral-400 w-[120px] pl-6">日期</TableHead>
-                                    <TableHead className="text-neutral-400">Apple ID</TableHead>
-                                    <TableHead className="text-neutral-400">禮品卡備註</TableHead>
-                                    <TableHead className="text-right text-neutral-400 pr-6">加值金額</TableHead>
+                            <TableHeader className="bg-neutral-950/40">
+                                <TableRow className="border-neutral-800/60 hover:bg-transparent">
+                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">日期</TableHead>
+                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">帳號</TableHead>
+                                    <TableHead className="text-right text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">餘額變動</TableHead>
+                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs hidden md:table-cell">變動後餘額</TableHead>
+                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs min-w-[120px]">備註</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {history === undefined ? (
+                                {!history ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-32 text-center text-neutral-500">
-                                            正在讀取歷史資料...
-                                        </TableCell>
+                                        <TableCell colSpan={5} className="text-center py-12 text-neutral-500 italic text-sm">讀取中...</TableCell>
                                     </TableRow>
-                                ) : currentHistory.length === 0 ? (
+                                ) : historyData.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-32 text-center text-neutral-500">
-                                            目前沒有歷史加值紀錄。
-                                        </TableCell>
+                                        <TableCell colSpan={5} className="text-center py-12 text-neutral-500 italic text-sm">暫無加值紀錄</TableCell>
                                     </TableRow>
                                 ) : (
-                                    currentHistory.map((log) => (
-                                        <TableRow key={log.id} className="border-neutral-800/50 hover:bg-neutral-800/30 transition-colors">
-                                            <TableCell className="pl-6 font-mono text-sm text-neutral-400">
-                                                {new Date(log.created_at).toLocaleDateString()}
+                                    historyData.map((item, idx) => (
+                                        <TableRow key={idx} className="border-neutral-800/40 hover:bg-neutral-800/30 transition-colors group">
+                                            <TableCell className="font-mono text-[10px] md:text-xs text-neutral-400">
+                                                {format(new Date(item.created_at), 'yyyy/MM/dd HH:mm')}
                                             </TableCell>
-                                            <TableCell className="font-medium text-neutral-300">
-                                                {log.apple_id}
+                                            <TableCell className="font-bold text-neutral-200 text-xs md:text-sm">
+                                                <div className="max-w-[100px] md:max-w-none truncate" title={item.apple_id}>
+                                                    {item.apple_id?.split('@')[0]}
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="font-mono text-sm uppercase text-neutral-400">
-                                                {log.memo || '-'}
-                                                {log.memo && (
-                                                    <button
-                                                        onClick={() => openBarcode(log.memo!)}
-                                                        className="ml-3 text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-0.5 rounded text-xs transition-colors"
-                                                    >
-                                                        條碼
-                                                    </button>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right pr-6">
-                                                <span className="text-emerald-400 font-mono font-bold">
-                                                    +{log.amount.toFixed(2)}
+                                            <TableCell className="text-right">
+                                                <span className="font-black text-xs md:text-sm font-mono text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
+                                                    +{item.amount_changed.toFixed(2)}
                                                 </span>
+                                            </TableCell>
+                                            <TableCell className="font-mono text-[10px] md:text-xs text-neutral-500 hidden md:table-cell">
+                                                {item.balance_after.toFixed(2)} {item.currency}
+                                            </TableCell>
+                                            <TableCell className="text-[10px] md:text-xs text-neutral-500 font-medium max-w-[120px] md:max-w-none truncate">
+                                                {item.memo}
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -362,37 +311,35 @@ export default function Recharge() {
                             </TableBody>
                         </Table>
                     </div>
-                </CardContent>
+                </Card>
+
+                {/* Pagination */}
                 {totalPages > 1 && (
-                    <CardFooter className="flex items-center justify-between border-t border-neutral-800/60 p-4 bg-neutral-950/30">
-                        <div className="text-sm text-neutral-500">
-                            顯示第 {((currentPage - 1) * itemsPerPage) + 1} 到 {Math.min(currentPage * itemsPerPage, rechargeHistory.length)} 筆，共 {rechargeHistory.length} 筆
-                        </div>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="border-neutral-700 hover:bg-neutral-800 text-neutral-300 h-9"
-                            >
-                                <ChevronLeft className="w-4 h-4 mr-1" />
-                                上一頁
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="border-neutral-700 hover:bg-neutral-800 text-neutral-300 h-9"
-                            >
-                                下一頁
-                                <ChevronRight className="w-4 h-4 ml-1" />
-                            </Button>
-                        </div>
-                    </CardFooter>
+                    <div className="flex justify-center items-center gap-4 pt-4 pb-6">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <span className="text-neutral-400 font-mono text-sm">
+                            第 {currentPage} 頁，共 {totalPages} 頁
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
                 )}
-            </Card>
+            </div>
         </div>
     );
 }
