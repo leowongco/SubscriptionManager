@@ -193,13 +193,17 @@ export default function Mapping() {
                                                         api.updateAccount({ ...account, balance: parseFloat(newBal) }).then(() => mutateAccounts());
                                                     }
                                                 }}>
-                                                    {account.balance.toFixed(2)}
+                                                    {typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="mt-3 flex gap-2 items-center text-[10px] text-neutral-500 font-medium">
                                             <span className="bg-neutral-800 px-1.5 py-0.5 rounded">每月 {account.start_date ? new Date(account.start_date).getDate() : '?'} 日扣款</span>
-                                            <span className="bg-emerald-500/5 text-emerald-500/80 px-1.5 py-0.5 rounded border border-emerald-500/10">{(account.balance / (account.base_price || 1)).toFixed(1)} 個月可用</span>
+                                            <span className="bg-emerald-500/5 text-emerald-500/80 px-1.5 py-0.5 rounded border border-emerald-500/10">
+                                                {typeof account.balance === 'number' && typeof account.base_price === 'number' && account.base_price > 0
+                                                    ? (account.balance / account.base_price).toFixed(1)
+                                                    : '0.0'} 個月可用
+                                            </span>
                                         </div>
                                     </CardHeader>
 
@@ -286,7 +290,8 @@ export default function Mapping() {
                         })}
                     </div>
                 </div>
-            ))}
-        </div>
+            ))
+            }
+        </div >
     );
 }

@@ -277,8 +277,8 @@ export default function Recharge() {
                                 <TableRow className="border-neutral-800/60 hover:bg-transparent">
                                     <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">日期</TableHead>
                                     <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">帳號</TableHead>
-                                    <TableHead className="text-right text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">餘額變動</TableHead>
-                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs hidden md:table-cell">變動後餘額</TableHead>
+                                    <TableHead className="text-right text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">金額</TableHead>
+                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs hidden md:table-cell">類型</TableHead>
                                     <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs min-w-[120px]">備註</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -295,20 +295,22 @@ export default function Recharge() {
                                     historyData.map((item, idx) => (
                                         <TableRow key={idx} className="border-neutral-800/40 hover:bg-neutral-800/30 transition-colors group">
                                             <TableCell className="font-mono text-[10px] md:text-xs text-neutral-400">
-                                                {format(new Date(item.created_at), 'yyyy/MM/dd HH:mm')}
+                                                {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
                                             </TableCell>
                                             <TableCell className="font-bold text-neutral-200 text-xs md:text-sm">
                                                 <div className="max-w-[100px] md:max-w-none truncate" title={item.apple_id}>
-                                                    {item.apple_id?.split('@')[0]}
+                                                    {item.apple_id ? item.apple_id.split('@')[0] : 'Unknown'}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <span className="font-black text-xs md:text-sm font-mono text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
-                                                    +{item.amount_changed.toFixed(2)}
+                                                    +{typeof item.amount === 'number' ? item.amount.toFixed(2) : '0.00'}
                                                 </span>
                                             </TableCell>
                                             <TableCell className="font-mono text-[10px] md:text-xs text-neutral-500 hidden md:table-cell">
-                                                {item.balance_after.toFixed(2)} {item.currency}
+                                                <Badge variant="outline" className="text-[9px] uppercase border-neutral-800 text-neutral-500">
+                                                    {item.type || 'recharge'}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell className="text-[10px] md:text-xs text-neutral-500 font-medium max-w-[120px] md:max-w-none truncate">
                                                 {item.memo}

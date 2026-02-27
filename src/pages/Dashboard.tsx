@@ -123,7 +123,7 @@ export default function Dashboard() {
                                         </div>
                                         <div className="flex justify-between items-center mt-1">
                                             <span className="text-xs text-neutral-500">{acc.service_name}</span>
-                                            <span className="font-mono text-sm font-bold text-neutral-200">{acc.currency} {acc.balance.toFixed(2)}</span>
+                                            <span className="font-mono text-sm font-bold text-neutral-200">{acc.currency} {(acc.balance ?? 0).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 );
@@ -156,10 +156,10 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     <div className="flex justify-between items-center bg-black/20 p-2 rounded-lg border border-white/5">
-                                        <span className="text-xs text-neutral-500 line-through">{s.currency} {s.base_price.toFixed(2)}</span>
+                                        <span className="text-xs text-neutral-500 line-through">{s.currency} {(s.base_price ?? 0).toFixed(2)}</span>
                                         <div className="flex items-center gap-1.5 text-orange-400 font-black text-sm md:text-md">
                                             <TrendingUp className="w-3.5 h-3.5" />
-                                            {s.currency} {s.next_price?.toFixed(2)}
+                                            {s.currency} {s.next_price ? s.next_price.toFixed(2) : '0.00'}
                                         </div>
                                     </div>
                                 </div>
