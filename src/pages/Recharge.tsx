@@ -246,14 +246,29 @@ export default function Recharge() {
                             <Barcode className="w-6 h-6 text-blue-500" /> 禮品卡條碼
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="flex flex-col items-center justify-center p-8 bg-white rounded-2xl mt-4 shadow-inner">
-                        <img
-                            src={`https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(selectedGiftCard)}&code=Code128&translate-esc=on`}
-                            alt="Gift Card Barcode"
-                            className="max-w-full"
-                        />
-                        <div className="mt-4 text-neutral-950 font-['Scancardium'] font-normal tracking-widest text-2xl">
-                            {selectedGiftCard}
+                    <div className="flex flex-col items-stretch p-6 bg-[#f2f2f2] rounded-xl mt-4 shadow-inner border border-neutral-200">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-[#333] text-xl font-bold leading-tight">App Store<br />& iTunes</h3>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-[10px] text-neutral-500 font-bold">HK$</span>
+                            </div>
+                        </div>
+
+                        <div className="border-[1.5px] border-neutral-800 p-4 bg-white flex justify-center items-center shadow-sm">
+                            <span className="text-neutral-900 font-['Scancardium'] font-normal tracking-[0.2em] text-3xl">
+                                {selectedGiftCard}
+                            </span>
+                        </div>
+
+                        <div className="mt-4 flex justify-between gap-4">
+                            <div className="text-[7px] leading-[1.2] text-neutral-500 max-w-[60%]">
+                                To redeem, visit appstore.com/redeem. Valid only in Hong Kong. For assistance, visit support.apple.com/giftcard. Terms apply; see apple.com/hk/en/go/legal/gc.
+                            </div>
+                            <div className="text-[7px] leading-[1.2] text-neutral-500 text-right">
+                                如要兌換禮品卡，請前往 appstore.com/redeem。僅適用於香港地區。
+                            </div>
                         </div>
                     </div>
                 </DialogContent>
