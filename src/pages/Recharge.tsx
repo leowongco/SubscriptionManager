@@ -252,7 +252,7 @@ export default function Recharge() {
                             alt="Gift Card Barcode"
                             className="max-w-full"
                         />
-                        <div className="mt-4 text-neutral-950 font-mono font-black tracking-widest text-lg">
+                        <div className="mt-4 text-neutral-950 font-['Scancardium'] font-normal tracking-widest text-2xl">
                             {selectedGiftCard}
                         </div>
                     </div>
