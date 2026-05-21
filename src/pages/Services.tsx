@@ -94,34 +94,6 @@ export default function Services() {
                 shadow="2xl"
                 backdropFilter="blur(20px)"
             >
-                {/* Decorative blur elements */}
-                <Box
-                    position="absolute"
-                    top={0}
-                    right={0}
-                    mt={-16}
-                    mr={-16}
-                    w={64}
-                    h={64}
-                    bg="blue.500/10"
-                    filter="blur(100px)"
-                    rounded="full"
-                    pointerEvents="none"
-                />
-                <Box
-                    position="absolute"
-                    bottom={0}
-                    left={0}
-                    mb={-16}
-                    ml={-16}
-                    w={64}
-                    h={64}
-                    bg="cyan.500/10"
-                    filter="blur(100px)"
-                    rounded="full"
-                    pointerEvents="none"
-                />
-
                 <Flex justify="space-between" alignItems="center">
                     <Box position="relative" zIndex={10}>
                         <Text fontSize="3xl" fontWeight="black" letterSpacing="tight" color="white" textShadow="md">

@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { Box, Flex, Text, Button } from '@chakra-ui/react';
-import { Plus, Calendar, Download } from 'lucide-react';
+import { Plus, Calendar, Download, Zap } from 'lucide-react';
 
 interface QuickActionProps {
   icon: ReactNode;
@@ -81,7 +81,7 @@ export function QuickActions() {
       <Box p={{ base: 4, md: 6 }}>
         <Flex alignItems="center" gap={2} mb={4}>
           <Box p={1.5} bg="indigo.500/10" rounded="lg">
-            <Text fontSize="lg">🎯</Text>
+            <Box as={Zap} w={5} h={5} color="indigo.400" />
           </Box>
           <Text fontSize="lg" fontWeight="bold" color="gray.100">快速行動</Text>
         </Flex>

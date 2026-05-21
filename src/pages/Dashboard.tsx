@@ -82,34 +82,6 @@ export default function Dashboard() {
                 backdropFilter="blur(20px)"
                 transition="all 0.3s"
             >
-                {/* Decorative blur elements */}
-                <Box
-                    position="absolute"
-                    top={0}
-                    right={0}
-                    mt={{ base: -16, md: -16 }}
-                    mr={{ base: -16, md: -16 }}
-                    w={{ base: 48, md: 64 }}
-                    h={{ base: 48, md: 64 }}
-                    bg="indigo.500/10"
-                    filter="blur(80px)"
-                    rounded="full"
-                    pointerEvents="none"
-                />
-                <Box
-                    position="absolute"
-                    bottom={0}
-                    left={0}
-                    mb={{ base: -16, md: -16 }}
-                    ml={{ base: -16, md: -16 }}
-                    w={{ base: 48, md: 64 }}
-                    h={{ base: 48, md: 64 }}
-                    bg="purple.500/10"
-                    filter="blur(80px)"
-                    rounded="full"
-                    pointerEvents="none"
-                />
-
                 <Box position="relative" zIndex={10}>
                     <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white" textShadow="md">
                         數據中心儀表板
@@ -140,7 +112,7 @@ export default function Dashboard() {
                     <Box
                         position="absolute"
                         inset={0}
-                        bg="linear-gradient(to bottom right, var(--chakra-colors-indigo-500/10), var(--chakra-colors-purple-500/5))"
+                        bg="linear-gradient(to bottom right, var(--chakra-colors-blue-500/10), var(--chakra-colors-blue-600/5))"
                         opacity={0}
                         _groupHover={{ opacity: 1 }}
                         transition="opacity 0.5s"
@@ -170,7 +142,7 @@ export default function Dashboard() {
                     bg="gray.900/40"
                     backdropFilter="blur(20px)"
                     border="1px solid"
-                    borderColor="purple.500/20"
+                    borderColor="teal.500/20"
                     rounded="xl"
                     shadow="2xl"
                     overflow="hidden"
@@ -180,18 +152,18 @@ export default function Dashboard() {
                     <Box
                         position="absolute"
                         inset={0}
-                        bg="linear-gradient(to bottom right, var(--chakra-colors-purple-500/10), var(--chakra-colors-pink-500/5))"
+                        bg="linear-gradient(to bottom right, var(--chakra-colors-teal-500/10), var(--chakra-colors-teal-600/5))"
                         opacity={0}
                         _groupHover={{ opacity: 1 }}
                         transition="opacity 0.5s"
                         pointerEvents="none"
                     />
                     <Flex p={6} flexDirection="row" alignItems="center" justifyContent="space-between" pb={2}>
-                        <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color="purple.400" textTransform="uppercase" letterSpacing="wider">
+                        <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color="teal.400" textTransform="uppercase" letterSpacing="wider">
                             預估每月總支出
                         </Text>
-                        <Box p={2} bg="purple.500/10" rounded={{ base: 'lg', md: 'xl' }}>
-                            <Box as={TrendingDown} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color="purple.400" />
+                        <Box p={2} bg="teal.500/10" rounded={{ base: 'lg', md: 'xl' }}>
+                            <Box as={TrendingDown} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color="teal.400" />
                         </Box>
                     </Flex>
                     <Box p={6} pt={0} position="relative" zIndex={10}>

@@ -282,20 +282,6 @@ export default function Recharge() {
         shadow="2xl"
         backdropFilter="blur(20px)"
       >
-        <Box
-          position="absolute"
-          top={0}
-          right={0}
-          mt={{ base: -16, md: -16 }}
-          mr={{ base: -16, md: -16 }}
-          w={{ base: 48, md: 64 }}
-          h={{ base: 48, md: 64 }}
-          bg="rgba(99, 102, 241, 0.1)"
-          filter="blur(80px)"
-          rounded="full"
-          pointerEvents="none"
-        />
-        
         <Box position="relative" zIndex={10}>
           <HStack gap={3}>
             <Icon as={CreditCard} color="blue.400" boxSize={8} />

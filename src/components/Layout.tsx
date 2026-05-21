@@ -58,10 +58,7 @@ export default function Layout() {
                     <Text
                         fontSize="xl"
                         fontWeight="black"
-                        bgGradient="to-r"
-                        gradientFrom="blue.400"
-                        gradientTo="indigo.500"
-                        bgClip="text"
+                        color="blue.400"
                         letterSpacing="tight"
                     >
                         Subscription Master
