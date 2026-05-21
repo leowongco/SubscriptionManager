@@ -3,6 +3,9 @@ import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Wallet, BellRing, AlertTriangle, TrendingDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { WarningCard } from '@/components/dashboard/WarningCard';
+import { BalanceTrendChart } from '@/components/dashboard/BalanceTrendChart';
 
 // Simple mock exchange rates to HKD for demonstration
 const RATES: Record<string, number> = {
@@ -63,6 +66,16 @@ export default function Dashboard() {
         return effective > new Date(); // still in the future
     }) || [];
 
+    // Mock trend data - in real app, this would come from API
+    const balanceTrendData = [
+        { date: '12月', balance: 1200 },
+        { date: '1月', balance: 1350 },
+        { date: '2月', balance: 1180 },
+        { date: '3月', balance: 1420 },
+        { date: '4月', balance: 1280 },
+        { date: '5月', balance: totalBalanceHKD },
+    ];
+
     return (
         <div className="space-y-6 md:space-y-10 max-w-7xl mx-auto pb-10 px-0 sm:px-4">
             {/* Header Section */}
@@ -75,6 +88,9 @@ export default function Dashboard() {
                     <p className="text-neutral-400 mt-2 text-xs md:text-sm font-medium max-w-2xl">歡迎回來！以下是您目前的 Apple 訂閱資金概況與系統通知。</p>
                 </div>
             </div>
+
+            {/* Quick Actions */}
+            <QuickActions />
 
             {/* KPI Cards */}
             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -112,9 +128,12 @@ export default function Dashboard() {
                         <p className="text-[10px] md:text-xs text-neutral-500 mt-2 font-medium">基於目前訂閱服務推算</p>
                     </CardContent>
                 </Card>
+
+                {/* 餘額趨勢圖 */}
+                <BalanceTrendChart data={balanceTrendData} currency="HK$" />
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2" id="warnings-section">
                 {/* Low Balance Warning */}
                 <div className="space-y-5">
                     <div className="flex items-center gap-3 border-b border-neutral-800/60 pb-3">
@@ -129,32 +148,10 @@ export default function Dashboard() {
                             所有帳號餘額充足。
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {lowBalanceAccounts.map((acc: any) => {
-                                const monthsLeft = acc._monthsLeft;
-                                return (
-                                    <div key={acc.id} className="p-4 rounded-xl border border-red-900/30 bg-red-950/10 backdrop-blur-md flex flex-col gap-2 hover:bg-red-950/20 transition-all">
-                                        <div className="flex justify-between items-start border-b border-red-900/30 pb-2">
-                                            <div className="font-bold text-red-300 text-sm md:text-md truncate pr-2">{acc.apple_id}</div>
-                                            <Badge className={monthsLeft < 0.5 ? "bg-red-600 animate-pulse" : "bg-red-900/40 text-red-200 border-red-800"}>
-                                                {monthsLeft.toFixed(1)}M
-                                            </Badge>
-                                        </div>
-                                        <div className="space-y-1">
-                                            {acc.subscriptions?.map((sub: any) => (
-                                                <div key={sub.id} className="flex justify-between items-center px-1">
-                                                    <span className="text-xs text-red-400 truncate max-w-[120px]">{sub.service_name}</span>
-                                                    <span className="font-mono text-sm font-bold text-red-300">{sub.currency} {(sub.base_price || 0).toFixed(2)}</span>
-                                                </div>
-                                            ))}
-                                            <div className="flex justify-between items-center px-1 pt-2 border-t border-red-950/50 mt-1">
-                                                <span className="text-xs text-red-500 font-bold">總餘額</span>
-                                                <span className="font-mono text-sm font-bold text-red-200">{acc.subscriptions?.[0]?.currency || '$'} {(acc.balance || 0).toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {lowBalanceAccounts.map((acc: any) => (
+                                <WarningCard key={acc.id} account={acc} />
+                            ))}
                         </div>
                     )}
                 </div>
