@@ -123,10 +123,7 @@ export default function Layout() {
                     <Text
                         fontSize="lg"
                         fontWeight="black"
-                        bgGradient="to-r"
-                        gradientFrom="blue.400"
-                        gradientTo="indigo.500"
-                        bgClip="text"
+                        color="blue.400"
                     >
                         Sub Master
                     </Text>

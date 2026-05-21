@@ -276,11 +276,11 @@ export default function Recharge() {
         position="relative"
         overflow="hidden"
         rounded={{ base: '2xl', md: '3xl' }}
-        bg="linear-gradient(to right, rgba(67, 56, 202, 0.4), rgba(88, 28, 135, 0.2), rgba(23, 23, 23, 1))"
-        border="1px solid rgba(38, 38, 38, 0.8)"
+        bg="gray.800"
+        border="1px solid"
+        borderColor="gray.700"
         p={{ base: 5, md: 8 }}
         shadow="2xl"
-        backdropFilter="blur(20px)"
       >
         <Box position="relative" zIndex={10}>
           <HStack gap={3}>

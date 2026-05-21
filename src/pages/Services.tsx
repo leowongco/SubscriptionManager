@@ -292,7 +292,7 @@ export default function Services() {
                 overflow="hidden"
                 shadow="2xl"
             >
-                <Box h={1.5} w="full" bg="linear-gradient(to right, var(--chakra-colors-blue-500), var(--chakra-colors-cyan-500), var(--chakra-colors-indigo-500))" />
+                <Box h={1.5} w="full" bg="blue.500" />
                 <Box overflowX="auto">
                     <Table.Root>
                         <Table.Header bg="gray.950/60">
