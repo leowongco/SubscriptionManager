@@ -1,121 +1,221 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, Users, Settings, CreditCard, Menu, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Home, Users, Settings, CreditCard, Menu, X, Apple, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import {
+  Box,
+  Flex,
+  VStack,
+  HStack,
+  Text,
+  IconButton,
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+  DrawerCloseTrigger,
+  Portal,
+} from '@chakra-ui/react';
 
 export default function Layout() {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const location = useLocation();
 
     // Close menu when route changes
     useEffect(() => {
-        setIsMobileMenuOpen(false);
+        setOpen(false);
     }, [location.pathname]);
 
     const navigation = [
         { name: '綜合儀表板', href: '/', icon: Home },
+        { name: 'Apple ID 管理', href: '/accounts', icon: Apple },
+        { name: 'Telegram 群組', href: '/groups', icon: MessageCircle },
         { name: '訂閱關係對應', href: '/mapping', icon: Users },
         { name: '服務與定價管理', href: '/services', icon: Settings },
         { name: '批次禮品卡加值', href: '/recharge', icon: CreditCard },
     ];
 
+    const isActive = (href: string) => {
+        if (href === '/groups') {
+            return location.pathname.startsWith('/groups');
+        }
+        return location.pathname === href;
+    };
+
     return (
-        <div className="min-h-screen bg-neutral-950 text-neutral-50 flex">
+        <Flex minH="100vh" bg="gray.900" color="white">
             {/* Sidebar (Desktop) */}
-            <div className="w-64 bg-neutral-900 border-r border-neutral-800 hidden md:flex flex-col flex-shrink-0">
-                <div className="p-6">
-                    <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 tracking-tight">
+            <Box
+                w="64"
+                bg="gray.800"
+                borderRight="1px"
+                borderColor="gray.700"
+                display={{ base: 'none', md: 'flex' }}
+                flexDirection="column"
+                flexShrink={0}
+            >
+                <Box p={6}>
+                    <Text
+                        fontSize="xl"
+                        fontWeight="black"
+                        bgGradient="to-r"
+                        gradientFrom="blue.400"
+                        gradientTo="indigo.500"
+                        bgClip="text"
+                        letterSpacing="tight"
+                    >
                         Subscription Master
-                    </h1>
-                </div>
-                <nav className="flex-1 px-4 space-y-2 mt-4">
-                    {navigation.map((item) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                            <Link
-                                key={item.name}
-                                to={item.href}
-                                className={cn(
-                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold',
-                                    isActive
-                                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                                        : 'text-neutral-400 hover:text-neutral-50 hover:bg-neutral-800'
-                                )}
+                    </Text>
+                </Box>
+                <VStack as="nav" flex={1} px={4} gap={2} mt={4} align="stretch">
+                    {navigation.map((item) => (
+                        <Link
+                            key={item.name}
+                            to={item.href}
+                            style={{ textDecoration: 'none' }}
+                        >
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                gap={3}
+                                px={3}
+                                py={2.5}
+                                rounded="xl"
+                                transition="all 0.2s"
+                                fontSize="sm"
+                                fontWeight="semibold"
+                                bg={isActive(item.href) ? 'rgba(37, 99, 235, 0.1)' : 'transparent'}
+                                color={isActive(item.href) ? 'blue.400' : 'gray.400'}
+                                border={isActive(item.href) ? '1px solid' : 'none'}
+                                borderColor={isActive(item.href) ? 'rgba(59, 130, 246, 0.2)' : 'transparent'}
+                                shadow={isActive(item.href) ? '0 0 15px rgba(59,130,246,0.1)' : 'none'}
+                                _hover={{
+                                    color: isActive(item.href) ? 'blue.400' : 'white',
+                                    bg: isActive(item.href) ? 'rgba(37, 99, 235, 0.1)' : 'gray.700',
+                                }}
                             >
-                                <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                <Box as={item.icon} w={5} h={5} />
                                 {item.name}
-                            </Link>
-                        );
-                    })}
-                </nav>
-                <div className="p-6 border-t border-neutral-800/50 bg-neutral-950/20">
-                    <p className="text-[10px] text-neutral-600 uppercase tracking-widest font-black text-center">Version 1.0 Pro Max</p>
-                </div>
-            </div>
+                            </Box>
+                        </Link>
+                    ))}
+                </VStack>
+                <Box p={6} borderTop="1px" borderColor="rgba(55, 65, 81, 0.5)" bg="rgba(3, 7, 18, 0.2)">
+                    <Text fontSize="10px" color="gray.600" textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
+                        Version 1.0 Pro Max
+                    </Text>
+                </Box>
+            </Box>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <Flex flex={1} flexDirection="column" minW={0}>
                 {/* Mobile Header */}
-                <header className="md:hidden h-16 border-b border-neutral-800 flex items-center justify-between px-6 bg-neutral-900/80 backdrop-blur-md sticky top-0 z-50">
-                    <h1 className="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500">
-                        Sub Master
-                    </h1>
-                    <button
-                        onClick={() => setIsMobileMenuOpen(true)}
-                        className="p-2 -mr-2 text-neutral-400 hover:text-white transition-colors"
+                <Box
+                    display={{ base: 'flex', md: 'none' }}
+                    h={16}
+                    borderBottom="1px"
+                    borderColor="gray.700"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    px={6}
+                    bg="rgba(31, 41, 55, 0.8)"
+                    position="sticky"
+                    top={0}
+                    zIndex={50}
+                >
+                    <Text
+                        fontSize="lg"
+                        fontWeight="black"
+                        bgGradient="to-r"
+                        gradientFrom="blue.400"
+                        gradientTo="indigo.500"
+                        bgClip="text"
                     >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </header>
+                        Sub Master
+                    </Text>
+                    <IconButton
+                        aria-label="Open menu"
+                        variant="ghost"
+                        color="gray.400"
+                        _hover={{ color: 'white' }}
+                        onClick={() => setOpen(true)}
+                    >
+                        <Menu />
+                    </IconButton>
+                </Box>
 
-                {/* Mobile Drawer Overlay */}
-                {isMobileMenuOpen && (
-                    <div className="fixed inset-0 z-[100] md:hidden">
-                        <div
-                            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                        />
-                        <div className="absolute right-0 top-0 bottom-0 w-72 bg-neutral-900 border-l border-neutral-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-                            <div className="p-6 flex justify-between items-center border-b border-neutral-800/50">
-                                <h2 className="font-black text-neutral-300 tracking-wider">選單</h2>
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="p-2 text-neutral-500 hover:text-white transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <nav className="flex-1 px-4 py-6 space-y-3">
-                                {navigation.map((item) => {
-                                    const isActive = location.pathname === item.href;
-                                    return (
+                {/* Mobile Drawer */}
+                <Drawer.Root open={open} onOpenChange={(e) => setOpen(e.open)} placement="end" size="xs">
+                    <Portal>
+                        <Drawer.Backdrop bg="rgba(0, 0, 0, 0.6)" backdropFilter="blur(4px)" />
+                    </Portal>
+                    <Portal>
+                        <DrawerContent bg="gray.800" borderColor="gray.700" borderLeft="1px">
+                            <DrawerHeader borderBottom="1px" borderColor="rgba(55, 65, 81, 0.5)">
+                                <HStack justify="space-between">
+                                    <Text fontWeight="black" color="gray.300" letterSpacing="wider">
+                                        選單
+                                    </Text>
+                                    <DrawerCloseTrigger asChild>
+                                        <IconButton
+                                            aria-label="Close menu"
+                                            variant="ghost"
+                                            color="gray.500"
+                                            _hover={{ color: 'white' }}
+                                        >
+                                            <X />
+                                        </IconButton>
+                                    </DrawerCloseTrigger>
+                                </HStack>
+                            </DrawerHeader>
+                            <DrawerBody py={6}>
+                                <VStack gap={3} align="stretch">
+                                    {navigation.map((item) => (
                                         <Link
                                             key={item.name}
                                             to={item.href}
-                                            className={cn(
-                                                'flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 text-sm font-bold',
-                                                isActive
-                                                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                                                    : 'text-neutral-400 hover:text-neutral-50 hover:bg-neutral-800'
-                                            )}
+                                            style={{ textDecoration: 'none' }}
+                                            onClick={() => setOpen(false)}
                                         >
-                                            <item.icon className="w-5 h-5 shrink-0" />
-                                            {item.name}
+                                            <Box
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={4}
+                                                px={4}
+                                                py={3.5}
+                                                rounded="2xl"
+                                                transition="all 0.2s"
+                                                fontSize="sm"
+                                                fontWeight="bold"
+                                                bg={isActive(item.href) ? 'rgba(37, 99, 235, 0.2)' : 'transparent'}
+                                                color={isActive(item.href) ? 'blue.400' : 'gray.400'}
+                                                border={isActive(item.href) ? '1px solid' : 'none'}
+                                                borderColor={isActive(item.href) ? 'rgba(59, 130, 246, 0.3)' : 'transparent'}
+                                                _hover={{
+                                                    color: isActive(item.href) ? 'blue.400' : 'white',
+                                                    bg: isActive(item.href) ? 'rgba(37, 99, 235, 0.2)' : 'gray.700',
+                                                }}
+                                            >
+                                                <Box as={item.icon} w={5} h={5} flexShrink={0} />
+                                                {item.name}
+                                            </Box>
                                         </Link>
-                                    );
-                                })}
-                            </nav>
-                            <div className="p-6 border-t border-neutral-800/50 bg-neutral-950/20">
-                                <p className="text-[10px] text-neutral-600 uppercase tracking-widest font-black text-center">Version 1.0 Pro Max</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                                    ))}
+                                </VStack>
+                            </DrawerBody>
+                            <DrawerFooter p={6} borderTop="1px" borderColor="rgba(55, 65, 81, 0.5)" bg="rgba(3, 7, 18, 0.2)">
+                                <Text fontSize="10px" color="gray.600" textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
+                                    Version 1.0 Pro Max
+                                </Text>
+                            </DrawerFooter>
+                        </DrawerContent>
+                    </Portal>
+                </Drawer.Root>
 
-                <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+                <Box as="main" flex={1} p={{ base: 4, md: 8 }} overflowY="auto">
                     <Outlet />
-                </main>
-            </div>
-        </div>
+                </Box>
+            </Flex>
+        </Flex>
     );
 }

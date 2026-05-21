@@ -136,7 +136,7 @@ export default function Mapping() {
                     <p className="text-neutral-400 mt-2 text-xs md:text-sm font-medium">管理 Apple ID、獨立服務、與成員的繳費關係。</p>
                 </div>
 
-                <Dialog open={isAccountOpen} onOpenChange={setIsAccountOpen}>
+                <Dialog open={isAccountOpen} onOpenChange={(e) => setIsAccountOpen(e.open)}>
                     <DialogTrigger asChild>
                         <Button onClick={() => setAccountForm({ balance: 0 })} className="w-full md:w-auto relative z-10 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl h-11 md:h-12 px-6 shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02]">
                             <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
@@ -243,8 +243,8 @@ export default function Mapping() {
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-1.5">
                                                             <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">新增服務</Label>
-                                                            <Select value={subscriptionForm.service_id} onValueChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v })} required>
-                                                                <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-10 transition-all text-xs"><SelectValue placeholder="選擇服務" /></SelectTrigger>
+                                                            <Select value={subscriptionForm.service_id} onValueChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v })}>
+                                                                <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-10 transition-all text-xs"><SelectValue>選擇服務</SelectValue></SelectTrigger>
                                                                 <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
                                                                     {services?.map(s => <SelectItem key={s.id} value={s.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs">{s.name}</SelectItem>)}
                                                                 </SelectContent>

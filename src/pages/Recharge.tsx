@@ -2,369 +2,655 @@ import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
 import {
-    Plus,
-    Trash2,
-    History as HistoryIcon,
-    CreditCard,
-    Barcode,
-    Users,
-    ChevronLeft,
-    ChevronRight
+  Box,
+  VStack,
+  HStack,
+  Text,
+  Input,
+  Button,
+  Badge,
+  Icon,
+  Spinner,
+  Flex,
+} from '@chakra-ui/react';
+import {
+  CreditCard,
+  History as HistoryIcon,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import AccountSelector from '@/components/recharge/AccountSelector';
+import RechargePreview from '@/components/recharge/RechargePreview';
+import RechargeProgress from '@/components/recharge/RechargeProgress';
+import { toaster } from '@/components/ui/toaster';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import type { RechargeAccount, RechargePreview as RechargePreviewType, RechargeProgress as RechargeProgressType } from '@/types/recharge';
 import { format } from 'date-fns';
 
-interface RechargeRow {
-    id: string;
-    account_id: string;
-    amount: number;
-    date: string;
-    gift_card?: string;
-}
-
 export default function Recharge() {
-    const { data: accounts } = useSWR<any[]>('accounts', api.getAccounts);
-    const { data: history, mutate: mutateHistory } = useSWR<any[]>('history', api.getHistory);
+  const { data: accounts, isLoading: accountsLoading } = useSWR<any[]>('accounts', api.getAccounts);
+  const { data: telegramGroups } = useSWR<any[]>('telegram-groups', api.getTelegramGroups);
+  const { data: history, mutate: mutateHistory } = useSWR<any[]>('history', api.getHistory);
 
-    const [rows, setRows] = useState<RechargeRow[]>([
-        { id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }
-    ]);
-    const [loading, setLoading] = useState(false);
-    const [isBarcodeOpen, setIsBarcodeOpen] = useState(false);
-    const [selectedGiftCard, setSelectedGiftCard] = useState('');
+  // 篩選狀態
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currencyFilter, setCurrencyFilter] = useState<string>('');
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+  // 加值表單狀態
+  const [amount, setAmount] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
+  const [operator, setOperator] = useState<string>('');
+  const [giftCard, setGiftCard] = useState<string>('');
 
-    const addRow = () => {
-        setRows([...rows, { id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }]);
-    };
+  // 選擇的帳號
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
 
-    const removeRow = (id: string) => {
-        if (rows.length > 1) {
-            setRows(rows.filter(r => r.id !== id));
+  // 預覽和進度狀態
+  const [showPreview, setShowPreview] = useState(false);
+  const [rechargeProgress, setRechargeProgress] = useState<RechargeProgressType | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // 歷史記錄分頁
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // 處理帳號數據，添加 Telegram Group 信息
+  const processedAccounts: RechargeAccount[] = useMemo(() => {
+    if (!accounts) return [];
+    
+    return accounts.map((acc) => {
+      // 查找帳號關聯的 Telegram Group
+      let telegramGroupId: string | null = null;
+      let telegramGroupName: string | null = null;
+      
+      if (acc.subscriptions && acc.subscriptions.length > 0) {
+        for (const sub of acc.subscriptions) {
+          if (sub.telegram_group_id) {
+            telegramGroupId = sub.telegram_group_id;
+            const group = telegramGroups?.find((g: any) => g.id === sub.telegram_group_id);
+            if (group) {
+              telegramGroupName = group.name;
+            }
+            break;
+          }
         }
-    };
+      }
+      
+      return {
+        id: acc.id,
+        apple_id: acc.apple_id,
+        google_account: acc.google_account,
+        balance: acc.balance || 0,
+        currency: acc.subscriptions?.[0]?.currency || 'HKD',
+        telegram_group_id: telegramGroupId,
+        telegram_group_name: telegramGroupName,
+      };
+    });
+  }, [accounts, telegramGroups]);
 
-    const updateRow = (id: string, field: keyof RechargeRow, value: any) => {
-        setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-
-        const rechargeData = rows
-            .filter(row => row.account_id && row.amount > 0)
-            .map(row => ({
-                account_id: row.account_id,
-                amount: row.amount,
-                memo: row.gift_card || 'Batch recharge'
-            }));
-
-        if (rechargeData.length === 0) {
-            setLoading(false);
-            return;
+  // 根據篩選條件過濾帳號
+  const filteredAccounts = useMemo(() => {
+    return processedAccounts.filter((account) => {
+      // Telegram Group 篩選
+      if (selectedGroupId && account.telegram_group_id !== selectedGroupId) {
+        return false;
+      }
+      
+      // 搜尋篩選
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        const appleId = account.apple_id?.toLowerCase() || '';
+        const googleAccount = account.google_account?.toLowerCase() || '';
+        if (!appleId.includes(searchLower) && !googleAccount.includes(searchLower)) {
+          return false;
         }
+      }
+      
+      // 幣種篩選
+      if (currencyFilter && account.currency !== currencyFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [processedAccounts, selectedGroupId, searchQuery, currencyFilter]);
 
-        try {
-            await api.batchRecharge(rechargeData);
-            setRows([{ id: Math.random().toString(), account_id: '', amount: 0, date: new Date().toISOString().split('T')[0] }]);
-            mutateHistory();
-        } catch (error) {
-            console.error('Batch recharge failed:', error);
-            // Optionally, show an error message to the user
-        } finally {
-            setLoading(false);
-        }
-    };
+  // 預覽數據
+  const previews: RechargePreviewType[] = useMemo(() => {
+    const amountNum = parseFloat(amount) || 0;
+    return selectedAccountIds
+      .map((id) => {
+        const account = processedAccounts.find((a) => a.id === id);
+        if (!account) return null;
+        return {
+          account_id: id,
+          apple_id: account.apple_id,
+          current_balance: account.balance,
+          recharge_amount: amountNum,
+          new_balance: account.balance + amountNum,
+        };
+      })
+      .filter((p): p is RechargePreviewType => p !== null);
+  }, [selectedAccountIds, processedAccounts, amount]);
 
-    const historyData = useMemo(() => {
-        if (!history) return [];
-        const start = (currentPage - 1) * itemsPerPage;
-        return history.slice(start, start + itemsPerPage);
-    }, [history, currentPage]);
+  const totalAmount = previews.reduce((sum, p) => sum + p.recharge_amount, 0);
 
-    const totalPages = Math.ceil((history?.length || 0) / itemsPerPage);
+  // 歷史記錄數據
+  const historyData = useMemo(() => {
+    if (!history) return [];
+    const start = (currentPage - 1) * itemsPerPage;
+    return history.slice(start, start + itemsPerPage);
+  }, [history, currentPage]);
 
-    return (
-        <div className="space-y-6 md:space-y-10 max-w-6xl mx-auto pb-10 px-0 sm:px-4">
-            {/* Header Section */}
-            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-blue-900/40 via-indigo-900/20 to-neutral-900 border border-neutral-800/80 p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-48 md:w-64 h-48 md:h-64 bg-blue-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-48 md:w-64 h-48 md:h-64 bg-indigo-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
+  const totalPages = Math.ceil((history?.length || 0) / itemsPerPage);
 
-                <div className="relative z-10">
-                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-md flex items-center gap-3">
-                        <CreditCard className="w-8 h-8 text-blue-400" />
-                        批次加值中心
-                    </h2>
-                    <p className="text-neutral-400 mt-2 text-xs md:text-sm font-medium">快速為多個 Apple ID 批量登錄禮品卡充值紀錄。</p>
-                </div>
-            </div>
+  // 處理預覽
+  const handlePreview = () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toaster.create({
+        title: '錯誤',
+        description: '請輸入有效的加值金額',
+        type: 'error',
+      });
+      return;
+    }
+    
+    if (selectedAccountIds.length === 0) {
+      toaster.create({
+        title: '錯誤',
+        description: '請選擇至少一個帳號',
+        type: 'error',
+      });
+      return;
+    }
+    
+    if (!reason.trim()) {
+      toaster.create({
+        title: '錯誤',
+        description: '請輸入加值原因',
+        type: 'error',
+      });
+      return;
+    }
+    
+    if (!operator.trim()) {
+      toaster.create({
+        title: '錯誤',
+        description: '請輸入操作者名稱',
+        type: 'error',
+      });
+      return;
+    }
+    
+    setShowPreview(true);
+  };
 
-            {/* Recharge Form Card */}
-            <Card className="bg-neutral-900/40 backdrop-blur-xl border-neutral-800/60 shadow-2xl overflow-hidden ring-1 ring-white/5 rounded-2xl md:rounded-3xl">
-                <CardHeader className="border-b border-neutral-800/50 bg-neutral-950/20 px-6 py-4 md:py-6">
-                    <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg md:text-xl font-bold text-neutral-100 flex items-center gap-2">
-                            <Plus className="w-5 h-5 text-blue-500" /> 加值項目單
-                        </CardTitle>
-                        <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 font-mono text-[10px] md:text-xs">{rows.length} 筆記錄</Badge>
-                    </div>
-                </CardHeader>
-                <CardContent className="pt-6 md:pt-8 px-4 md:px-8">
-                    <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-                        <div className="space-y-5 md:space-y-6">
-                            {rows.map((row) => (
-                                <div key={row.id} className="grid grid-cols-12 gap-4 md:gap-5 items-end bg-neutral-950/50 p-5 md:p-6 rounded-xl md:rounded-2xl border border-neutral-800/50 relative group transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.1)]">
-                                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-500/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+  // 確認加值
+  const handleConfirmRecharge = async () => {
+    setIsProcessing(true);
+    setRechargeProgress({
+      total: selectedAccountIds.length,
+      completed: 0,
+      success: 0,
+      failed: 0,
+      results: [],
+      isProcessing: true,
+    });
+    
+    try {
+      const response = await api.batchRechargeByGroup({
+        account_ids: selectedAccountIds,
+        amount: parseFloat(amount),
+        reason: reason,
+        operator: operator,
+        gift_card: giftCard || undefined,
+      });
+      
+      // 更新進度
+      setRechargeProgress({
+        total: selectedAccountIds.length,
+        completed: response.results.length,
+        success: response.success,
+        failed: response.failed,
+        results: response.results,
+        isProcessing: false,
+      });
+      
+      // 顯示結果
+      if (response.success === selectedAccountIds.length) {
+        toaster.create({
+          title: '加值成功',
+          description: `已成功為 ${response.success} 個帳號加值`,
+          type: 'success',
+        });
+      } else if (response.success > 0) {
+        toaster.create({
+          title: '部分成功',
+          description: `成功 ${response.success} 個，失敗 ${response.failed} 個`,
+          type: 'warning',
+        });
+      } else {
+        toaster.create({
+          title: '加值失敗',
+          description: '所有加值操作都失敗了',
+          type: 'error',
+        });
+      }
+      
+      // 刷新歷史記錄
+      mutateHistory();
+      
+      // 重置表單
+      setTimeout(() => {
+        setShowPreview(false);
+        setRechargeProgress(null);
+        setSelectedAccountIds([]);
+        setAmount('');
+        setReason('');
+        setGiftCard('');
+        setIsProcessing(false);
+      }, 3000);
+    } catch (error: any) {
+      toaster.create({
+        title: '加值失敗',
+        description: error.message || '未知錯誤',
+        type: 'error',
+      });
+      setIsProcessing(false);
+      setRechargeProgress(null);
+    }
+  };
 
-                                    {/* Account Select */}
-                                    <div className="col-span-12 md:col-span-3 space-y-1.5 md:space-y-2 relative z-10">
-                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                            <Users className="w-3 h-3" /> 付款帳號 (Apple ID)
-                                        </Label>
-                                        <Select
-                                            value={row.account_id}
-                                            onValueChange={(val) => updateRow(row.id, 'account_id', val)}
-                                        >
-                                            <SelectTrigger className="bg-neutral-900/80 border-neutral-800 focus:ring-blue-500/50 rounded-xl h-11 md:h-12 transition-all text-xs">
-                                                <SelectValue placeholder="請選擇帳號..." />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
-                                                {accounts?.map(acc => (
-                                                    <SelectItem key={acc.id} value={acc.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs md:text-sm">
-                                                        {acc.apple_id} <span className="text-[10px] opacity-50 ml-1">({acc.currency})</span>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+  // 取消預覽
+  const handleCancelPreview = () => {
+    setShowPreview(false);
+  };
 
-                                    {/* Date */}
-                                    <div className="col-span-6 md:col-span-2 space-y-1.5 md:space-y-2 relative z-10">
-                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider">加值日期</Label>
-                                        <Input
-                                            type="date"
-                                            value={row.date}
-                                            onChange={(e) => updateRow(row.id, 'date', e.target.value)}
-                                            className="bg-neutral-900/80 border-neutral-800 focus:border-blue-500/50 rounded-xl h-11 md:h-12 transition-all text-xs"
-                                        />
-                                    </div>
+  return (
+    <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
+      {/* Header Section */}
+      <Box
+        position="relative"
+        overflow="hidden"
+        rounded={{ base: '2xl', md: '3xl' }}
+        bg="linear-gradient(to right, rgba(67, 56, 202, 0.4), rgba(88, 28, 135, 0.2), rgba(23, 23, 23, 1))"
+        border="1px solid rgba(38, 38, 38, 0.8)"
+        p={{ base: 5, md: 8 }}
+        shadow="2xl"
+        backdropFilter="blur(20px)"
+      >
+        <Box
+          position="absolute"
+          top={0}
+          right={0}
+          mt={{ base: -16, md: -16 }}
+          mr={{ base: -16, md: -16 }}
+          w={{ base: 48, md: 64 }}
+          h={{ base: 48, md: 64 }}
+          bg="rgba(99, 102, 241, 0.1)"
+          filter="blur(80px)"
+          rounded="full"
+          pointerEvents="none"
+        />
+        
+        <Box position="relative" zIndex={10}>
+          <HStack gap={3}>
+            <Icon as={CreditCard} color="blue.400" boxSize={8} />
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white">
+              批次加值中心
+            </Text>
+          </HStack>
+          <Text color="gray.400" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
+            快速為多個 Apple ID 批量登錄禮品卡充值紀錄，支援按 Telegram Group 篩選。
+          </Text>
+        </Box>
+      </Box>
 
-                                    {/* Amount */}
-                                    <div className="col-span-6 md:col-span-2 space-y-1.5 md:space-y-2 relative z-10">
-                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider">加值金額</Label>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                value={row.amount || ''}
-                                                onChange={(e) => updateRow(row.id, 'amount', parseFloat(e.target.value))}
-                                                className="bg-neutral-900/80 border-neutral-800 focus:border-blue-500/50 rounded-xl h-11 md:h-12 pl-3 transition-all font-mono text-xs md:text-sm"
-                                            />
-                                        </div>
-                                    </div>
+      {/* 篩選區 */}
+      <Box
+        bg="gray.800"
+        border="1px solid"
+        borderColor="gray.700"
+        borderRadius="xl"
+        p={6}
+      >
+        <VStack gap={4} align="stretch">
+          <HStack gap={2}>
+            <Icon as={Filter} color="blue.400" />
+            <Text color="white" fontSize="lg" fontWeight="bold">
+              篩選條件
+            </Text>
+          </HStack>
+          
+          <Flex gap={4} wrap="wrap">
+            {/* Telegram Group 選擇 */}
+            <Box flex="1" minW="200px">
+              <Text color="gray.400" fontSize="sm" mb={2}>
+                Telegram Group
+              </Text>
+              <Select
+                value={selectedGroupId}
+                onValueChange={(val) => setSelectedGroupId(val)}
+              >
+                <SelectTrigger className="bg-gray-900 border-gray-600 text-white rounded-lg">
+                  <SelectValue>選擇 Telegram Group</SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  <SelectItem value="">
+                    <Text color="gray.400">全部群組</Text>
+                  </SelectItem>
+                  {telegramGroups?.map((group: any) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      <Text color="white">{group.name}</Text>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Box>
+            
+            {/* Apple ID 搜尋 */}
+            <Box flex="1" minW="200px">
+              <Text color="gray.400" fontSize="sm" mb={2}>
+                Apple ID 搜尋
+              </Text>
+              <Input
+                placeholder="搜尋 Apple ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                bg="gray.900"
+                borderColor="gray.600"
+                color="white"
+                _placeholder={{ color: 'gray.500' }}
+                borderRadius="lg"
+              />
+            </Box>
+            
+            {/* 幣種篩選 */}
+            <Box flex="1" minW="200px">
+              <Text color="gray.400" fontSize="sm" mb={2}>
+                幣種
+              </Text>
+              <Select
+                value={currencyFilter}
+                onValueChange={(val) => setCurrencyFilter(val)}
+              >
+                <SelectTrigger className="bg-gray-900 border-gray-600 text-white rounded-lg">
+                  <SelectValue>選擇幣種</SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  <SelectItem value="">
+                    <Text color="gray.400">全部幣種</Text>
+                  </SelectItem>
+                  <SelectItem value="HKD">
+                    <Text color="white">HKD</Text>
+                  </SelectItem>
+                  <SelectItem value="USD">
+                    <Text color="white">USD</Text>
+                  </SelectItem>
+                  <SelectItem value="TWD">
+                    <Text color="white">TWD</Text>
+                  </SelectItem>
+                  <SelectItem value="TRY">
+                    <Text color="white">TRY</Text>
+                  </SelectItem>
+                  <SelectItem value="ARS">
+                    <Text color="white">ARS</Text>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Box>
+          </Flex>
+        </VStack>
+      </Box>
 
-                                    {/* Gift Card */}
-                                    <div className="col-span-12 md:col-span-4 space-y-1.5 md:space-y-2 relative z-10">
-                                        <Label className="text-[10px] md:text-xs text-neutral-500 font-bold uppercase tracking-wider">禮品卡序號 / 備註</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                placeholder="輸入序號..."
-                                                value={row.gift_card || ''}
-                                                onChange={(e) => updateRow(row.id, 'gift_card', e.target.value)}
-                                                className="bg-neutral-900/80 border-neutral-800 focus:border-blue-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm"
-                                            />
-                                            {row.gift_card && (
-                                                <Button
-                                                    type="button"
-                                                    variant="secondary"
-                                                    size="icon"
-                                                    onClick={() => {
-                                                        setSelectedGiftCard(row.gift_card || '');
-                                                        setIsBarcodeOpen(true);
-                                                    }}
-                                                    className="shrink-0 h-11 w-11 md:h-12 md:w-12 rounded-xl bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 border border-blue-500/20"
-                                                >
-                                                    <Barcode className="w-5 h-5" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
+      {/* 加值表單 */}
+      {!showPreview && !rechargeProgress && (
+        <>
+          <Box
+            bg="gray.800"
+            border="1px solid"
+            borderColor="gray.700"
+            borderRadius="xl"
+            p={6}
+          >
+            <VStack gap={4} align="stretch">
+              <HStack gap={2}>
+                <Icon as={CreditCard} color="green.400" />
+                <Text color="white" fontSize="lg" fontWeight="bold">
+                  加值設定
+                </Text>
+              </HStack>
+              
+              <Flex gap={4} wrap="wrap">
+                {/* 加值金額 */}
+                <Box flex="1" minW="200px">
+                  <Text color="gray.400" fontSize="sm" mb={2}>
+                    加值金額 *
+                  </Text>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    bg="gray.900"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.500' }}
+                    borderRadius="lg"
+                    fontSize="lg"
+                    fontWeight="bold"
+                  />
+                </Box>
+                
+                {/* 加值原因 */}
+                <Box flex="1" minW="200px">
+                  <Text color="gray.400" fontSize="sm" mb={2}>
+                    加值原因 *
+                  </Text>
+                  <Input
+                    placeholder="例如：禮品卡加值"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    bg="gray.900"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.500' }}
+                    borderRadius="lg"
+                  />
+                </Box>
+                
+                {/* 操作者 */}
+                <Box flex="1" minW="200px">
+                  <Text color="gray.400" fontSize="sm" mb={2}>
+                    操作者 *
+                  </Text>
+                  <Input
+                    placeholder="輸入您的名稱"
+                    value={operator}
+                    onChange={(e) => setOperator(e.target.value)}
+                    bg="gray.900"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.500' }}
+                    borderRadius="lg"
+                  />
+                </Box>
+              </Flex>
+              
+              {/* 禮品卡序號 */}
+              <Box>
+                <Text color="gray.400" fontSize="sm" mb={2}>
+                  禮品卡序號 / 備註（選填）
+                </Text>
+                <Input
+                  placeholder="輸入禮品卡序號或備註..."
+                  value={giftCard}
+                  onChange={(e) => setGiftCard(e.target.value)}
+                  bg="gray.900"
+                  borderColor="gray.600"
+                  color="white"
+                  _placeholder={{ color: 'gray.500' }}
+                  borderRadius="lg"
+                />
+              </Box>
+            </VStack>
+          </Box>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => removeRow(row.id)}
-                                        className="absolute -top-2.5 -right-2.5 md:top-3 md:right-3 p-1.5 bg-neutral-900 border border-neutral-800 text-neutral-500 hover:text-red-400 hover:border-red-500/30 rounded-full md:rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-xl md:shadow-none z-20"
-                                        title="移除此列"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+          {/* 帳號選擇 */}
+          <AccountSelector
+            accounts={filteredAccounts}
+            selectedIds={selectedAccountIds}
+            onSelectionChange={setSelectedAccountIds}
+            loading={accountsLoading}
+          />
 
-                        <div className="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-neutral-800/50 gap-4">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={addRow}
-                                className="w-full md:w-auto border-neutral-800 hover:bg-neutral-800 hover:text-white rounded-xl h-11 md:h-12 px-6 font-bold transition-all text-xs md:text-sm"
-                            >
-                                <Plus className="w-4 h-4 mr-2" /> 增添一行
-                            </Button>
+          {/* 預覽按鈕 */}
+          <HStack justify="flex-end">
+            <Button
+              colorPalette="blue"
+              onClick={handlePreview}
+              disabled={isProcessing || selectedAccountIds.length === 0}
+            >
+              <Icon as={CreditCard} mr={2} />
+              預覽加值
+            </Button>
+          </HStack>
+        </>
+      )}
 
-                            <div className="flex items-center gap-4 w-full md:w-auto">
-                                <Button
-                                    type="submit"
-                                    disabled={loading || rows.length === 0}
-                                    className="flex-1 md:flex-none md:min-w-[160px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl h-11 md:h-12 font-black shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-xs md:text-sm"
-                                >
-                                    {loading ? '提交中...' : '確認並執行批次扣款'}
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+      {/* 預覽 */}
+      {showPreview && !rechargeProgress && (
+        <RechargePreview
+          previews={previews}
+          totalAmount={totalAmount}
+          onConfirm={handleConfirmRecharge}
+          onCancel={handleCancelPreview}
+          loading={isProcessing}
+        />
+      )}
 
-            {/* Barcode Modal */}
-            <Dialog open={isBarcodeOpen} onOpenChange={setIsBarcodeOpen}>
-                <DialogContent className="w-[92vw] max-w-[400px] bg-neutral-900/95 backdrop-blur-3xl text-neutral-50 border-neutral-800/80 rounded-2xl shadow-2xl p-6">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                            <Barcode className="w-6 h-6 text-blue-500" /> 禮品卡條碼
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col items-stretch p-6 bg-[#f2f2f2] rounded-xl mt-4 shadow-inner border border-neutral-200">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 className="text-[#333] text-xl font-bold leading-tight">App Store<br />& iTunes</h3>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-[10px] text-neutral-500 font-bold">HK$</span>
-                            </div>
-                        </div>
+      {/* 進度 */}
+      {rechargeProgress && (
+        <RechargeProgress progress={rechargeProgress} />
+      )}
 
-                        <div className="border-[1.5px] border-neutral-800 p-4 bg-white flex justify-center items-center shadow-sm">
-                            <span className="text-neutral-900 font-['Scancardium'] font-normal tracking-[0.2em] text-3xl">
-                                {selectedGiftCard}
-                            </span>
-                        </div>
+      {/* 歷史記錄 */}
+      <VStack gap={4} align="stretch">
+        <HStack justify="space-between" borderBottom="1px solid" borderColor="gray.700" pb={3}>
+          <HStack gap={2}>
+            <Icon as={HistoryIcon} color="gray.400" />
+            <Text color="white" fontSize="xl" fontWeight="bold">
+              歷史加值紀錄
+            </Text>
+          </HStack>
+          <Badge colorPalette="blue" variant="solid">
+            {history?.length || 0} 筆記錄
+          </Badge>
+        </HStack>
 
-                        <div className="mt-4 flex justify-between gap-4">
-                            <div className="text-[7px] leading-[1.2] text-neutral-500 max-w-[60%]">
-                                To redeem, visit appstore.com/redeem. Valid only in Hong Kong. For assistance, visit support.apple.com/giftcard. Terms apply; see apple.com/hk/en/go/legal/gc.
-                            </div>
-                            <div className="text-[7px] leading-[1.2] text-neutral-500 text-right">
-                                如要兌換禮品卡，請前往 appstore.com/redeem。僅適用於香港地區。
-                            </div>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+        <Box
+          bg="gray.800"
+          border="1px solid"
+          borderColor="gray.700"
+          borderRadius="xl"
+          overflow="hidden"
+        >
+          {!history ? (
+            <VStack py={12}>
+              <Spinner size="lg" color="blue.400" />
+              <Text color="gray.400">載入中...</Text>
+            </VStack>
+          ) : historyData.length === 0 ? (
+            <VStack py={12}>
+              <Icon as={HistoryIcon} color="gray.500" boxSize={8} />
+              <Text color="gray.500">暫無加值紀錄</Text>
+            </VStack>
+          ) : (
+            <Box overflowX="auto">
+              <Box as="table" width="full">
+                <Box as="thead" bg="gray.900">
+                  <Box as="tr">
+                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                      日期
+                    </Box>
+                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                      帳號
+                    </Box>
+                    <Box as="th" p={4} textAlign="right" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                      金額
+                    </Box>
+                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                      類型
+                    </Box>
+                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                      備註
+                    </Box>
+                  </Box>
+                </Box>
+                <Box as="tbody">
+                  {historyData.map((item, idx) => (
+                    <Box
+                      as="tr"
+                      key={idx}
+                      borderBottom="1px solid"
+                      borderColor="gray.700"
+                      _hover={{ bg: 'gray.700/30' }}
+                    >
+                      <Box as="td" p={4} color="gray.400" fontSize="sm" fontFamily="mono">
+                        {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
+                      </Box>
+                      <Box as="td" p={4} color="white" fontSize="sm" fontWeight="medium">
+                        {item.apple_id ? item.apple_id.split('@')[0] : 'Unknown'}
+                      </Box>
+                      <Box as="td" p={4} textAlign="right" color="green.400" fontSize="sm" fontWeight="bold" fontFamily="mono">
+                        +{typeof item.amount === 'number' ? item.amount.toFixed(2) : '0.00'}
+                      </Box>
+                      <Box as="td" p={4}>
+                        <Badge colorPalette="blue" variant="subtle" fontSize="xs">
+                          {item.type || 'recharge'}
+                        </Badge>
+                      </Box>
+                      <Box as="td" p={4} color="gray.400" fontSize="sm">
+                        {item.memo}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </Box>
 
-            {/* History Table */}
-            <div className="space-y-4 md:space-y-6">
-                <div className="flex items-center justify-between border-b border-neutral-800/60 pb-3">
-                    <h3 className="text-xl md:text-2xl font-bold text-neutral-100 tracking-tight flex items-center gap-3">
-                        <div className="p-2 bg-neutral-800 rounded-lg">
-                            <HistoryIcon className="w-5 h-5 text-neutral-400" />
-                        </div>
-                        歷史加值紀錄
-                    </h3>
-                </div>
-
-                <Card className="bg-neutral-900/40 backdrop-blur-xl border border-neutral-800/60 shadow-2xl overflow-hidden rounded-2xl md:rounded-3xl">
-                    <div className="overflow-x-auto min-w-full custom-scrollbar">
-                        <Table>
-                            <TableHeader className="bg-neutral-950/40">
-                                <TableRow className="border-neutral-800/60 hover:bg-transparent">
-                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">日期</TableHead>
-                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">帳號</TableHead>
-                                    <TableHead className="text-right text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs">金額</TableHead>
-                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs hidden md:table-cell">類型</TableHead>
-                                    <TableHead className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] md:text-xs min-w-[120px]">備註</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {!history ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-12 text-neutral-500 italic text-sm">讀取中...</TableCell>
-                                    </TableRow>
-                                ) : historyData.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-12 text-neutral-500 italic text-sm">暫無加值紀錄</TableCell>
-                                    </TableRow>
-                                ) : (
-                                    historyData.map((item, idx) => (
-                                        <TableRow key={idx} className="border-neutral-800/40 hover:bg-neutral-800/30 transition-colors group">
-                                            <TableCell className="font-mono text-[10px] md:text-xs text-neutral-400">
-                                                {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
-                                            </TableCell>
-                                            <TableCell className="font-bold text-neutral-200 text-xs md:text-sm">
-                                                <div className="max-w-[100px] md:max-w-none truncate" title={item.apple_id}>
-                                                    {item.apple_id ? item.apple_id.split('@')[0] : 'Unknown'}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <span className="font-black text-xs md:text-sm font-mono text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
-                                                    +{typeof item.amount === 'number' ? item.amount.toFixed(2) : '0.00'}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="font-mono text-[10px] md:text-xs text-neutral-500 hidden md:table-cell">
-                                                <Badge variant="outline" className="text-[9px] uppercase border-neutral-800 text-neutral-500">
-                                                    {item.type || 'recharge'}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-[10px] md:text-xs text-neutral-500 font-medium max-w-[120px] md:max-w-none truncate">
-                                                {item.memo}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </Card>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-4 pt-4 pb-6">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                        <span className="text-neutral-400 font-mono text-sm">
-                            第 {currentPage} 頁，共 {totalPages} 頁
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </Button>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+        {/* 分頁 */}
+        {totalPages > 1 && (
+          <HStack justify="center" gap={4}>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              borderColor="gray.600"
+              color="gray.300"
+            >
+              <Icon as={ChevronLeft} />
+            </Button>
+            <Text color="gray.400" fontSize="sm">
+              第 {currentPage} 頁，共 {totalPages} 頁
+            </Text>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              borderColor="gray.600"
+              color="gray.300"
+            >
+              <Icon as={ChevronRight} />
+            </Button>
+          </HStack>
+        )}
+      </VStack>
+    </VStack>
+  );
 }

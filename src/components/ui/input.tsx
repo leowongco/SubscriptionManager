@@ -1,17 +1,37 @@
-import * as React from "react"
+import { forwardRef } from "react"
+import { Input as ChakraInput, type InputProps } from "@chakra-ui/react"
 
-import { cn } from "@/lib/utils"
+interface CustomInputProps extends Omit<InputProps, 'size'> {
+  className?: string
+}
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+const Input = forwardRef<HTMLInputElement, CustomInputProps>(
   ({ className, type, ...props }, ref) => {
     return (
-      <input
+      <ChakraInput
         type={type}
-        className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className
-        )}
         ref={ref}
+        h="36px"
+        w="full"
+        rounded="md"
+        border="1px solid"
+        borderColor="gray.300"
+        bg="transparent"
+        px={3}
+        py={1}
+        fontSize={{ base: "base", md: "sm" }}
+        shadow="sm"
+        transition="all 0.2s"
+        _placeholder={{ color: "gray.400" }}
+        _focus={{
+          outline: "none",
+          ring: "1px",
+          ringColor: "blue.500",
+        }}
+        _disabled={{
+          cursor: "not-allowed",
+          opacity: 0.5,
+        }}
         {...props}
       />
     )

@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Box, Flex, VStack, Text, Grid } from '@chakra-ui/react';
 import { TrendingUp, Wallet, BellRing, AlertTriangle, TrendingDown } from 'lucide-react';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WarningCard } from '@/components/dashboard/WarningCard';
@@ -76,121 +76,249 @@ export default function Dashboard() {
     ];
 
     return (
-        <div className="space-y-6 md:space-y-10 max-w-7xl mx-auto pb-10 px-0 sm:px-4">
+        <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
             {/* Header Section */}
-            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-indigo-900/40 via-purple-900/20 to-neutral-900 border border-neutral-800/80 p-5 md:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-48 md:w-64 h-48 md:h-64 bg-indigo-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-48 md:w-64 h-48 md:h-64 bg-purple-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
+            <Box
+                position="relative"
+                overflow="hidden"
+                rounded={{ base: '2xl', md: '3xl' }}
+                bg="linear-gradient(to right, rgba(67, 56, 202, 0.4), rgba(88, 28, 135, 0.2), rgba(23, 23, 23, 1))"
+                border="1px solid rgba(38, 38, 38, 0.8)"
+                p={{ base: 5, md: 8 }}
+                shadow="2xl"
+                backdropFilter="blur(20px)"
+                transition="all 0.3s"
+            >
+                <Box
+                    position="absolute"
+                    top={0}
+                    right={0}
+                    mt={{ base: -16, md: -16 }}
+                    mr={{ base: -16, md: -16 }}
+                    w={{ base: 48, md: 64 }}
+                    h={{ base: 48, md: 64 }}
+                    bg="rgba(99, 102, 241, 0.1)"
+                    filter="blur(80px)"
+                    rounded="full"
+                    pointerEvents="none"
+                />
+                <Box
+                    position="absolute"
+                    bottom={0}
+                    left={0}
+                    mb={{ base: -16, md: -16 }}
+                    ml={{ base: -16, md: -16 }}
+                    w={{ base: 48, md: 64 }}
+                    h={{ base: 48, md: 64 }}
+                    bg="rgba(168, 85, 247, 0.1)"
+                    filter="blur(80px)"
+                    rounded="full"
+                    pointerEvents="none"
+                />
 
-                <div className="relative z-10">
-                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-md">數據中心儀表板</h2>
-                    <p className="text-neutral-400 mt-2 text-xs md:text-sm font-medium max-w-2xl">歡迎回來！以下是您目前的 Apple 訂閱資金概況與系統通知。</p>
-                </div>
-            </div>
+                <Box position="relative" zIndex={10}>
+                    <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white" textShadow="0 2px 4px rgba(0,0,0,0.3)">
+                        數據中心儀表板
+                    </Text>
+                    <Text color="gray.400" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
+                        歡迎回來！以下是您目前的 Apple 訂閱資金概況與系統通知。
+                    </Text>
+                </Box>
+            </Box>
 
             {/* Quick Actions */}
             <QuickActions />
 
             {/* KPI Cards */}
-            <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="bg-neutral-900/40 backdrop-blur-xl border border-indigo-500/20 shadow-2xl overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-[10px] md:text-sm font-semibold text-indigo-400 uppercase tracking-wider">總可用餘額</CardTitle>
-                        <div className="p-2 bg-indigo-500/10 rounded-lg md:rounded-xl">
-                            <Wallet className="h-4 w-4 md:h-5 md:w-5 text-indigo-400" />
-                        </div>
-                    </CardHeader>
-                    <CardContent className="relative z-10">
-                        <div className="text-3xl md:text-4xl font-black text-white drop-shadow-sm flex items-baseline gap-1.5">
-                            <span className="text-xl md:text-2xl text-neutral-400 font-medium">HK$</span>
+            <Grid gap={{ base: 4, md: 6 }} templateColumns={{ md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}>
+                {/* Total Balance Card */}
+                <Box
+                    bg="rgba(23, 23, 23, 0.4)"
+                    backdropFilter="blur(20px)"
+                    border="1px solid rgba(99, 102, 241, 0.2)"
+                    rounded="xl"
+                    shadow="2xl"
+                    overflow="hidden"
+                    position="relative"
+                    role="group"
+                >
+                    <Box
+                        position="absolute"
+                        inset={0}
+                        bg="linear-gradient(to bottom right, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.05))"
+                        opacity={0}
+                        _groupHover={{ opacity: 1 }}
+                        transition="opacity 0.5s"
+                        pointerEvents="none"
+                    />
+                    <Flex p={6} flexDirection="row" alignItems="center" justifyContent="space-between" pb={2}>
+                        <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color="indigo.400" textTransform="uppercase" letterSpacing="wider">
+                            總可用餘額
+                        </Text>
+                        <Box p={2} bg="rgba(99, 102, 241, 0.1)" rounded={{ base: 'lg', md: 'xl' }}>
+                            <Box as={Wallet} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color="indigo.400" />
+                        </Box>
+                    </Flex>
+                    <Box p={6} pt={0} position="relative" zIndex={10}>
+                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="white" textShadow="0 1px 2px rgba(0,0,0,0.2)" alignItems="baseline" gap={1.5}>
+                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="gray.400" fontWeight="medium">HK$</Text>
                             {totalBalanceHKD.toFixed(2)}
-                        </div>
-                        <p className="text-[10px] md:text-xs text-neutral-500 mt-2 font-medium">所有蘋果帳號加總</p>
-                    </CardContent>
-                </Card>
+                        </Flex>
+                        <Text fontSize={{ base: '10px', md: 'xs' }} color="gray.500" mt={2} fontWeight="medium">
+                            所有蘋果帳號加總
+                        </Text>
+                    </Box>
+                </Box>
 
-                <Card className="bg-neutral-900/40 backdrop-blur-xl border border-purple-500/20 shadow-2xl overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-[10px] md:text-sm font-semibold text-purple-400 uppercase tracking-wider">預估每月總支出</CardTitle>
-                        <div className="p-2 bg-purple-500/10 rounded-lg md:rounded-xl">
-                            <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-purple-400" />
-                        </div>
-                    </CardHeader>
-                    <CardContent className="relative z-10">
-                        <div className="text-3xl md:text-4xl font-black text-white drop-shadow-sm flex items-baseline gap-1.5">
-                            <span className="text-xl md:text-2xl text-neutral-400 font-medium font-mono">≈</span>
-                            <span className="text-xl md:text-2xl text-neutral-400 font-medium">HK$</span>
+                {/* Monthly Expense Card */}
+                <Box
+                    bg="rgba(23, 23, 23, 0.4)"
+                    backdropFilter="blur(20px)"
+                    border="1px solid rgba(168, 85, 247, 0.2)"
+                    rounded="xl"
+                    shadow="2xl"
+                    overflow="hidden"
+                    position="relative"
+                    role="group"
+                >
+                    <Box
+                        position="absolute"
+                        inset={0}
+                        bg="linear-gradient(to bottom right, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.05))"
+                        opacity={0}
+                        _groupHover={{ opacity: 1 }}
+                        transition="opacity 0.5s"
+                        pointerEvents="none"
+                    />
+                    <Flex p={6} flexDirection="row" alignItems="center" justifyContent="space-between" pb={2}>
+                        <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color="purple.400" textTransform="uppercase" letterSpacing="wider">
+                            預估每月總支出
+                        </Text>
+                        <Box p={2} bg="rgba(168, 85, 247, 0.1)" rounded={{ base: 'lg', md: 'xl' }}>
+                            <Box as={TrendingDown} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color="purple.400" />
+                        </Box>
+                    </Flex>
+                    <Box p={6} pt={0} position="relative" zIndex={10}>
+                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="white" textShadow="0 1px 2px rgba(0,0,0,0.2)" alignItems="baseline" gap={1.5}>
+                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="gray.400" fontWeight="medium">≈</Text>
+                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="gray.400" fontWeight="medium">HK$</Text>
                             {monthlyExpenseHKD.toFixed(2)}
-                        </div>
-                        <p className="text-[10px] md:text-xs text-neutral-500 mt-2 font-medium">基於目前訂閱服務推算</p>
-                    </CardContent>
-                </Card>
+                        </Flex>
+                        <Text fontSize={{ base: '10px', md: 'xs' }} color="gray.500" mt={2} fontWeight="medium">
+                            基於目前訂閱服務推算
+                        </Text>
+                    </Box>
+                </Box>
 
-                {/* 餘額趨勢圖 */}
+                {/* Balance Trend Chart */}
                 <BalanceTrendChart data={balanceTrendData} currency="HK$" />
-            </div>
+            </Grid>
 
-            <div className="grid gap-6 lg:grid-cols-2" id="warnings-section">
+            <Grid gap={6} templateColumns={{ lg: 'repeat(2, 1fr)' }} id="warnings-section">
                 {/* Low Balance Warning */}
-                <div className="space-y-5">
-                    <div className="flex items-center gap-3 border-b border-neutral-800/60 pb-3">
-                        <div className="p-2 bg-red-500/10 rounded-lg">
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
-                        </div>
-                        <h3 className="text-xl font-bold text-neutral-100 tracking-tight">低餘額警告</h3>
-                    </div>
+                <VStack gap={5} align="stretch">
+                    <Flex alignItems="center" gap={3} borderBottom="1px solid rgba(38, 38, 38, 0.6)" pb={3}>
+                        <Box p={2} bg="rgba(239, 68, 68, 0.1)" rounded="lg">
+                            <Box as={AlertTriangle} w={5} h={5} color="red.500" />
+                        </Box>
+                        <Text fontSize="xl" fontWeight="bold" color="gray.100" letterSpacing="tight">
+                            低餘額警告
+                        </Text>
+                    </Flex>
 
                     {lowBalanceAccounts.length === 0 ? (
-                        <div className="text-neutral-500 border border-neutral-800/40 rounded-2xl p-6 text-center bg-neutral-900/20 backdrop-blur-sm text-sm">
+                        <Box
+                            color="gray.500"
+                            border="1px solid rgba(38, 38, 38, 0.4)"
+                            rounded="2xl"
+                            p={6}
+                            textAlign="center"
+                            bg="rgba(23, 23, 23, 0.2)"
+                            backdropFilter="blur(4px)"
+                            fontSize="sm"
+                        >
                             所有帳號餘額充足。
-                        </div>
+                        </Box>
                     ) : (
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <Grid gap={3} templateColumns={{ md: 'repeat(2, 1fr)' }}>
                             {lowBalanceAccounts.map((acc: any) => (
                                 <WarningCard key={acc.id} account={acc} />
                             ))}
-                        </div>
+                        </Grid>
                     )}
-                </div>
+                </VStack>
 
                 {/* Upcoming Price Increases */}
-                <div className="space-y-5">
-                    <div className="flex items-center gap-3 border-b border-neutral-800/60 pb-3">
-                        <div className="p-2 bg-orange-500/10 rounded-lg">
-                            <BellRing className="w-5 h-5 text-orange-400" />
-                        </div>
-                        <h3 className="text-xl font-bold text-neutral-100 tracking-tight">即將生效的調價</h3>
-                    </div>
+                <VStack gap={5} align="stretch">
+                    <Flex alignItems="center" gap={3} borderBottom="1px solid rgba(38, 38, 38, 0.6)" pb={3}>
+                        <Box p={2} bg="rgba(249, 115, 22, 0.1)" rounded="lg">
+                            <Box as={BellRing} w={5} h={5} color="orange.400" />
+                        </Box>
+                        <Text fontSize="xl" fontWeight="bold" color="gray.100" letterSpacing="tight">
+                            即將生效的調價
+                        </Text>
+                    </Flex>
 
                     {upcomingPriceIncreases.length === 0 ? (
-                        <div className="text-neutral-500 border border-neutral-800/40 rounded-2xl p-6 text-center bg-neutral-900/20 backdrop-blur-sm text-sm">
+                        <Box
+                            color="gray.500"
+                            border="1px solid rgba(38, 38, 38, 0.4)"
+                            rounded="2xl"
+                            p={6}
+                            textAlign="center"
+                            bg="rgba(23, 23, 23, 0.2)"
+                            backdropFilter="blur(4px)"
+                            fontSize="sm"
+                        >
                             目前無即將生效的漲價。
-                        </div>
+                        </Box>
                     ) : (
-                        <div className="space-y-3">
+                        <VStack gap={3} align="stretch">
                             {upcomingPriceIncreases.map(s => (
-                                <div key={s.id} className="p-4 rounded-xl border border-orange-900/30 bg-orange-950/10 backdrop-blur-md flex flex-col gap-3 hover:bg-orange-950/20 transition-all">
-                                    <div className="flex justify-between items-start">
-                                        <div className="font-bold text-orange-300 text-sm md:text-md">{s.name}</div>
-                                        <div className="text-[10px] font-bold text-orange-400 bg-orange-900/30 px-2 py-0.5 rounded border border-orange-800/50 uppercase">
+                                <Box
+                                    key={s.id}
+                                    p={4}
+                                    rounded="xl"
+                                    border="1px solid rgba(154, 52, 18, 0.3)"
+                                    bg="rgba(124, 45, 18, 0.1)"
+                                    backdropFilter="blur(12px)"
+                                    display="flex"
+                                    flexDirection="column"
+                                    gap={3}
+                                    _hover={{ bg: 'rgba(124, 45, 18, 0.2)' }}
+                                    transition="all"
+                                >
+                                    <Flex justify="space-between" alignItems="start">
+                                        <Text fontWeight="bold" color="orange.300" fontSize={{ base: 'sm', md: 'md' }}>{s.name}</Text>
+                                        <Text
+                                            fontSize="10px"
+                                            fontWeight="bold"
+                                            color="orange.400"
+                                            bg="rgba(154, 52, 18, 0.3)"
+                                            px={2}
+                                            py={0.5}
+                                            rounded="sm"
+                                            border="1px solid rgba(154, 52, 18, 0.5)"
+                                            textTransform="uppercase"
+                                        >
                                             {new Date(s.effective_date!).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-center bg-black/20 p-2 rounded-lg border border-white/5">
-                                        <span className="text-xs text-neutral-500 line-through">{s.currency} {(s.base_price ?? 0).toFixed(2)}</span>
-                                        <div className="flex items-center gap-1.5 text-orange-400 font-black text-sm md:text-md">
-                                            <TrendingUp className="w-3.5 h-3.5" />
+                                        </Text>
+                                    </Flex>
+                                    <Flex justify="space-between" alignItems="center" bg="rgba(0,0,0,0.2)" p={2} rounded="lg" border="1px solid rgba(255,255,255,0.05)">
+                                        <Text fontSize="xs" color="gray.500" textDecoration="line-through">
+                                            {s.currency} {(s.base_price ?? 0).toFixed(2)}
+                                        </Text>
+                                        <Flex alignItems="center" gap={1.5} color="orange.400" fontWeight="black" fontSize={{ base: 'sm', md: 'md' }}>
+                                            <Box as={TrendingUp} w={3.5} h={3.5} />
                                             {s.currency} {s.next_price ? s.next_price.toFixed(2) : '0.00'}
-                                        </div>
-                                    </div>
-                                </div>
+                                        </Flex>
+                                    </Flex>
+                                </Box>
                             ))}
-                        </div>
+                        </VStack>
                     )}
-                </div>
-            </div>
-        </div>
+                </VStack>
+            </Grid>
+        </VStack>
     );
 }

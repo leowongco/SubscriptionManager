@@ -88,7 +88,7 @@ export default function Services() {
                     <h2 className="text-3xl font-black tracking-tight text-white drop-shadow-md">服務與定價維護</h2>
                     <p className="text-neutral-400 mt-2 text-sm font-medium">管理訂閱服務及未來價格調整計畫，精準掌控成本。</p>
                 </div>
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <Dialog open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
                     <DialogTrigger asChild>
                         <Button onClick={openNew} className="relative z-10 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl h-12 px-6 shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02]">
                             <Plus className="w-5 h-5 mr-2" />
@@ -122,7 +122,7 @@ export default function Services() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">計費週期</Label>
-                                    <Select value={formData.cycle} onValueChange={(v: 'monthly' | 'yearly') => setFormData({ ...formData, cycle: v })}>
+                                    <Select value={formData.cycle} onValueChange={(v) => setFormData({ ...formData, cycle: v as 'monthly' | 'yearly' })}>
                                         <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-blue-500/50 rounded-xl h-12 transition-all"><SelectValue /></SelectTrigger>
                                         <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
                                             <SelectItem value="monthly" className="cursor-pointer hover:bg-neutral-800 rounded-lg">每月 (Monthly)</SelectItem>
