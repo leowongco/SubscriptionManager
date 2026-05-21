@@ -29,6 +29,6 @@ export interface AccountWithWarning {
   currency: string;
   monthlyBurn: number;
   monthsLeft: number;
-  subscriptions: any[];
+  subscriptions: unknown[];
   warningLevel: WarningLevel;
 }

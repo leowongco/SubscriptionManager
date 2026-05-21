@@ -11,7 +11,7 @@ interface WarningCardProps {
     currency: string;
     _monthlyBurn?: number;
     _monthsLeft?: number;
-    subscriptions?: any[];
+    subscriptions?: { id: string; service_name: string; currency: string; base_price?: number }[];
   };
 }
 
@@ -96,7 +96,7 @@ export function WarningCard({ account }: WarningCardProps) {
         <div className="mt-2 pt-2 border-t border-neutral-800/40">
           <div className="text-xs text-neutral-500 mb-1">訂閱服務</div>
           <div className="space-y-1">
-            {account.subscriptions.slice(0, 3).map((sub: any) => (
+            {account.subscriptions.slice(0, 3).map((sub) => (
               <div key={sub.id} className="flex justify-between items-center text-xs">
                 <span className="text-neutral-400 truncate max-w-[120px]">
                   {sub.service_name}

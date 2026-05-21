@@ -2,7 +2,6 @@ import useSWR from 'swr';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Wallet, BellRing, AlertTriangle, TrendingDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WarningCard } from '@/components/dashboard/WarningCard';
 import { BalanceTrendChart } from '@/components/dashboard/BalanceTrendChart';
