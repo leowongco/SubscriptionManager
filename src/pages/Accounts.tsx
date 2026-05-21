@@ -16,6 +16,7 @@ import { api } from '@/lib/api';
 import { AccountCard } from '@/components/accounts/AccountCard';
 import { BalanceAdjustDialog } from '@/components/accounts/BalanceAdjustDialog';
 import { toaster } from '@/components/ui/toaster';
+import { formatCurrency } from '@/lib/currency';
 
 interface Subscription {
     id: string;
@@ -30,6 +31,7 @@ interface Account {
     id: string;
     apple_id: string;
     balance: number;
+    currency?: string;
     group_name?: string;
     subscriptions?: Subscription[];
 }
@@ -70,10 +72,11 @@ export default function Accounts() {
     // 餘額調整
     const handleAdjustBalance = async (accountId: string, data: { adjustment_amount: number; reason: string; operator: string }) => {
         try {
+            const account = accounts.find(a => a.id === accountId);
             await api.adjustAccountBalance(accountId, data);
             toaster.create({
                 title: '調整成功',
-                description: `餘額已${data.adjustment_amount >= 0 ? '增加' : '減少'} $${Math.abs(data.adjustment_amount).toFixed(2)}`,
+                description: `餘額已${data.adjustment_amount >= 0 ? '增加' : '減少'} ${formatCurrency(Math.abs(data.adjustment_amount), account?.currency)}`,
                 type: 'success',
             });
             await loadAccounts(); // 重新載入數據

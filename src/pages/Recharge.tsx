@@ -12,6 +12,7 @@ import {
   Icon,
   Spinner,
   Flex,
+  Table,
 } from '@chakra-ui/react';
 import {
   CreditCard,
@@ -570,56 +571,55 @@ export default function Recharge() {
             </VStack>
           ) : (
             <Box overflowX="auto">
-              <Box as="table" width="full">
-                <Box as="thead" bg="gray.900">
-                  <Box as="tr">
-                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+              <Table.Root width="full">
+                <Table.Header bg="gray.900">
+                  <Table.Row>
+                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       日期
-                    </Box>
-                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    </Table.ColumnHeader>
+                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       帳號
-                    </Box>
-                    <Box as="th" p={4} textAlign="right" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    </Table.ColumnHeader>
+                    <Table.ColumnHeader p={4} textAlign="right" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       金額
-                    </Box>
-                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    </Table.ColumnHeader>
+                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       類型
-                    </Box>
-                    <Box as="th" p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    </Table.ColumnHeader>
+                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       備註
-                    </Box>
-                  </Box>
-                </Box>
-                <Box as="tbody">
+                    </Table.ColumnHeader>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
                   {historyData.map((item, idx) => (
-                    <Box
-                      as="tr"
+                    <Table.Row
                       key={idx}
                       borderBottom="1px solid"
                       borderColor="gray.700"
                       _hover={{ bg: 'gray.700/30' }}
                     >
-                      <Box as="td" p={4} color="gray.400" fontSize="sm" fontFamily="mono">
+                      <Table.Cell p={4} color="gray.400" fontSize="sm" fontFamily="mono">
                         {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
-                      </Box>
-                      <Box as="td" p={4} color="white" fontSize="sm" fontWeight="medium">
+                      </Table.Cell>
+                      <Table.Cell p={4} color="white" fontSize="sm" fontWeight="medium">
                         {item.apple_id ? item.apple_id.split('@')[0] : 'Unknown'}
-                      </Box>
-                      <Box as="td" p={4} textAlign="right" color="green.400" fontSize="sm" fontWeight="bold" fontFamily="mono">
+                      </Table.Cell>
+                      <Table.Cell p={4} textAlign="right" color="green.400" fontSize="sm" fontWeight="bold" fontFamily="mono">
                         +{typeof item.amount === 'number' ? item.amount.toFixed(2) : '0.00'}
-                      </Box>
-                      <Box as="td" p={4}>
+                      </Table.Cell>
+                      <Table.Cell p={4}>
                         <Badge colorPalette="blue" variant="subtle" fontSize="xs">
                           {item.type || 'recharge'}
                         </Badge>
-                      </Box>
-                      <Box as="td" p={4} color="gray.400" fontSize="sm">
+                      </Table.Cell>
+                      <Table.Cell p={4} color="gray.400" fontSize="sm">
                         {item.memo}
-                      </Box>
-                    </Box>
+                      </Table.Cell>
+                    </Table.Row>
                   ))}
-                </Box>
-              </Box>
+                </Table.Body>
+              </Table.Root>
             </Box>
           )}
         </Box>

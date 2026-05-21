@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   apple_id TEXT,
   google_account TEXT,
   balance REAL DEFAULT 0,
+  currency TEXT DEFAULT 'HKD',
   service_id TEXT,
   start_date DATETIME,
   last_sync_date DATETIME,

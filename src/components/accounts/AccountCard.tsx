@@ -7,6 +7,7 @@ import {
     Badge,
 } from '@chakra-ui/react';
 import { DollarSign, Edit, Trash2, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 interface Subscription {
     id: string;
@@ -22,6 +23,7 @@ interface AccountCardProps {
         id: string;
         apple_id: string;
         balance: number;
+        currency?: string;
         group_name?: string;
         subscriptions?: Subscription[];
     };
@@ -70,12 +72,19 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                         <HStack gap={1}>
                             <Box as={DollarSign} w={4} h={4} color="green.400" />
                             <Text fontWeight="bold" fontSize="xl" color="green.400">
-                                {account.balance?.toFixed(2) || '0.00'}
+                                {formatCurrency(account.balance || 0, account.currency)}
                             </Text>
                         </HStack>
-                        <Text fontSize="xs" color="gray.500">
-                            當前餘額
-                        </Text>
+                        <HStack gap={1}>
+                            <Text fontSize="xs" color="gray.500">
+                                當前餘額
+                            </Text>
+                            {account.currency && account.currency !== 'HKD' && (
+                                <Badge colorPalette="cyan" fontSize="xs">
+                                    {account.currency}
+                                </Badge>
+                            )}
+                        </HStack>
                     </VStack>
                 </HStack>
 
@@ -112,7 +121,7 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                         </Text>
                     </HStack>
                     <Text fontWeight="bold" color="orange.400">
-                        ${monthlyExpense.toFixed(2)}
+                        {formatCurrency(monthlyExpense, account.currency)}
                     </Text>
                 </HStack>
 
@@ -140,6 +149,7 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                         colorPalette="gray"
                         variant="ghost"
                         onClick={() => onEdit(account)}
+                        aria-label="編輯帳號"
                     >
                         <Box as={Edit} w={4} h={4} />
                     </Button>
@@ -148,6 +158,7 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                         colorPalette="red"
                         variant="ghost"
                         onClick={() => onDelete(account)}
+                        aria-label="刪除帳號"
                     >
                         <Box as={Trash2} w={4} h={4} />
                     </Button>

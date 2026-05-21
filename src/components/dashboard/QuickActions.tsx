@@ -12,26 +12,22 @@ interface QuickActionProps {
 }
 
 function QuickActionButton({ icon, label, onClick, variant = 'secondary' }: QuickActionProps) {
-  const variantStyles = {
+  const variantConfig = {
     primary: {
-      bg: 'rgba(79, 70, 229, 0.8)',
-      _hover: { bg: 'rgba(67, 56, 202, 0.9)' },
-      color: 'white',
-      borderColor: 'rgba(99, 102, 241, 0.5)',
+      colorPalette: 'indigo',
+      variant: 'solid' as const,
     },
     secondary: {
-      bg: 'rgba(38, 38, 38, 0.6)',
-      _hover: { bg: 'rgba(38, 38, 38, 0.8)' },
-      color: 'gray.200',
-      borderColor: 'rgba(55, 65, 81, 0.7)',
+      colorPalette: 'gray',
+      variant: 'solid' as const,
     },
     outline: {
-      bg: 'transparent',
-      _hover: { bg: 'rgba(38, 38, 38, 0.4)' },
-      color: 'gray.300',
-      borderColor: 'rgba(55, 65, 81, 0.7)',
+      colorPalette: 'gray',
+      variant: 'outline' as const,
     },
   };
+
+  const config = variantConfig[variant];
 
   return (
     <Button
@@ -42,11 +38,11 @@ function QuickActionButton({ icon, label, onClick, variant = 'secondary' }: Quic
       px={4}
       py={2.5}
       rounded="xl"
-      border="1px solid"
       backdropFilter="blur(4px)"
       fontWeight="medium"
       fontSize="sm"
-      {...variantStyles[variant]}
+      colorPalette={config.colorPalette}
+      variant={config.variant}
     >
       {icon}
       <span>{label}</span>
@@ -75,15 +71,16 @@ export function QuickActions() {
 
   return (
     <Box
-      bg="rgba(23, 23, 23, 0.4)"
+      bg="gray.900/40"
       backdropFilter="blur(20px)"
-      border="1px solid rgba(38, 38, 38, 0.6)"
+      border="1px solid"
+      borderColor="gray.700"
       rounded="xl"
       shadow="2xl"
     >
       <Box p={{ base: 4, md: 6 }}>
         <Flex alignItems="center" gap={2} mb={4}>
-          <Box p={1.5} bg="rgba(99, 102, 241, 0.1)" rounded="lg">
+          <Box p={1.5} bg="indigo.500/10" rounded="lg">
             <Text fontSize="lg">🎯</Text>
           </Box>
           <Text fontSize="lg" fontWeight="bold" color="gray.100">快速行動</Text>

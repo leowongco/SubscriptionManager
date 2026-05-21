@@ -4,6 +4,7 @@ import {
     Text,
     VStack,
     HStack,
+    Badge,
 } from '@chakra-ui/react';
 import {
     Dialog,
@@ -17,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Field } from '../ui/field';
 import { useState } from 'react';
+import { formatCurrency } from '@/lib/currency';
 
 interface BalanceAdjustDialogProps {
     open: boolean;
@@ -25,6 +27,7 @@ interface BalanceAdjustDialogProps {
         id: string;
         apple_id: string;
         balance: number;
+        currency?: string;
     } | null;
     onConfirm: (accountId: string, data: { adjustment_amount: number; reason: string; operator: string }) => Promise<void>;
 }
@@ -75,9 +78,16 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
                                 <Text fontWeight="medium">{account?.apple_id || '-'}</Text>
                             </HStack>
                             <HStack justify="space-between" mt={2}>
-                                <Text color="gray.400" fontSize="sm">當前餘額</Text>
+                                <HStack gap={2}>
+                                    <Text color="gray.400" fontSize="sm">當前餘額</Text>
+                                    {account?.currency && account.currency !== 'HKD' && (
+                                        <Badge colorPalette="cyan" fontSize="xs">
+                                            {account.currency}
+                                        </Badge>
+                                    )}
+                                </HStack>
                                 <Text fontWeight="bold" fontSize="lg" color="blue.400">
-                                    ${account?.balance?.toFixed(2) || '0.00'}
+                                    {formatCurrency(account?.balance || 0, account?.currency)}
                                 </Text>
                             </HStack>
                         </Box>
@@ -102,7 +112,7 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
                                 <HStack justify="space-between">
                                     <Text color="gray.400" fontSize="sm">調整後餘額</Text>
                                     <Text fontWeight="bold" color={newBalance >= 0 ? 'green.400' : 'red.400'}>
-                                        ${newBalance.toFixed(2)}
+                                        {formatCurrency(newBalance, account?.currency)}
                                     </Text>
                                 </HStack>
                             </Box>

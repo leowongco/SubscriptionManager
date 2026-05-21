@@ -5,15 +5,7 @@ import { TrendingUp, Wallet, BellRing, AlertTriangle, TrendingDown } from 'lucid
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WarningCard } from '@/components/dashboard/WarningCard';
 import { BalanceTrendChart } from '@/components/dashboard/BalanceTrendChart';
-
-// Simple mock exchange rates to HKD for demonstration
-const RATES: Record<string, number> = {
-    HKD: 1,
-    TWD: 0.24,
-    TRY: 0.23,
-    ARS: 0.0076,
-    USD: 7.82
-};
+import { EXCHANGE_RATES } from '@/lib/currency';
 
 export default function Dashboard() {
     const { data: accounts } = useSWR<any[]>('accounts', api.getAccounts);
@@ -21,7 +13,7 @@ export default function Dashboard() {
 
     // Calculations
     const totalBalanceHKD = accounts?.reduce((sum, acc) => {
-        const rate = RATES[acc.currency] || 1;
+        const rate = EXCHANGE_RATES[acc.currency] || 1;
         return sum + (acc.balance * rate);
     }, 0) || 0;
 
@@ -29,7 +21,7 @@ export default function Dashboard() {
         if (!acc.subscriptions || acc.subscriptions.length === 0) return sum;
 
         const accMonthlyBurn = acc.subscriptions.reduce((subSum: number, sub: any) => {
-            const rate = RATES[sub.currency] || 1;
+            const rate = EXCHANGE_RATES[sub.currency] || 1;
             let monthlyPrice = sub.base_price || 0;
             if (sub.cycle === 'yearly') monthlyPrice = monthlyPrice / 12;
             return subSum + (monthlyPrice * rate);
@@ -82,13 +74,15 @@ export default function Dashboard() {
                 position="relative"
                 overflow="hidden"
                 rounded={{ base: '2xl', md: '3xl' }}
-                bg="linear-gradient(to right, rgba(67, 56, 202, 0.4), rgba(88, 28, 135, 0.2), rgba(23, 23, 23, 1))"
-                border="1px solid rgba(38, 38, 38, 0.8)"
+                bg="bg.subtle"
+                border="1px solid"
+                borderColor="gray.700"
                 p={{ base: 5, md: 8 }}
                 shadow="2xl"
                 backdropFilter="blur(20px)"
                 transition="all 0.3s"
             >
+                {/* Decorative blur elements */}
                 <Box
                     position="absolute"
                     top={0}
@@ -97,7 +91,7 @@ export default function Dashboard() {
                     mr={{ base: -16, md: -16 }}
                     w={{ base: 48, md: 64 }}
                     h={{ base: 48, md: 64 }}
-                    bg="rgba(99, 102, 241, 0.1)"
+                    bg="indigo.500/10"
                     filter="blur(80px)"
                     rounded="full"
                     pointerEvents="none"
@@ -110,14 +104,14 @@ export default function Dashboard() {
                     ml={{ base: -16, md: -16 }}
                     w={{ base: 48, md: 64 }}
                     h={{ base: 48, md: 64 }}
-                    bg="rgba(168, 85, 247, 0.1)"
+                    bg="purple.500/10"
                     filter="blur(80px)"
                     rounded="full"
                     pointerEvents="none"
                 />
 
                 <Box position="relative" zIndex={10}>
-                    <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white" textShadow="0 2px 4px rgba(0,0,0,0.3)">
+                    <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white" textShadow="md">
                         數據中心儀表板
                     </Text>
                     <Text color="gray.400" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
@@ -133,9 +127,10 @@ export default function Dashboard() {
             <Grid gap={{ base: 4, md: 6 }} templateColumns={{ md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}>
                 {/* Total Balance Card */}
                 <Box
-                    bg="rgba(23, 23, 23, 0.4)"
+                    bg="gray.900/40"
                     backdropFilter="blur(20px)"
-                    border="1px solid rgba(99, 102, 241, 0.2)"
+                    border="1px solid"
+                    borderColor="indigo.500/20"
                     rounded="xl"
                     shadow="2xl"
                     overflow="hidden"
@@ -145,7 +140,7 @@ export default function Dashboard() {
                     <Box
                         position="absolute"
                         inset={0}
-                        bg="linear-gradient(to bottom right, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.05))"
+                        bg="linear-gradient(to bottom right, var(--chakra-colors-indigo-500/10), var(--chakra-colors-purple-500/5))"
                         opacity={0}
                         _groupHover={{ opacity: 1 }}
                         transition="opacity 0.5s"
@@ -155,12 +150,12 @@ export default function Dashboard() {
                         <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color="indigo.400" textTransform="uppercase" letterSpacing="wider">
                             總可用餘額
                         </Text>
-                        <Box p={2} bg="rgba(99, 102, 241, 0.1)" rounded={{ base: 'lg', md: 'xl' }}>
+                        <Box p={2} bg="indigo.500/10" rounded={{ base: 'lg', md: 'xl' }}>
                             <Box as={Wallet} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color="indigo.400" />
                         </Box>
                     </Flex>
                     <Box p={6} pt={0} position="relative" zIndex={10}>
-                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="white" textShadow="0 1px 2px rgba(0,0,0,0.2)" alignItems="baseline" gap={1.5}>
+                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="white" textShadow="sm" alignItems="baseline" gap={1.5}>
                             <Text fontSize={{ base: 'xl', md: '2xl' }} color="gray.400" fontWeight="medium">HK$</Text>
                             {totalBalanceHKD.toFixed(2)}
                         </Flex>
@@ -172,9 +167,10 @@ export default function Dashboard() {
 
                 {/* Monthly Expense Card */}
                 <Box
-                    bg="rgba(23, 23, 23, 0.4)"
+                    bg="gray.900/40"
                     backdropFilter="blur(20px)"
-                    border="1px solid rgba(168, 85, 247, 0.2)"
+                    border="1px solid"
+                    borderColor="purple.500/20"
                     rounded="xl"
                     shadow="2xl"
                     overflow="hidden"
@@ -184,7 +180,7 @@ export default function Dashboard() {
                     <Box
                         position="absolute"
                         inset={0}
-                        bg="linear-gradient(to bottom right, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.05))"
+                        bg="linear-gradient(to bottom right, var(--chakra-colors-purple-500/10), var(--chakra-colors-pink-500/5))"
                         opacity={0}
                         _groupHover={{ opacity: 1 }}
                         transition="opacity 0.5s"
@@ -194,12 +190,12 @@ export default function Dashboard() {
                         <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color="purple.400" textTransform="uppercase" letterSpacing="wider">
                             預估每月總支出
                         </Text>
-                        <Box p={2} bg="rgba(168, 85, 247, 0.1)" rounded={{ base: 'lg', md: 'xl' }}>
+                        <Box p={2} bg="purple.500/10" rounded={{ base: 'lg', md: 'xl' }}>
                             <Box as={TrendingDown} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color="purple.400" />
                         </Box>
                     </Flex>
                     <Box p={6} pt={0} position="relative" zIndex={10}>
-                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="white" textShadow="0 1px 2px rgba(0,0,0,0.2)" alignItems="baseline" gap={1.5}>
+                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="white" textShadow="sm" alignItems="baseline" gap={1.5}>
                             <Text fontSize={{ base: 'xl', md: '2xl' }} color="gray.400" fontWeight="medium">≈</Text>
                             <Text fontSize={{ base: 'xl', md: '2xl' }} color="gray.400" fontWeight="medium">HK$</Text>
                             {monthlyExpenseHKD.toFixed(2)}
@@ -217,8 +213,8 @@ export default function Dashboard() {
             <Grid gap={6} templateColumns={{ lg: 'repeat(2, 1fr)' }} id="warnings-section">
                 {/* Low Balance Warning */}
                 <VStack gap={5} align="stretch">
-                    <Flex alignItems="center" gap={3} borderBottom="1px solid rgba(38, 38, 38, 0.6)" pb={3}>
-                        <Box p={2} bg="rgba(239, 68, 68, 0.1)" rounded="lg">
+                    <Flex alignItems="center" gap={3} borderBottom="1px solid" borderColor="gray.700" pb={3}>
+                        <Box p={2} bg="red.500/10" rounded="lg">
                             <Box as={AlertTriangle} w={5} h={5} color="red.500" />
                         </Box>
                         <Text fontSize="xl" fontWeight="bold" color="gray.100" letterSpacing="tight">
@@ -229,11 +225,12 @@ export default function Dashboard() {
                     {lowBalanceAccounts.length === 0 ? (
                         <Box
                             color="gray.500"
-                            border="1px solid rgba(38, 38, 38, 0.4)"
+                            border="1px solid"
+                            borderColor="gray.700"
                             rounded="2xl"
                             p={6}
                             textAlign="center"
-                            bg="rgba(23, 23, 23, 0.2)"
+                            bg="gray.900/20"
                             backdropFilter="blur(4px)"
                             fontSize="sm"
                         >
@@ -250,8 +247,8 @@ export default function Dashboard() {
 
                 {/* Upcoming Price Increases */}
                 <VStack gap={5} align="stretch">
-                    <Flex alignItems="center" gap={3} borderBottom="1px solid rgba(38, 38, 38, 0.6)" pb={3}>
-                        <Box p={2} bg="rgba(249, 115, 22, 0.1)" rounded="lg">
+                    <Flex alignItems="center" gap={3} borderBottom="1px solid" borderColor="gray.700" pb={3}>
+                        <Box p={2} bg="orange.500/10" rounded="lg">
                             <Box as={BellRing} w={5} h={5} color="orange.400" />
                         </Box>
                         <Text fontSize="xl" fontWeight="bold" color="gray.100" letterSpacing="tight">
@@ -262,11 +259,12 @@ export default function Dashboard() {
                     {upcomingPriceIncreases.length === 0 ? (
                         <Box
                             color="gray.500"
-                            border="1px solid rgba(38, 38, 38, 0.4)"
+                            border="1px solid"
+                            borderColor="gray.700"
                             rounded="2xl"
                             p={6}
                             textAlign="center"
-                            bg="rgba(23, 23, 23, 0.2)"
+                            bg="gray.900/20"
                             backdropFilter="blur(4px)"
                             fontSize="sm"
                         >
@@ -279,13 +277,14 @@ export default function Dashboard() {
                                     key={s.id}
                                     p={4}
                                     rounded="xl"
-                                    border="1px solid rgba(154, 52, 18, 0.3)"
-                                    bg="rgba(124, 45, 18, 0.1)"
+                                    border="1px solid"
+                                    borderColor="orange.900/30"
+                                    bg="orange.900/10"
                                     backdropFilter="blur(12px)"
                                     display="flex"
                                     flexDirection="column"
                                     gap={3}
-                                    _hover={{ bg: 'rgba(124, 45, 18, 0.2)' }}
+                                    _hover={{ bg: 'orange.900/20' }}
                                     transition="all"
                                 >
                                     <Flex justify="space-between" alignItems="start">
@@ -294,17 +293,18 @@ export default function Dashboard() {
                                             fontSize="10px"
                                             fontWeight="bold"
                                             color="orange.400"
-                                            bg="rgba(154, 52, 18, 0.3)"
+                                            bg="orange.900/30"
                                             px={2}
                                             py={0.5}
                                             rounded="sm"
-                                            border="1px solid rgba(154, 52, 18, 0.5)"
+                                            border="1px solid"
+                                            borderColor="orange.700/50"
                                             textTransform="uppercase"
                                         >
                                             {new Date(s.effective_date!).toLocaleDateString()}
                                         </Text>
                                     </Flex>
-                                    <Flex justify="space-between" alignItems="center" bg="rgba(0,0,0,0.2)" p={2} rounded="lg" border="1px solid rgba(255,255,255,0.05)">
+                                    <Flex justify="space-between" alignItems="center" bg="black/20" p={2} rounded="lg" border="1px solid" borderColor="white/5">
                                         <Text fontSize="xs" color="gray.500" textDecoration="line-through">
                                             {s.currency} {(s.base_price ?? 0).toFixed(2)}
                                         </Text>

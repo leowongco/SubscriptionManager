@@ -1,14 +1,29 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, UserPlus, Trash2, CheckCircle2, Circle } from 'lucide-react';
-import { ListPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus } from 'lucide-react';
+import {
+    Box,
+    VStack,
+    HStack,
+    Text,
+    Button,
+    Input,
+    Badge,
+    Flex,
+    Grid,
+    SimpleGrid,
+    DialogRoot,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogCloseTrigger,
+    Field,
+    NativeSelectRoot,
+    NativeSelectField,
+} from '@chakra-ui/react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Subscription {
     id: string;
@@ -102,7 +117,7 @@ export default function Mapping() {
             await api.createMember({ ...memberForm, subscription_id: selectedSubscriptionId });
         }
         setIsMemberOpen(false);
-        mutateAccounts(); // members are nested under array, refresh accounts
+        mutateAccounts();
     };
 
     const togglePaymentStatus = async (member: Member) => {
@@ -125,240 +140,682 @@ export default function Mapping() {
     };
 
     return (
-        <div className="space-y-6 md:space-y-10 max-w-7xl mx-auto pb-10 px-0 sm:px-4">
+        <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
             {/* Header Section */}
-            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-emerald-900/40 via-teal-900/20 to-neutral-900 border border-neutral-800/80 p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-48 md:w-64 h-48 md:h-64 bg-emerald-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-48 md:w-64 h-48 md:h-64 bg-teal-500/10 blur-[80px] md:blur-[100px] rounded-full pointer-events-none"></div>
+            <Box
+                position="relative"
+                overflow="hidden"
+                rounded={{ base: '2xl', md: '3xl' }}
+                bg="bg.subtle"
+                border="1px solid"
+                borderColor="gray.700"
+                p={{ base: 6, md: 8 }}
+                shadow="2xl"
+                backdropFilter="blur(20px)"
+            >
+                {/* Decorative blur elements */}
+                <Box
+                    position="absolute"
+                    top={0}
+                    right={0}
+                    mt={-16}
+                    mr={-16}
+                    w={{ base: 48, md: 64 }}
+                    h={{ base: 48, md: 64 }}
+                    bg="emerald.500/10"
+                    filter={{ base: 'blur(80px)', md: 'blur(100px)' }}
+                    rounded="full"
+                    pointerEvents="none"
+                />
+                <Box
+                    position="absolute"
+                    bottom={0}
+                    left={0}
+                    mb={-16}
+                    ml={-16}
+                    w={{ base: 48, md: 64 }}
+                    h={{ base: 48, md: 64 }}
+                    bg="teal.500/10"
+                    filter={{ base: 'blur(80px)', md: 'blur(100px)' }}
+                    rounded="full"
+                    pointerEvents="none"
+                />
 
-                <div className="relative z-10">
-                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-md">訂閱關係對應</h2>
-                    <p className="text-neutral-400 mt-2 text-xs md:text-sm font-medium">管理 Apple ID、獨立服務、與成員的繳費關係。</p>
-                </div>
+                <Flex
+                    justify="space-between"
+                    alignItems={{ base: 'start', md: 'center' }}
+                    flexDirection={{ base: 'column', md: 'row' }}
+                    gap={6}
+                >
+                    <Box position="relative" zIndex={10}>
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white" textShadow="md">
+                            訂閱關係對應
+                        </Text>
+                        <Text color="gray.400" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
+                            管理 Apple ID、獨立服務、與成員的繳費關係。
+                        </Text>
+                    </Box>
 
-                <Dialog open={isAccountOpen} onOpenChange={(e) => setIsAccountOpen(e.open)}>
-                    <DialogTrigger asChild>
-                        <Button onClick={() => setAccountForm({ balance: 0 })} className="w-full md:w-auto relative z-10 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl h-11 md:h-12 px-6 shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02]">
-                            <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                            新增帳號
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-[92vw] max-w-[450px] bg-neutral-900/90 backdrop-blur-3xl text-neutral-50 border-neutral-800/80 rounded-2xl shadow-2xl p-5 md:p-6">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-bold">{accountForm.id ? '編輯帳號' : '新增帳號'}</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleAccountSubmit} className="space-y-4 md:space-y-5 pt-4">
-                            <div className="space-y-1.5 md:space-y-2">
-                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Apple ID (付款帳號)</Label>
-                                <Input value={accountForm.apple_id || ''} onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" required />
-                            </div>
-                            <div className="space-y-1.5 md:space-y-2 pb-2">
-                                <Label className="text-[10px] md:text-sm text-neutral-400 font-semibold uppercase tracking-wider">初始餘額</Label>
-                                <Input type="number" step="0.01" value={accountForm.balance || ''} onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" />
-                            </div>
-                            <Button type="submit" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl h-11 md:h-12 text-sm md:text-md font-bold text-white shadow-lg transition-all transform hover:scale-[1.02]">儲存帳號</Button>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                    <DialogRoot open={isAccountOpen} onOpenChange={(e) => setIsAccountOpen(e.open)}>
+                        <DialogTrigger asChild>
+                            <Button
+                                onClick={() => setAccountForm({ balance: 0 })}
+                                w={{ base: 'full', md: 'auto' }}
+                                position="relative"
+                                zIndex={10}
+                                colorPalette="green"
+                                rounded="xl"
+                                h={{ base: 11, md: 12 }}
+                                px={6}
+                                shadow="lg"
+                                _hover={{ transform: 'scale(1.02)' }}
+                                transition="all"
+                            >
+                                <Box as={Plus} w={{ base: 4, md: 5 }} h={{ base: 4, md: 5 }} mr={2} />
+                                新增帳號
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent
+                            maxW="450px"
+                            w="92vw"
+                            bg="gray.900/90"
+                            backdropFilter="blur(40px)"
+                            color="gray.50"
+                            borderColor="gray.700"
+                            rounded="2xl"
+                            shadow="2xl"
+                            p={{ base: 5, md: 6 }}
+                        >
+                            <DialogHeader>
+                                <DialogTitle fontSize="xl" fontWeight="bold">
+                                    {accountForm.id ? '編輯帳號' : '新增帳號'}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleAccountSubmit}>
+                                <VStack gap={{ base: 4, md: 5 }} pt={4}>
+                                    <Field.Root>
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            Apple ID (付款帳號)
+                                        </Field.Label>
+                                        <Input
+                                            value={accountForm.apple_id || ''}
+                                            onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })}
+                                            required
+                                            bg="gray.950/50"
+                                            borderColor="gray.800"
+                                            rounded="xl"
+                                            h={{ base: 11, md: 12 }}
+                                            _focus={{ borderColor: 'emerald.500/50' }}
+                                            fontFamily="mono"
+                                            fontSize={{ base: 'xs', md: 'sm' }}
+                                        />
+                                    </Field.Root>
 
-            {!accounts && <div className="text-neutral-500 text-center animate-pulse">讀取關係資料中...</div>}
+                                    <Field.Root>
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            初始餘額
+                                        </Field.Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={accountForm.balance || ''}
+                                            onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })}
+                                            bg="gray.950/50"
+                                            borderColor="gray.800"
+                                            rounded="xl"
+                                            h={{ base: 11, md: 12 }}
+                                            _focus={{ borderColor: 'emerald.500/50' }}
+                                            fontFamily="mono"
+                                            fontSize={{ base: 'xs', md: 'sm' }}
+                                        />
+                                    </Field.Root>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
-                {accounts?.map(account => {
-                    return (
-                        <Card key={account.id} className="bg-neutral-900/40 backdrop-blur-xl border border-neutral-800/60 shadow-xl overflow-hidden relative group hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 flex flex-col">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                            <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                                    <Button
+                                        type="submit"
+                                        w="full"
+                                        colorPalette="green"
+                                        rounded="xl"
+                                        h={{ base: 11, md: 12 }}
+                                        fontSize={{ base: 'sm', md: 'md' }}
+                                        fontWeight="bold"
+                                        shadow="lg"
+                                        _hover={{ transform: 'scale(1.02)' }}
+                                        transition="all"
+                                    >
+                                        儲存帳號
+                                    </Button>
+                                </VStack>
+                            </form>
+                            <DialogCloseTrigger />
+                        </DialogContent>
+                    </DialogRoot>
+                </Flex>
+            </Box>
 
-                            <CardHeader className="pb-4 relative z-10 border-b border-neutral-800/50 bg-neutral-950/40 px-5">
-                                <div className="flex justify-between items-start">
-                                    <div className="min-w-0 pr-2">
-                                        <CardTitle className="text-lg md:text-xl font-bold text-white flex items-center gap-2 drop-shadow-md truncate">
-                                            {account.apple_id}
-                                        </CardTitle>
-                                        <CardDescription className="text-emerald-400 font-medium mt-1 flex flex-col gap-1 text-xs">
-                                            {(account.subscriptions?.length || 0) > 0 ? (
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {account.subscriptions?.map((sub: Subscription) => (
-                                                        <span key={sub.id} className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
-                                                            {sub.service_name} ({sub.group_name})
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <span className="text-neutral-500 text-[10px]">無啟用中訂閱</span>
-                                            )}
-                                        </CardDescription>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end shrink-0">
-                                        <div className="text-[10px] text-neutral-500 font-semibold tracking-wider font-mono">{account.subscriptions?.[0]?.currency || '$'}</div>
-                                        <div className="text-xl md:text-2xl font-black text-neutral-100 font-mono drop-shadow-sm cursor-pointer hover:text-emerald-400 transition-colors" title="Click to update balance" onClick={() => {
+            {!accounts && (
+                <Text color="gray.500" textAlign="center" animation="pulse">
+                    讀取關係資料中...
+                </Text>
+            )}
+
+            <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap={{ base: 5, md: 6 }}>
+                {accounts?.map(account => (
+                    <Box
+                        key={account.id}
+                        bg="gray.900/40"
+                        backdropFilter="blur(20px)"
+                        border="1px solid"
+                        borderColor="gray.700"
+                        shadow="xl"
+                        overflow="hidden"
+                        position="relative"
+                        rounded="xl"
+                        _hover={{ shadow: '2xl', borderColor: 'emerald.500/30' }}
+                        transition="all"
+                        display="flex"
+                        flexDirection="column"
+                    >
+                        {/* Hover gradient overlay */}
+                        <Box
+                            position="absolute"
+                            inset={0}
+                            bg="linear-gradient(to bottom right, rgba(16, 185, 129, 0.05), rgba(20, 184, 166, 0.05))"
+                            opacity={0}
+                            _groupHover={{ opacity: 1 }}
+                            transition="opacity"
+                            pointerEvents="none"
+                        />
+                        
+                        {/* Top gradient bar */}
+                        <Box h={1} w="full" bg="linear-gradient(to right, var(--chakra-colors-emerald-500), var(--chakra-colors-teal-500))" />
+
+                        {/* Header */}
+                        <Box
+                            pb={4}
+                            position="relative"
+                            zIndex={10}
+                            borderBottom="1px solid"
+                            borderColor="gray.700"
+                            bg="gray.950/40"
+                            px={5}
+                            pt={4}
+                        >
+                            <Flex justify="space-between" alignItems="start">
+                                <Box minW={0} pr={2}>
+                                    <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" color="white" display="flex" alignItems="center" gap={2} textShadow="md" truncate>
+                                        {account.apple_id}
+                                    </Text>
+                                    <Box mt={1}>
+                                        {(account.subscriptions?.length || 0) > 0 ? (
+                                            <Flex flexWrap="wrap" gap={1} mt={1}>
+                                                {account.subscriptions?.map((sub: Subscription) => (
+                                                    <Badge
+                                                        key={sub.id}
+                                                        colorPalette="green"
+                                                        variant="subtle"
+                                                        fontSize="10px"
+                                                        px={1.5}
+                                                        py={0.5}
+                                                    >
+                                                        {sub.service_name} ({sub.group_name})
+                                                    </Badge>
+                                                ))}
+                                            </Flex>
+                                        ) : (
+                                            <Text color="gray.500" fontSize="10px">
+                                                無啟用中訂閱
+                                            </Text>
+                                        )}
+                                    </Box>
+                                </Box>
+                                <VStack align="end" flexShrink={0}>
+                                    <Text fontSize="10px" color="gray.500" fontWeight="semibold" letterSpacing="wider" fontFamily="mono">
+                                        {account.subscriptions?.[0]?.currency || '$'}
+                                    </Text>
+                                    <Text
+                                        fontSize={{ base: 'xl', md: '2xl' }}
+                                        fontWeight="black"
+                                        color="gray.100"
+                                        fontFamily="mono"
+                                        textShadow="sm"
+                                        cursor="pointer"
+                                        _hover={{ color: 'emerald.400' }}
+                                        transition="color"
+                                        onClick={() => {
                                             const newBal = prompt('Update Balance:', account.balance.toString());
                                             if (newBal !== null) {
                                                 api.updateAccount({ ...account, balance: parseFloat(newBal) }).then(() => mutateAccounts());
                                             }
-                                        }}>
-                                            {typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
-                                        </div>
-                                    </div>
-                                </div>
+                                        }}
+                                    >
+                                        {typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
+                                    </Text>
+                                </VStack>
+                            </Flex>
 
-                                <div className="mt-4 flex gap-2 items-center justify-between">
-                                    <Dialog open={isSubscriptionOpen && selectedSubAccountId === account.id} onOpenChange={(open) => {
+                            <Flex mt={4} gap={2} alignItems="center" justify="space-between">
+                                <DialogRoot
+                                    open={isSubscriptionOpen && selectedSubAccountId === account.id}
+                                    onOpenChange={(open) => {
                                         if (!open) setIsSubscriptionOpen(false);
-                                    }}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="h-7 px-2 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 text-[10px]" onClick={() => {
+                                    }}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            h={7}
+                                            px={2}
+                                            borderColor="emerald.500/20"
+                                            color="emerald.400"
+                                            _hover={{ bg: 'emerald.500/10' }}
+                                            fontSize="10px"
+                                            onClick={() => {
                                                 setSelectedSubAccountId(account.id);
                                                 setSubscriptionForm({ start_date: getTodayString() });
                                                 setIsSubscriptionOpen(true);
-                                            }}>
-                                                <ListPlus className="w-3.5 h-3.5 mr-1" /> 管理訂閱
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="w-[92vw] max-w-[450px] bg-neutral-900/95 backdrop-blur-3xl border-neutral-800/80 text-neutral-50 rounded-2xl shadow-2xl p-5 md:p-6">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-xl font-bold">訂閱管理 - {account.apple_id}</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4 pt-2">
-                                                <div className="bg-neutral-950/50 rounded-xl border border-neutral-800/50 p-3 space-y-2 max-h-[200px] overflow-y-auto">
-                                                    {(account.subscriptions?.length || 0) > 0 ? account.subscriptions?.map((sub: Subscription) => (
-                                                        <div key={sub.id} className="flex justify-between items-center bg-neutral-900/50 p-2 rounded-lg border border-neutral-800/40">
-                                                            <div>
-                                                                <div className="text-sm font-semibold text-emerald-300">{sub.service_name} <span className="text-[10px] text-neutral-400 font-normal">({sub.group_name})</span></div>
-                                                                <div className="text-[10px] text-neutral-500 font-mono">
+                                            }}
+                                        >
+                                            <Box as={ListPlus} w={3.5} h={3.5} mr={1} /> 管理訂閱
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent
+                                        maxW="450px"
+                                        w="92vw"
+                                        bg="gray.900/95"
+                                        backdropFilter="blur(40px)"
+                                        borderColor="gray.700"
+                                        color="gray.50"
+                                        rounded="2xl"
+                                        shadow="2xl"
+                                        p={{ base: 5, md: 6 }}
+                                    >
+                                        <DialogHeader>
+                                            <DialogTitle fontSize="xl" fontWeight="bold">
+                                                訂閱管理 - {account.apple_id}
+                                            </DialogTitle>
+                                        </DialogHeader>
+                                        <VStack gap={4} pt={2}>
+                                            <Box
+                                                bg="gray.950/50"
+                                                rounded="xl"
+                                                border="1px solid"
+                                                borderColor="gray.700"
+                                                p={3}
+                                                maxH="200px"
+                                                overflowY="auto"
+                                                w="full"
+                                            >
+                                                {(account.subscriptions?.length || 0) > 0 ? (
+                                                    account.subscriptions?.map((sub: Subscription) => (
+                                                        <Flex
+                                                            key={sub.id}
+                                                            justify="space-between"
+                                                            alignItems="center"
+                                                            bg="gray.900/50"
+                                                            p={2}
+                                                            rounded="lg"
+                                                            border="1px solid"
+                                                            borderColor="gray.700"
+                                                            mb={2}
+                                                            _last={{ mb: 0 }}
+                                                        >
+                                                            <Box>
+                                                                <Text fontSize="sm" fontWeight="semibold" color="emerald.300">
+                                                                    {sub.service_name}{' '}
+                                                                    <Text as="span" fontSize="10px" color="gray.400" fontWeight="normal">
+                                                                        ({sub.group_name})
+                                                                    </Text>
+                                                                </Text>
+                                                                <Text fontSize="10px" color="gray.500" fontFamily="mono">
                                                                     {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
-                                                                    <span className="ml-2 bg-neutral-800 px-1 py-0.5 rounded text-neutral-400">每月 {new Date(sub.start_date).getDate()} 日扣</span>
-                                                                </div>
-                                                            </div>
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => removeSubscription(sub.id)}>
-                                                                <Trash2 className="w-4 h-4" />
+                                                                    <Badge ml={2} bg="gray.800" fontSize="10px" color="gray.400">
+                                                                        每月 {new Date(sub.start_date).getDate()} 日扣
+                                                                    </Badge>
+                                                                </Text>
+                                                            </Box>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                color="gray.500"
+                                                                _hover={{ color: 'red.400', bg: 'red.500/10' }}
+                                                                onClick={() => removeSubscription(sub.id)}
+                                                                aria-label="移除訂閱"
+                                                            >
+                                                                <Box as={Trash2} w={4} h={4} />
                                                             </Button>
-                                                        </div>
-                                                    )) : <div className="text-center text-xs text-neutral-500 py-4">無訂閱項目</div>}
-                                                </div>
+                                                        </Flex>
+                                                    ))
+                                                ) : (
+                                                    <Text textAlign="center" fontSize="xs" color="gray.500" py={4}>
+                                                        無訂閱項目
+                                                    </Text>
+                                                )}
+                                            </Box>
 
-                                                <form onSubmit={handleSubscriptionSubmit} className="space-y-4 pt-2 border-t border-neutral-800/80">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">新增服務</Label>
-                                                            <Select value={subscriptionForm.service_id} onValueChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v })}>
-                                                                <SelectTrigger className="bg-neutral-950/50 border-neutral-800 focus:ring-emerald-500/50 rounded-xl h-10 transition-all text-xs"><SelectValue>選擇服務</SelectValue></SelectTrigger>
-                                                                <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-50 rounded-xl shadow-2xl">
-                                                                    {services?.map(s => <SelectItem key={s.id} value={s.id} className="cursor-pointer hover:bg-neutral-800 rounded-lg text-xs">{s.name}</SelectItem>)}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">群組名稱</Label>
-                                                            <Input value={subscriptionForm.group_name || ''} onChange={e => setSubscriptionForm({ ...subscriptionForm, group_name: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-10 transition-all text-xs" required placeholder="如：家庭方案、用戶群..." />
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">扣款起始日</Label>
-                                                            <Input type="date" value={subscriptionForm.start_date?.split('T')[0] || ''} onChange={e => setSubscriptionForm({ ...subscriptionForm, start_date: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-10 transition-all text-xs" required />
-                                                        </div>
-                                                    </div>
-                                                    <Button type="submit" className="w-full bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white rounded-xl h-10 text-sm font-bold transition-all">加入訂閱</Button>
-                                                </form>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                            </CardHeader>
+                                            <Box as="form" onSubmit={handleSubscriptionSubmit} w="full">
+                                                <VStack gap={4} pt={2} borderTop="1px solid" borderColor="gray.700">
+                                                    <Grid templateColumns="2" gap={4}>
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                新增服務
+                                                            </Field.Label>
+                                                            <NativeSelectRoot>
+                                                                <NativeSelectField
+                                                                    value={subscriptionForm.service_id}
+                                                                    onChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v.target.value })}
+                                                                    bg="gray.950/50"
+                                                                    borderColor="gray.800"
+                                                                    rounded="xl"
+                                                                    h={10}
+                                                                    fontSize="xs"
+                                                                >
+                                                                    <option value="">選擇服務</option>
+                                                                    {services?.map(s => (
+                                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                                    ))}
+                                                                </NativeSelectField>
+                                                            </NativeSelectRoot>
+                                                        </Field.Root>
 
-                            <CardContent className="flex-1 px-4 py-3 relative z-10 bg-neutral-900/20 space-y-6">
-                                {(account.subscriptions?.length || 0) === 0 && (
-                                    <div className="text-neutral-500 text-xs text-center py-4">無啟用中訂閱，請先「管理訂閱」新增服務。</div>
-                                )}
-                                {account.subscriptions?.map(sub => (
-                                    <div key={sub.id} className="space-y-3">
-                                        <div className="flex justify-between items-center border-b border-neutral-800/40 pb-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-white tracking-wide">{sub.service_name}</span>
-                                                <span className="text-[10px] text-emerald-400/80 font-mono">{sub.group_name}</span>
-                                            </div>
-                                            <Dialog open={isMemberOpen && selectedSubscriptionId === sub.id} onOpenChange={(open) => {
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                群組名稱
+                                                            </Field.Label>
+                                                            <Input
+                                                                value={subscriptionForm.group_name || ''}
+                                                                onChange={e => setSubscriptionForm({ ...subscriptionForm, group_name: e.target.value })}
+                                                                required
+                                                                placeholder="如：家庭方案、用戶群..."
+                                                                bg="gray.950/50"
+                                                                borderColor="gray.800"
+                                                                rounded="xl"
+                                                                h={10}
+                                                                fontSize="xs"
+                                                            />
+                                                        </Field.Root>
+
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                扣款起始日
+                                                            </Field.Label>
+                                                            <Input
+                                                                type="date"
+                                                                value={subscriptionForm.start_date?.split('T')[0] || ''}
+                                                                onChange={e => setSubscriptionForm({ ...subscriptionForm, start_date: e.target.value })}
+                                                                required
+                                                                bg="gray.950/50"
+                                                                borderColor="gray.800"
+                                                                rounded="xl"
+                                                                h={10}
+                                                                fontSize="xs"
+                                                            />
+                                                        </Field.Root>
+                                                    </Grid>
+
+                                                    <Button
+                                                        type="submit"
+                                                        w="full"
+                                                        bg="emerald.600/20"
+                                                        color="emerald.400"
+                                                        border="1px solid"
+                                                        borderColor="emerald.500/30"
+                                                        _hover={{ bg: 'emerald.500', color: 'white' }}
+                                                        rounded="xl"
+                                                        h={10}
+                                                        fontSize="sm"
+                                                        fontWeight="bold"
+                                                    >
+                                                        加入訂閱
+                                                    </Button>
+                                                </VStack>
+                                            </Box>
+                                        </VStack>
+                                        <DialogCloseTrigger />
+                                    </DialogContent>
+                                </DialogRoot>
+                            </Flex>
+                        </Box>
+
+                        {/* Content */}
+                        <Box
+                            flex={1}
+                            px={4}
+                            py={3}
+                            position="relative"
+                            zIndex={10}
+                            bg="gray.900/20"
+                        >
+                            {(account.subscriptions?.length || 0) === 0 && (
+                                <Text color="gray.500" fontSize="xs" textAlign="center" py={4}>
+                                    無啟用中訂閱，請先「管理訂閱」新增服務。
+                                </Text>
+                            )}
+                            {account.subscriptions?.map(sub => (
+                                <Box key={sub.id} mb={6} _last={{ mb: 0 }}>
+                                    <Flex justify="space-between" alignItems="center" borderBottom="1px solid" borderColor="gray.700" pb={2} mb={3}>
+                                        <VStack align="start" gap={0}>
+                                            <Text fontSize="sm" fontWeight="bold" color="white" letterSpacing="wide">
+                                                {sub.service_name}
+                                            </Text>
+                                            <Text fontSize="10px" color="emerald.400/80" fontFamily="mono">
+                                                {sub.group_name}
+                                            </Text>
+                                        </VStack>
+                                        <DialogRoot
+                                            open={isMemberOpen && selectedSubscriptionId === sub.id}
+                                            onOpenChange={(open) => {
                                                 if (!open) setIsMemberOpen(false);
-                                            }}>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-[10px]" onClick={() => {
+                                            }}
+                                        >
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    h={6}
+                                                    px={2}
+                                                    color="emerald.400"
+                                                    _hover={{ color: 'emerald.300', bg: 'emerald.500/10' }}
+                                                    fontSize="10px"
+                                                    onClick={() => {
                                                         setSelectedSubscriptionId(sub.id);
                                                         setMemberForm({ payment_status: 0 });
                                                         setIsMemberOpen(true);
-                                                    }}>
-                                                        <UserPlus className="w-3 h-3 mr-1" /> 加人
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="w-[92vw] max-w-[400px] bg-neutral-900/90 backdrop-blur-3xl border-neutral-800/80 text-neutral-50 rounded-2xl shadow-2xl p-5 md:p-6">
-                                                    <DialogHeader>
-                                                        <DialogTitle className="text-xl font-bold">新增 {sub.service_name} 成員</DialogTitle>
-                                                    </DialogHeader>
-                                                    <form onSubmit={handleMemberSubmit} className="space-y-4 md:space-y-5 pt-4">
-                                                        <div className="space-y-1.5 md:space-y-2">
-                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">電子郵件 (Email) / 代號</Label>
-                                                            <Input value={memberForm.email || ''} onChange={e => setMemberForm({ ...memberForm, email: e.target.value })} required className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all font-mono text-xs md:text-sm" />
-                                                        </div>
-                                                        <div className="space-y-1.5 md:space-y-2">
-                                                            <Label className="text-[10px] md:text-xs text-neutral-400 font-semibold uppercase tracking-wider">備註 (選填)</Label>
-                                                            <Input value={memberForm.memo || ''} onChange={e => setMemberForm({ ...memberForm, memo: e.target.value })} className="bg-neutral-950/50 border-neutral-800 focus:border-emerald-500/50 rounded-xl h-11 md:h-12 transition-all text-xs" />
-                                                        </div>
-                                                        <div className="flex items-center space-x-2 pt-2">
-                                                            <input
-                                                                type="checkbox"
-                                                                id={`payment_status_${sub.id}`}
-                                                                checked={memberForm.payment_status === 1}
-                                                                onChange={e => setMemberForm({ ...memberForm, payment_status: e.target.checked ? 1 : 0 })}
-                                                                className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-neutral-900 cursor-pointer accent-emerald-500"
+                                                    }}
+                                                >
+                                                    <Box as={UserPlus} w={3} h={3} mr={1} /> 加人
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent
+                                                maxW="400px"
+                                                w="92vw"
+                                                bg="gray.900/90"
+                                                backdropFilter="blur(40px)"
+                                                borderColor="gray.700"
+                                                color="gray.50"
+                                                rounded="2xl"
+                                                shadow="2xl"
+                                                p={{ base: 5, md: 6 }}
+                                            >
+                                                <DialogHeader>
+                                                    <DialogTitle fontSize="xl" fontWeight="bold">
+                                                        新增 {sub.service_name} 成員
+                                                    </DialogTitle>
+                                                </DialogHeader>
+                                                <form onSubmit={handleMemberSubmit}>
+                                                    <VStack gap={{ base: 4, md: 5 }} pt={4}>
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                電子郵件 (Email) / 代號
+                                                            </Field.Label>
+                                                            <Input
+                                                                value={memberForm.email || ''}
+                                                                onChange={e => setMemberForm({ ...memberForm, email: e.target.value })}
+                                                                required
+                                                                bg="gray.950/50"
+                                                                borderColor="gray.800"
+                                                                rounded="xl"
+                                                                h={{ base: 11, md: 12 }}
+                                                                _focus={{ borderColor: 'emerald.500/50' }}
+                                                                fontFamily="mono"
+                                                                fontSize={{ base: 'xs', md: 'sm' }}
                                                             />
-                                                            <Label htmlFor={`payment_status_${sub.id}`} className="cursor-pointer font-medium text-xs md:text-sm text-neutral-300 hover:text-white transition-colors">初始狀態為「已繳費」</Label>
-                                                        </div>
-                                                        <Button type="submit" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl h-11 md:h-12 text-sm md:text-md font-bold text-white shadow-lg transition-all transform hover:scale-[1.02]">儲存成員</Button>
-                                                    </form>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
+                                                        </Field.Root>
 
-                                        <div className="space-y-1.5">
-                                            {sub.members?.length === 0 && (
-                                                <div className="text-[9px] text-neutral-500 text-center py-2 bg-neutral-950/30 rounded-lg border border-neutral-800/50">尚無成員</div>
-                                            )}
-                                            {sub.members?.map(member => (
-                                                <div key={member.id} className="group flex justify-between items-center py-1.5 px-3 bg-neutral-950/50 rounded-lg border border-neutral-800/50 hover:border-emerald-500/30 hover:bg-neutral-900/80 transition-all">
-                                                    <div className="flex items-center gap-2 overflow-hidden">
-                                                        <button onClick={() => togglePaymentStatus(member)} className={`flex-shrink-0 transition-colors ${member.payment_status ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'text-neutral-600 hover:text-neutral-500'}`}>
-                                                            {member.payment_status ? <CheckCircle2 className="w-4 h-4 fill-emerald-500/20" /> : <Circle className="w-4 h-4" />}
-                                                        </button>
-                                                        <div className="flex flex-col truncate">
-                                                            <span className="text-xs font-bold text-neutral-300 truncate font-mono tracking-tighter">{member.email}</span>
-                                                            {member.memo && <span className="text-[9px] text-neutral-500 truncate">{member.memo}</span>}
-                                                        </div>
-                                                    </div>
-                                                    <button onClick={() => deleteMember(member.id)} className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all p-1.5 shrink-0 ml-1">
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                備註 (選填)
+                                                            </Field.Label>
+                                                            <Input
+                                                                value={memberForm.memo || ''}
+                                                                onChange={e => setMemberForm({ ...memberForm, memo: e.target.value })}
+                                                                bg="gray.950/50"
+                                                                borderColor="gray.800"
+                                                                rounded="xl"
+                                                                h={{ base: 11, md: 12 }}
+                                                                fontSize="xs"
+                                                            />
+                                                        </Field.Root>
 
-                            <CardFooter className="p-4 border-t border-neutral-800/50 flex justify-between bg-neutral-950/60 backdrop-blur-md relative z-10">
-                                <Button variant="ghost" size="sm" onClick={() => {
+                                                        <Checkbox
+                                                            checked={memberForm.payment_status === 1}
+                                                            onCheckedChange={(e) => setMemberForm({ ...memberForm, payment_status: e.checked ? 1 : 0 })}
+                                                        >
+                                                            初始狀態為「已繳費」
+                                                        </Checkbox>
+
+                                                        <Button
+                                                            type="submit"
+                                                            w="full"
+                                                            colorPalette="green"
+                                                            rounded="xl"
+                                                            h={{ base: 11, md: 12 }}
+                                                            fontSize={{ base: 'sm', md: 'md' }}
+                                                            fontWeight="bold"
+                                                            shadow="lg"
+                                                            _hover={{ transform: 'scale(1.02)' }}
+                                                            transition="all"
+                                                        >
+                                                            儲存成員
+                                                        </Button>
+                                                    </VStack>
+                                                </form>
+                                                <DialogCloseTrigger />
+                                            </DialogContent>
+                                        </DialogRoot>
+                                    </Flex>
+
+                                    <VStack gap={1.5}>
+                                        {sub.members?.length === 0 && (
+                                            <Text fontSize="9px" color="gray.500" textAlign="center" py={2} bg="gray.950/30" rounded="lg" border="1px solid" borderColor="gray.700">
+                                                尚無成員
+                                            </Text>
+                                        )}
+                                        {sub.members?.map(member => (
+                                            <Flex
+                                                key={member.id}
+                                                justify="space-between"
+                                                alignItems="center"
+                                                py={1.5}
+                                                px={3}
+                                                bg="gray.950/50"
+                                                rounded="lg"
+                                                border="1px solid"
+                                                borderColor="gray.700"
+                                                _hover={{ borderColor: 'emerald.500/30', bg: 'gray.900/80' }}
+                                                transition="all"
+                                            >
+                                                <HStack gap={2} overflow="hidden">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        p={0}
+                                                        minW="auto"
+                                                        h="auto"
+                                                        color={member.payment_status ? 'emerald.500' : 'gray.600'}
+                                                        _hover={{ color: member.payment_status ? 'emerald.400' : 'gray.500' }}
+                                                        onClick={() => togglePaymentStatus(member)}
+                                                        aria-label={member.payment_status ? '標記為未繳費' : '標記為已繳費'}
+                                                    >
+                                                        <Box
+                                                            as={member.payment_status ? CheckCircle2 : Circle}
+                                                            w={4}
+                                                            h={4}
+                                                        />
+                                                    </Button>
+                                                    <VStack align="start" gap={0} truncate>
+                                                        <Text fontSize="xs" fontWeight="bold" color="gray.300" fontFamily="mono" letterSpacing="tighter" truncate>
+                                                            {member.email}
+                                                        </Text>
+                                                        {member.memo && (
+                                                            <Text fontSize="9px" color="gray.500" truncate>
+                                                                {member.memo}
+                                                            </Text>
+                                                        )}
+                                                    </VStack>
+                                                </HStack>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    p={1.5}
+                                                    minW="auto"
+                                                    h="auto"
+                                                    color="gray.500"
+                                                    _hover={{ color: 'red.400', bg: 'red.500/10' }}
+                                                    onClick={() => deleteMember(member.id)}
+                                                    aria-label="刪除成員"
+                                                >
+                                                    <Box as={Trash2} w={3.5} h={3.5} />
+                                                </Button>
+                                            </Flex>
+                                        ))}
+                                    </VStack>
+                                </Box>
+                            ))}
+                        </Box>
+
+                        {/* Footer */}
+                        <HStack
+                            p={4}
+                            borderTop="1px solid"
+                            borderColor="gray.700"
+                            justify="space-between"
+                            bg="gray.950/60"
+                            backdropFilter="blur(10px)"
+                            position="relative"
+                            zIndex={10}
+                        >
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                color="emerald.400"
+                                _hover={{ color: 'emerald.300', bg: 'emerald.500/10' }}
+                                fontSize={{ base: '10px', md: 'xs' }}
+                                fontWeight="bold"
+                                letterSpacing="wider"
+                                onClick={() => {
                                     setAccountForm({ ...account });
                                     setIsAccountOpen(true);
-                                }} className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-[10px] md:text-xs font-bold tracking-wider">
-                                    編輯帳號
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => deleteAccount(account.id)} className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 text-[10px] md:text-xs font-bold tracking-wider">
-                                    移除帳號卡
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    );
-                })}
-            </div>
-        </div >
+                                }}
+                            >
+                                編輯帳號
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                color="gray.500"
+                                _hover={{ color: 'red.400', bg: 'red.500/10' }}
+                                fontSize={{ base: '10px', md: 'xs' }}
+                                fontWeight="bold"
+                                letterSpacing="wider"
+                                onClick={() => deleteAccount(account.id)}
+                            >
+                                移除帳號卡
+                            </Button>
+                        </HStack>
+                    </Box>
+                ))}
+            </SimpleGrid>
+        </VStack>
     );
 }

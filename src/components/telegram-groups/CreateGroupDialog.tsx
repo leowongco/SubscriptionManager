@@ -5,6 +5,8 @@ import {
   HStack,
   Button,
   Input,
+  NativeSelectRoot,
+  NativeSelectField,
 } from '@chakra-ui/react';
 import {
   Dialog,
@@ -117,25 +119,25 @@ export default function CreateGroupDialog({
               <Text fontSize="sm" color="gray.400">
                 扣費日（每月幾號）<Text as="span" color="red.400">*</Text>
               </Text>
-              <select
-                value={billingDay}
-                onChange={(e) => setBillingDay(e.target.value)}
-                style={{
-                  background: '#374151',
-                  border: '1px solid #4B5563',
-                  color: 'white',
-                  borderRadius: '0.375rem',
-                  padding: '0.5rem',
-                  width: '100%',
-                  outline: 'none',
-                }}
-              >
-                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                  <option key={day} value={day}>
-                    每月 {day} 日
-                  </option>
-                ))}
-              </select>
+              <NativeSelectRoot>
+                <NativeSelectField
+                  value={billingDay}
+                  onChange={(e) => setBillingDay(e.target.value)}
+                  bg="gray.700"
+                  border="1px"
+                  borderColor="gray.600"
+                  color="white"
+                  rounded="md"
+                  p={2}
+                  w="full"
+                >
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                    <option key={day} value={day}>
+                      每月 {day} 日
+                    </option>
+                  ))}
+                </NativeSelectField>
+              </NativeSelectRoot>
             </VStack>
 
             {/* 收費週期 */}
@@ -143,23 +145,23 @@ export default function CreateGroupDialog({
               <Text fontSize="sm" color="gray.400">
                 收費週期類型 <Text as="span" color="red.400">*</Text>
               </Text>
-              <select
-                value={billingCycleType}
-                onChange={(e) => setBillingCycleType(e.target.value as 'monthly' | 'biannually' | 'yearly')}
-                style={{
-                  background: '#374151',
-                  border: '1px solid #4B5563',
-                  color: 'white',
-                  borderRadius: '0.375rem',
-                  padding: '0.5rem',
-                  width: '100%',
-                  outline: 'none',
-                }}
-              >
-                <option value="monthly">每月</option>
-                <option value="biannually">半年</option>
-                <option value="yearly">一年</option>
-              </select>
+              <NativeSelectRoot>
+                <NativeSelectField
+                  value={billingCycleType}
+                  onChange={(e) => setBillingCycleType(e.target.value as 'monthly' | 'biannually' | 'yearly')}
+                  bg="gray.700"
+                  border="1px"
+                  borderColor="gray.600"
+                  color="white"
+                  rounded="md"
+                  p={2}
+                  w="full"
+                >
+                  <option value="monthly">每月</option>
+                  <option value="biannually">半年</option>
+                  <option value="yearly">一年</option>
+                </NativeSelectField>
+              </NativeSelectRoot>
             </VStack>
 
             {/* 備註 */}

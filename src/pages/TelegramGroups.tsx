@@ -9,6 +9,7 @@ import {
   SimpleGrid,
   Spinner,
   Icon,
+  Input,
 } from '@chakra-ui/react';
 import { Plus, Users, DollarSign, TrendingUp, Search } from 'lucide-react';
 import GroupCard from '../components/telegram-groups/GroupCard';
@@ -222,17 +223,15 @@ export default function TelegramGroups() {
         >
           <HStack gap={3}>
             <Box as={Search} w={5} h={5} color="gray.400" />
-            <input
+            <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜尋群組名稱或備註..."
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'white',
-                width: '100%',
-                outline: 'none',
-              }}
+              bg="transparent"
+              border="none"
+              color="white"
+              _placeholder={{ color: 'gray.500' }}
+              _focus={{ borderColor: 'transparent' }}
             />
           </HStack>
         </Box>

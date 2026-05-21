@@ -46,7 +46,7 @@ export default function Layout() {
         <Flex minH="100vh" bg="gray.900" color="white">
             {/* Sidebar (Desktop) */}
             <Box
-                w="64"
+                w={{ base: '48', md: '56', lg: '64' }}
                 bg="gray.800"
                 borderRight="1px"
                 borderColor="gray.700"

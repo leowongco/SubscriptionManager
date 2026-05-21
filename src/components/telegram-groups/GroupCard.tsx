@@ -131,6 +131,7 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
               colorPalette="gray"
               variant="ghost"
               onClick={() => onEdit(group)}
+              aria-label="編輯群組"
             >
               <HStack gap={2}>
                 <Box as={Edit} w={4} h={4} />
