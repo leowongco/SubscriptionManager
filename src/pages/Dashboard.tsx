@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Box, Flex, VStack, Text, Grid } from '@chakra-ui/react';
-import { TrendingUp, Wallet, BellRing, AlertTriangle, TrendingDown } from 'lucide-react';
+import { Box, Flex, VStack, Text, Grid, EmptyState, Icon } from '@chakra-ui/react';
+import { TrendingUp, Wallet, BellRing, AlertTriangle, TrendingDown, CheckCircle } from 'lucide-react';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WarningCard } from '@/components/dashboard/WarningCard';
 import { BalanceTrendChart } from '@/components/dashboard/BalanceTrendChart';
@@ -242,19 +242,16 @@ export default function Dashboard() {
                     </Flex>
 
                     {lowBalanceAccounts.length === 0 ? (
-                        <Box
-                            color={emptyTextColor}
-                            border="1px solid"
-                            borderColor={emptyBorderColor}
-                            rounded="2xl"
-                            p={6}
-                            textAlign="center"
-                            bg={emptyBg}
-                            backdropFilter="blur(4px)"
-                            fontSize="sm"
-                        >
-                            所有帳號餘額充足。
-                        </Box>
+                        <EmptyState.Root size="sm">
+                            <EmptyState.Content>
+                                <EmptyState.Indicator>
+                                    <Icon as={CheckCircle} />
+                                </EmptyState.Indicator>
+                                <VStack textAlign="center" gap={1}>
+                                    <EmptyState.Title>所有帳號餘額充足</EmptyState.Title>
+                                </VStack>
+                            </EmptyState.Content>
+                        </EmptyState.Root>
                     ) : (
                         <Grid gap={3} templateColumns={{ md: 'repeat(2, 1fr)' }}>
                             {lowBalanceAccounts.map((acc: any) => (
@@ -276,19 +273,16 @@ export default function Dashboard() {
                     </Flex>
 
                     {upcomingPriceIncreases.length === 0 ? (
-                        <Box
-                            color={emptyTextColor}
-                            border="1px solid"
-                            borderColor={emptyBorderColor}
-                            rounded="2xl"
-                            p={6}
-                            textAlign="center"
-                            bg={emptyBg}
-                            backdropFilter="blur(4px)"
-                            fontSize="sm"
-                        >
-                            目前無即將生效的漲價。
-                        </Box>
+                        <EmptyState.Root size="sm">
+                            <EmptyState.Content>
+                                <EmptyState.Indicator>
+                                    <Icon as={CheckCircle} />
+                                </EmptyState.Indicator>
+                                <VStack textAlign="center" gap={1}>
+                                    <EmptyState.Title>目前無即將生效的漲價</EmptyState.Title>
+                                </VStack>
+                            </EmptyState.Content>
+                        </EmptyState.Root>
                     ) : (
                         <VStack gap={3} align="stretch">
                             {upcomingPriceIncreases.map(s => (

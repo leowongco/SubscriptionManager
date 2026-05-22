@@ -13,6 +13,7 @@ import {
   Spinner,
   Flex,
   Table,
+  EmptyState,
 } from '@chakra-ui/react';
 import {
   CreditCard,
@@ -20,6 +21,7 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react';
 import AccountSelector from '@/components/recharge/AccountSelector';
 import RechargePreview from '@/components/recharge/RechargePreview';
@@ -579,10 +581,17 @@ export default function Recharge() {
               <Text color={secondaryTextColor}>載入中...</Text>
             </VStack>
           ) : historyData.length === 0 ? (
-            <VStack py={12}>
-              <Icon as={HistoryIcon} color={mutedTextColor} boxSize={8} />
-              <Text color={mutedTextColor}>暫無加值紀錄</Text>
-            </VStack>
+            <EmptyState.Root>
+              <EmptyState.Content>
+                <EmptyState.Indicator>
+                  <Icon as={AlertCircle} />
+                </EmptyState.Indicator>
+                <VStack textAlign="center" gap={2}>
+                  <EmptyState.Title>暫無加值紀錄</EmptyState.Title>
+                  <EmptyState.Description>選擇帳號並進行加值後，紀錄將顯示在這裡</EmptyState.Description>
+                </VStack>
+              </EmptyState.Content>
+            </EmptyState.Root>
           ) : (
             <Box overflowX="auto">
               <Table.Root width="full">

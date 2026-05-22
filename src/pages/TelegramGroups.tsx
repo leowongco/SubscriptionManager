@@ -10,8 +10,9 @@ import {
   Icon,
   Input,
   Flex,
+  EmptyState,
 } from '@chakra-ui/react';
-import { Plus, Users, DollarSign, TrendingUp, Search } from 'lucide-react';
+import { Plus, Users, DollarSign, TrendingUp, Search, AlertCircle } from 'lucide-react';
 import GroupCard from '../components/telegram-groups/GroupCard';
 import CreateGroupDialog from '../components/telegram-groups/CreateGroupDialog';
 import { toaster } from '../components/ui/toaster';
@@ -295,22 +296,21 @@ export default function TelegramGroups() {
 
         {/* 群組列表 */}
         {filteredGroups.length === 0 ? (
-          <VStack
-            justify="center"
-            minH="300px"
-            bg={cardBg}
-            rounded="xl"
-            border="1px"
-            borderColor={cardBorderColor}
-          >
-            <Icon as={Users} w={12} h={12} color={secondaryTextColor} />
-            <Text fontSize="lg" color={secondaryTextColor}>
-              沒有找到群組
-            </Text>
-            <Text fontSize="sm" color={mutedTextColor}>
-              {searchQuery ? '嘗試其他搜尋條件' : '點擊「新增群組」開始'}
-            </Text>
-          </VStack>
+          <EmptyState.Root>
+            <EmptyState.Content>
+              <EmptyState.Indicator>
+                <Icon as={AlertCircle} />
+              </EmptyState.Indicator>
+              <VStack textAlign="center" gap={2}>
+                <EmptyState.Title>
+                  {searchQuery ? '沒有符合條件的群組' : '尚未新增群組'}
+                </EmptyState.Title>
+                <EmptyState.Description>
+                  {searchQuery ? '請調整搜尋條件' : '點擊上方「新增群組」按鈕開始'}
+                </EmptyState.Description>
+              </VStack>
+            </EmptyState.Content>
+          </EmptyState.Root>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
             {filteredGroups.map((group) => (
