@@ -24,6 +24,7 @@ import {
     NativeSelectField,
 } from '@chakra-ui/react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface Subscription {
     id: string;
@@ -57,6 +58,18 @@ interface Member {
 export default function Mapping() {
     const { data: accounts, mutate: mutateAccounts } = useSWR<Account[]>('accounts', api.getAccounts);
     const { data: services } = useSWR<any[]>('services', api.getServices);
+
+    // Color mode values for light/dark mode support
+    const headerBg = useColorModeValue('white', 'bg.subtle');
+    const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const headerTitleColor = useColorModeValue('gray.900', 'white');
+    const headerTextColor = useColorModeValue('gray.600', 'gray.300');
+
+    const cardBg = useColorModeValue('white', 'gray.900/40');
+    const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const textColor = useColorModeValue('gray.900', 'white');
+    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+    const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [accountForm, setAccountForm] = useState<Partial<Account>>({});
@@ -146,41 +159,13 @@ export default function Mapping() {
                 position="relative"
                 overflow="hidden"
                 rounded={{ base: '2xl', md: '3xl' }}
-                bg="bg.subtle"
+                bg={headerBg}
                 border="1px solid"
-                borderColor="gray.700"
+                borderColor={headerBorderColor}
                 p={{ base: 6, md: 8 }}
                 shadow="2xl"
                 backdropFilter="blur(20px)"
             >
-                {/* Decorative blur elements */}
-                <Box
-                    position="absolute"
-                    top={0}
-                    right={0}
-                    mt={-16}
-                    mr={-16}
-                    w={{ base: 48, md: 64 }}
-                    h={{ base: 48, md: 64 }}
-                    bg="emerald.500/10"
-                    filter={{ base: 'blur(80px)', md: 'blur(100px)' }}
-                    rounded="full"
-                    pointerEvents="none"
-                />
-                <Box
-                    position="absolute"
-                    bottom={0}
-                    left={0}
-                    mb={-16}
-                    ml={-16}
-                    w={{ base: 48, md: 64 }}
-                    h={{ base: 48, md: 64 }}
-                    bg="teal.500/10"
-                    filter={{ base: 'blur(80px)', md: 'blur(100px)' }}
-                    rounded="full"
-                    pointerEvents="none"
-                />
-
                 <Flex
                     justify="space-between"
                     alignItems={{ base: 'start', md: 'center' }}
@@ -188,10 +173,10 @@ export default function Mapping() {
                     gap={6}
                 >
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white" textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
                             訂閱關係對應
                         </Text>
-                        <Text color="gray.400" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
+                        <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
                             管理 Apple ID、獨立服務、與成員的繳費關係。
                         </Text>
                     </Box>
@@ -234,7 +219,7 @@ export default function Mapping() {
                             <form onSubmit={handleAccountSubmit}>
                                 <VStack gap={{ base: 4, md: 5 }} pt={4}>
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             Apple ID (付款帳號)
                                         </Field.Label>
                                         <Input
@@ -252,7 +237,7 @@ export default function Mapping() {
                                     </Field.Root>
 
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             初始餘額
                                         </Field.Label>
                                         <Input
@@ -463,13 +448,13 @@ export default function Mapping() {
                                                             <Box>
                                                                 <Text fontSize="sm" fontWeight="semibold" color="emerald.300">
                                                                     {sub.service_name}{' '}
-                                                                    <Text as="span" fontSize="10px" color="gray.400" fontWeight="normal">
+                                                                    <Text as="span" fontSize="10px" color="gray.300" fontWeight="normal">
                                                                         ({sub.group_name})
                                                                     </Text>
                                                                 </Text>
                                                                 <Text fontSize="10px" color="gray.500" fontFamily="mono">
                                                                     {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
-                                                                    <Badge ml={2} bg="gray.800" fontSize="10px" color="gray.400">
+                                                                    <Badge ml={2} bg="gray.800" fontSize="10px" color="gray.300">
                                                                         每月 {new Date(sub.start_date).getDate()} 日扣
                                                                     </Badge>
                                                                 </Text>
@@ -497,7 +482,7 @@ export default function Mapping() {
                                                 <VStack gap={4} pt={2} borderTop="1px solid" borderColor="gray.700">
                                                     <Grid templateColumns="2" gap={4}>
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 新增服務
                                                             </Field.Label>
                                                             <NativeSelectRoot>
@@ -519,7 +504,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 群組名稱
                                                             </Field.Label>
                                                             <Input
@@ -536,7 +521,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 扣款起始日
                                                             </Field.Label>
                                                             <Input
@@ -645,7 +630,7 @@ export default function Mapping() {
                                                 <form onSubmit={handleMemberSubmit}>
                                                     <VStack gap={{ base: 4, md: 5 }} pt={4}>
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 電子郵件 (Email) / 代號
                                                             </Field.Label>
                                                             <Input
@@ -663,7 +648,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 備註 (選填)
                                                             </Field.Label>
                                                             <Input
