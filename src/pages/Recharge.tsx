@@ -45,6 +45,10 @@ export default function Recharge() {
   const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
   const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
+  
+  // 表格顏色
+  const tableBg = useColorModeValue('white', 'bg.subtle');
+  const tableBorderColor = useColorModeValue('gray.200', 'white/10');
 
   // 篩選狀態
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -559,12 +563,16 @@ export default function Recharge() {
         </HStack>
 
         <Box
-          bg="gray.800"
+          rounded="3xl"
           border="1px solid"
-          borderColor="gray.700"
-          borderRadius="xl"
+          borderColor={tableBorderColor}
+          bg={tableBg}
+          backdropFilter="blur(20px)"
           overflow="hidden"
+          shadow="2xl"
         >
+          {/* 頂部色條 */}
+          <Box h={1.5} w="full" bg="blue.500" />
           {!history ? (
             <VStack py={12}>
               <Spinner size="lg" color="blue.400" />
@@ -578,7 +586,7 @@ export default function Recharge() {
           ) : (
             <Box overflowX="auto">
               <Table.Root width="full">
-                <Table.Header bg="gray.900">
+                <Table.Header bg={useColorModeValue('gray.50', 'gray.900')}>
                   <Table.Row>
                     <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       日期
@@ -602,13 +610,13 @@ export default function Recharge() {
                     <Table.Row
                       key={idx}
                       borderBottom="1px solid"
-                      borderColor="gray.700"
-                      _hover={{ bg: 'gray.700/30' }}
+                      borderColor={tableBorderColor}
+                      _hover={{ bg: useColorModeValue('gray.50', 'gray.800/30') }}
                     >
                       <Table.Cell p={4} color={secondaryTextColor} fontSize="sm" fontFamily="mono">
                         {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
                       </Table.Cell>
-                      <Table.Cell p={4} color="white" fontSize="sm" fontWeight="medium">
+                      <Table.Cell p={4} color={headerTitleColor} fontSize="sm" fontWeight="medium">
                         {item.apple_id ? item.apple_id.split('@')[0] : 'Unknown'}
                       </Table.Cell>
                       <Table.Cell p={4} textAlign="right" color="green.400" fontSize="sm" fontWeight="bold" fontFamily="mono">

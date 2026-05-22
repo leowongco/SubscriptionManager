@@ -38,6 +38,10 @@ export default function TelegramGroupDetail() {
   const textColor = useColorModeValue('gray.900', 'white');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
   const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
+  
+  // 表格顏色
+  const tableBg = useColorModeValue('white', 'bg.subtle');
+  const tableBorderColor = useColorModeValue('gray.200', 'white/10');
 
   // 載入群組詳情
   const loadGroup = async () => {
@@ -330,13 +334,17 @@ export default function TelegramGroupDetail() {
         {/* 關聯的 Apple ID 列表 */}
         {group.subscriptions && group.subscriptions.length > 0 && (
           <Box
-            bg={cardBg}
-            rounded="xl"
-            border="1px"
-            borderColor={cardBorderColor}
+            rounded="3xl"
+            border="1px solid"
+            borderColor={tableBorderColor}
+            bg={tableBg}
+            backdropFilter="blur(20px)"
             overflow="hidden"
+            shadow="2xl"
           >
-            <Box p={4} borderBottom="1px" borderColor={cardBorderColor}>
+            {/* 頂部色條 */}
+            <Box h={1.5} w="full" bg="blue.500" />
+            <Box p={4} borderBottom="1px" borderColor={tableBorderColor}>
               <Text fontSize="lg" fontWeight="bold" color={textColor}>
                 關聯的 Apple ID
               </Text>
@@ -344,7 +352,7 @@ export default function TelegramGroupDetail() {
             <Box overflowX="auto">
               <Table.Root>
                 <Table.Header>
-                  <Table.Row bg={cardBorderColor}>
+                  <Table.Row bg={useColorModeValue('gray.50', 'gray.900')}>
                     <Table.ColumnHeader color={secondaryTextColor}>Apple ID</Table.ColumnHeader>
                     <Table.ColumnHeader color={secondaryTextColor}>服務</Table.ColumnHeader>
                     <Table.ColumnHeader color={secondaryTextColor}>成員數</Table.ColumnHeader>
@@ -353,7 +361,7 @@ export default function TelegramGroupDetail() {
                 </Table.Header>
                 <Table.Body>
                   {group.subscriptions.map((sub) => (
-                    <Table.Row key={sub.id} _hover={{ bg: cardBorderColor }}>
+                    <Table.Row key={sub.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.800/30') }}>
                       <Table.Cell color={textColor}>{sub.apple_id || '-'}</Table.Cell>
                       <Table.Cell color={textColor}>{sub.service_name}</Table.Cell>
                       <Table.Cell color={textColor}>{sub.members?.length || 0}</Table.Cell>
@@ -369,13 +377,17 @@ export default function TelegramGroupDetail() {
         {/* 成員付款狀態 */}
         {group.subscriptions && group.subscriptions.length > 0 && (
           <Box
-            bg={cardBg}
-            rounded="xl"
-            border="1px"
-            borderColor={cardBorderColor}
+            rounded="3xl"
+            border="1px solid"
+            borderColor={tableBorderColor}
+            bg={tableBg}
+            backdropFilter="blur(20px)"
             overflow="hidden"
+            shadow="2xl"
           >
-            <Box p={4} borderBottom="1px" borderColor={cardBorderColor}>
+            {/* 頂部色條 */}
+            <Box h={1.5} w="full" bg="blue.500" />
+            <Box p={4} borderBottom="1px" borderColor={tableBorderColor}>
               <Text fontSize="lg" fontWeight="bold" color={textColor}>
                 成員付款狀態
               </Text>
@@ -383,7 +395,7 @@ export default function TelegramGroupDetail() {
             <Box overflowX="auto">
               <Table.Root>
                 <Table.Header>
-                  <Table.Row bg={cardBorderColor}>
+                  <Table.Row bg={useColorModeValue('gray.50', 'gray.900')}>
                     <Table.ColumnHeader color={secondaryTextColor}>Email</Table.ColumnHeader>
                     <Table.ColumnHeader color={secondaryTextColor}>服務</Table.ColumnHeader>
                     <Table.ColumnHeader color={secondaryTextColor}>備註</Table.ColumnHeader>
@@ -393,7 +405,7 @@ export default function TelegramGroupDetail() {
                 <Table.Body>
                   {group.subscriptions.flatMap((sub) =>
                     (sub.members || []).map((member) => (
-                      <Table.Row key={member.id} _hover={{ bg: cardBorderColor }}>
+                      <Table.Row key={member.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.800/30') }}>
                         <Table.Cell color={textColor}>{member.email}</Table.Cell>
                         <Table.Cell color={textColor}>{sub.service_name}</Table.Cell>
                         <Table.Cell color={secondaryTextColor}>{member.memo || '-'}</Table.Cell>
