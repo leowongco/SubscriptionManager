@@ -11,11 +11,13 @@ import {
   Spinner,
   Badge,
   Table,
+  Flex,
 } from '@chakra-ui/react';
 import { ArrowLeft, Edit, ExternalLink, Calendar, Users, DollarSign, Copy, CheckCircle, XCircle } from 'lucide-react';
 import BillingCycleCard from '../components/telegram-groups/BillingCycleCard';
 import CreateGroupDialog from '../components/telegram-groups/CreateGroupDialog';
 import { toaster } from '../components/ui/toaster';
+import { useColorModeValue } from '@/components/ui/color-mode';
 import type { TelegramGroupDetail, CreateGroupRequest } from '../types/telegram-groups';
 
 export default function TelegramGroupDetail() {
@@ -24,6 +26,18 @@ export default function TelegramGroupDetail() {
   const [group, setGroup] = useState<TelegramGroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // 顏色變量 - 支持亮色/暗色模式
+  const headerBg = useColorModeValue('white', 'bg.subtle');
+  const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerTitleColor = useColorModeValue('gray.900', 'white');
+  const headerTextColor = useColorModeValue('gray.600', 'gray.300');
+  
+  const cardBg = useColorModeValue('white', 'gray.900/40');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
   // 載入群組詳情
   const loadGroup = async () => {
@@ -137,7 +151,7 @@ export default function TelegramGroupDetail() {
       <Container maxW="container.xl" py={8}>
         <VStack justify="center" minH="400px">
           <Spinner size="xl" color="blue.400" />
-          <Text color="gray.400">載入中...</Text>
+          <Text color={secondaryTextColor}>載入中...</Text>
         </VStack>
       </Container>
     );
@@ -147,7 +161,7 @@ export default function TelegramGroupDetail() {
     return (
       <Container maxW="container.xl" py={8}>
         <VStack justify="center" minH="400px">
-          <Text color="gray.400">群組不存在</Text>
+          <Text color={secondaryTextColor}>群組不存在</Text>
           <Button size="sm" onClick={() => navigate('/groups')}>
             返回列表
           </Button>
@@ -165,91 +179,107 @@ export default function TelegramGroupDetail() {
   return (
     <Container maxW="container.xl" py={8}>
       <VStack align="stretch" gap={6}>
-        {/* 返回按鈕和標題 */}
-        <HStack justify="space-between" align="center">
-          <HStack gap={4}>
-            <Button
-              size="sm"
-              variant="ghost"
-              colorPalette="gray"
-              onClick={() => navigate('/groups')}
-            >
-              <HStack gap={2}>
-                <Box as={ArrowLeft} w={4} h={4} />
-                <Text>返回</Text>
-              </HStack>
-            </Button>
-            <VStack align="start" gap={1}>
-              <HStack gap={3}>
-                <Text fontSize="2xl" fontWeight="bold" color="white">
-                  {group.name}
-                </Text>
-                <Badge colorPalette="blue" fontSize="xs">
-                  {cycleLabel[group.billing_cycle_type]}
-                </Badge>
-              </HStack>
-              {group.telegram_link && (
-                <HStack gap={1}>
-                  <Box as={ExternalLink} w={4} h={4} color="blue.400" />
-                  <a
-                    href={group.telegram_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Text
-                      fontSize="sm"
-                      color="blue.400"
-                      _hover={{ textDecoration: 'underline' }}
-                    >
-                      Telegram 群組
-                    </Text>
-                  </a>
+        {/* Header Section */}
+        <Box
+          position="relative"
+          overflow="hidden"
+          rounded={{ base: '2xl', md: '3xl' }}
+          bg={headerBg}
+          border="1px solid"
+          borderColor={headerBorderColor}
+          p={{ base: 5, md: 8 }}
+          shadow="2xl"
+          backdropFilter="blur(20px)"
+          transition="all 0.3s"
+        >
+          <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
+            <HStack gap={4}>
+              <Button
+                size="sm"
+                variant="ghost"
+                colorPalette="gray"
+                onClick={() => navigate('/groups')}
+              >
+                <HStack gap={2}>
+                  <Box as={ArrowLeft} w={4} h={4} />
+                  <Text>返回</Text>
                 </HStack>
-              )}
-            </VStack>
-          </HStack>
-          <HStack gap={2}>
-            <Button
-              size="sm"
-              colorPalette="green"
-              variant="outline"
-              onClick={generatePost}
-            >
-              <HStack gap={2}>
-                <Box as={Copy} w={4} h={4} />
-                <Text>生成貼文</Text>
-              </HStack>
-            </Button>
-            <Button
-              size="sm"
-              colorPalette="blue"
-              onClick={() => setDialogOpen(true)}
-            >
-              <HStack gap={2}>
-                <Box as={Edit} w={4} h={4} />
-                <Text>編輯</Text>
-              </HStack>
-            </Button>
-          </HStack>
-        </HStack>
+              </Button>
+              <VStack align="start" gap={1}>
+                <HStack gap={3}>
+                  <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor}>
+                    {group.name}
+                  </Text>
+                  <Badge colorPalette="blue" fontSize="xs">
+                    {cycleLabel[group.billing_cycle_type]}
+                  </Badge>
+                </HStack>
+                {group.telegram_link && (
+                  <HStack gap={1}>
+                    <Box as={ExternalLink} w={4} h={4} color="blue.400" />
+                    <a
+                      href={group.telegram_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Text color="blue.400" fontSize="sm" _hover={{ color: 'blue.300' }}>
+                        Telegram 群組
+                      </Text>
+                    </a>
+                  </HStack>
+                )}
+              </VStack>
+            </HStack>
+            <HStack gap={3}>
+              <Button
+                colorPalette="blue"
+                variant="outline"
+                rounded="xl"
+                h={12}
+                px={6}
+                onClick={generatePost}
+              >
+                <HStack gap={2}>
+                  <Box as={Calendar} w={4} h={4} />
+                  <Text>生成貼文</Text>
+                </HStack>
+              </Button>
+              <Button
+                colorPalette="blue"
+                rounded="xl"
+                h={12}
+                px={6}
+                shadow="lg"
+                _hover={{ transform: 'scale(1.02)' }}
+                transition="all"
+                onClick={() => setDialogOpen(true)}
+              >
+                <HStack gap={2}>
+                  <Box as={Edit} w={4} h={4} />
+                  <Text>編輯群組</Text>
+                </HStack>
+              </Button>
+            </HStack>
+          </Flex>
+        </Box>
 
         {/* 基本信息卡片 */}
         <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
           <Box
             p={5}
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
           >
             <HStack gap={3}>
               <Box as={Calendar} w={8} h={8} color="blue.400" />
               <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.400">
+                <Text fontSize="sm" color={secondaryTextColor}>
                   扣費日
                 </Text>
-                <Text fontSize="xl" fontWeight="bold" color="white">
+                <Text fontSize="xl" fontWeight="bold" color={textColor}>
                   每月 {group.billing_day} 日
                 </Text>
               </VStack>
@@ -258,18 +288,18 @@ export default function TelegramGroupDetail() {
 
           <Box
             p={5}
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
           >
             <HStack gap={3}>
               <Box as={Users} w={8} h={8} color="green.400" />
               <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.400">
+                <Text fontSize="sm" color={secondaryTextColor}>
                   關聯 Apple ID
                 </Text>
-                <Text fontSize="xl" fontWeight="bold" color="white">
+                <Text fontSize="xl" fontWeight="bold" color={textColor}>
                   {group.account_count || 0} 個
                 </Text>
               </VStack>
@@ -278,18 +308,18 @@ export default function TelegramGroupDetail() {
 
           <Box
             p={5}
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
           >
             <HStack gap={3}>
               <Box as={DollarSign} w={8} h={8} color="orange.400" />
               <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.400">
+                <Text fontSize="sm" color={secondaryTextColor}>
                   收費週期
                 </Text>
-                <Text fontSize="xl" fontWeight="bold" color="white">
+                <Text fontSize="xl" fontWeight="bold" color={textColor}>
                   {cycleLabel[group.billing_cycle_type]}
                 </Text>
               </VStack>
@@ -300,34 +330,34 @@ export default function TelegramGroupDetail() {
         {/* 關聯的 Apple ID 列表 */}
         {group.subscriptions && group.subscriptions.length > 0 && (
           <Box
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
             overflow="hidden"
           >
-            <Box p={4} borderBottom="1px" borderColor="gray.700">
-              <Text fontSize="lg" fontWeight="bold" color="white">
+            <Box p={4} borderBottom="1px" borderColor={cardBorderColor}>
+              <Text fontSize="lg" fontWeight="bold" color={textColor}>
                 關聯的 Apple ID
               </Text>
             </Box>
             <Box overflowX="auto">
               <Table.Root>
                 <Table.Header>
-                  <Table.Row bg="gray.700">
-                    <Table.ColumnHeader color="gray.400">Apple ID</Table.ColumnHeader>
-                    <Table.ColumnHeader color="gray.400">服務</Table.ColumnHeader>
-                    <Table.ColumnHeader color="gray.400">成員數</Table.ColumnHeader>
-                    <Table.ColumnHeader color="gray.400">餘額</Table.ColumnHeader>
+                  <Table.Row bg={cardBorderColor}>
+                    <Table.ColumnHeader color={secondaryTextColor}>Apple ID</Table.ColumnHeader>
+                    <Table.ColumnHeader color={secondaryTextColor}>服務</Table.ColumnHeader>
+                    <Table.ColumnHeader color={secondaryTextColor}>成員數</Table.ColumnHeader>
+                    <Table.ColumnHeader color={secondaryTextColor}>餘額</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
                   {group.subscriptions.map((sub) => (
-                    <Table.Row key={sub.id} _hover={{ bg: 'gray.700' }}>
-                      <Table.Cell color="white">{sub.apple_id || '-'}</Table.Cell>
-                      <Table.Cell color="white">{sub.service_name}</Table.Cell>
-                      <Table.Cell color="white">{sub.members?.length || 0}</Table.Cell>
-                      <Table.Cell color="white">${sub.account_balance?.toFixed(2) || '0.00'}</Table.Cell>
+                    <Table.Row key={sub.id} _hover={{ bg: cardBorderColor }}>
+                      <Table.Cell color={textColor}>{sub.apple_id || '-'}</Table.Cell>
+                      <Table.Cell color={textColor}>{sub.service_name}</Table.Cell>
+                      <Table.Cell color={textColor}>{sub.members?.length || 0}</Table.Cell>
+                      <Table.Cell color={textColor}>${sub.account_balance?.toFixed(2) || '0.00'}</Table.Cell>
                     </Table.Row>
                   ))}
                 </Table.Body>
@@ -339,34 +369,34 @@ export default function TelegramGroupDetail() {
         {/* 成員付款狀態 */}
         {group.subscriptions && group.subscriptions.length > 0 && (
           <Box
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
             overflow="hidden"
           >
-            <Box p={4} borderBottom="1px" borderColor="gray.700">
-              <Text fontSize="lg" fontWeight="bold" color="white">
+            <Box p={4} borderBottom="1px" borderColor={cardBorderColor}>
+              <Text fontSize="lg" fontWeight="bold" color={textColor}>
                 成員付款狀態
               </Text>
             </Box>
             <Box overflowX="auto">
               <Table.Root>
                 <Table.Header>
-                  <Table.Row bg="gray.700">
-                    <Table.ColumnHeader color="gray.400">Email</Table.ColumnHeader>
-                    <Table.ColumnHeader color="gray.400">服務</Table.ColumnHeader>
-                    <Table.ColumnHeader color="gray.400">備註</Table.ColumnHeader>
-                    <Table.ColumnHeader color="gray.400">付款狀態</Table.ColumnHeader>
+                  <Table.Row bg={cardBorderColor}>
+                    <Table.ColumnHeader color={secondaryTextColor}>Email</Table.ColumnHeader>
+                    <Table.ColumnHeader color={secondaryTextColor}>服務</Table.ColumnHeader>
+                    <Table.ColumnHeader color={secondaryTextColor}>備註</Table.ColumnHeader>
+                    <Table.ColumnHeader color={secondaryTextColor}>付款狀態</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
                   {group.subscriptions.flatMap((sub) =>
                     (sub.members || []).map((member) => (
-                      <Table.Row key={member.id} _hover={{ bg: 'gray.700' }}>
-                        <Table.Cell color="white">{member.email}</Table.Cell>
-                        <Table.Cell color="white">{sub.service_name}</Table.Cell>
-                        <Table.Cell color="gray.400">{member.memo || '-'}</Table.Cell>
+                      <Table.Row key={member.id} _hover={{ bg: cardBorderColor }}>
+                        <Table.Cell color={textColor}>{member.email}</Table.Cell>
+                        <Table.Cell color={textColor}>{sub.service_name}</Table.Cell>
+                        <Table.Cell color={secondaryTextColor}>{member.memo || '-'}</Table.Cell>
                         <Table.Cell>
                           <HStack gap={2}>
                             {member.payment_status ? (
@@ -394,7 +424,7 @@ export default function TelegramGroupDetail() {
         {/* 帳單週期歷史 */}
         {group.billing_cycles && group.billing_cycles.length > 0 && (
           <VStack align="stretch" gap={4}>
-            <Text fontSize="lg" fontWeight="bold" color="white">
+            <Text fontSize="lg" fontWeight="bold" color={textColor}>
               帳單週期歷史
             </Text>
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
@@ -409,15 +439,15 @@ export default function TelegramGroupDetail() {
         {group.notes && (
           <Box
             p={4}
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
           >
-            <Text fontSize="sm" color="gray.400" mb={2}>
+            <Text fontSize="sm" color={secondaryTextColor} mb={2}>
               備註
             </Text>
-            <Text color="white">{group.notes}</Text>
+            <Text color={textColor}>{group.notes}</Text>
           </Box>
         )}
 
