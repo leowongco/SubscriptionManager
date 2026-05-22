@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI 統一實施方案對比</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #131a3a;
+            --bg-card: #1a2244;
+            --text-primary: #e8eaf6;
+            --text-secondary: #9fa8da;
+            --text-muted: #7986cb;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --border-color: rgba(139, 92, 246, 0.2);
+            --glow-blue: rgba(59, 130, 246, 0.3);
+            --glow-purple: rgba(139, 92, 246, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Grid pattern overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        @media (max-width: 1200px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                max-width: 700px;
+                margin: 0 auto 60px;
+            }
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 40px var(--glow-purple);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card.recommended {
+            border-color: var(--accent-emerald);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .card.recommended::before {
+            background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));
+            opacity: 1;
+        }
+
+        /* Card Badge */
+        .card-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Card Header */
+        .card-header {
+            margin-bottom: 30px;
+        }
+
+        .plan-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .card-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Time Estimate */
+        .time-estimate {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 8px 16px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: var(--accent-purple);
+        }
+
+        .time-estimate svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Phases */
+        .phases {
+            margin-bottom: 30px;
+        }
+
+        .phase {
+            background: rgba(26, 34, 68, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .phase:hover {
+            background: rgba(26, 34, 68, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .phase-number {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .phase-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .phase-time {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .phase-items {
+            list-style: none;
+            padding-left: 44px;
+        }
+
+        .phase-items li {
+            position: relative;
+            padding: 6px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .phase-items li::before {
+            content: '→';
+            position: absolute;
+            left: -20px;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Pros & Cons */
+        .pros-cons {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title.pros { color: var(--accent-emerald); }
+        .section-title.cons { color: var(--accent-rose); }
+
+        .item-list {
+            list-style: none;
+        }
+
+        .item-list li {
+            position: relative;
+            padding: 8px 0 8px 28px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .item-list.pros li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent-emerald);
+            font-weight: 700;
+        }
+
+        .item-list.cons li::before {
+            content: '✗';
+            position: absolute;
+            left: 0;
+            color: var(--accent-rose);
+            font-weight: 700;
+        }
+
+        /* Select Button */
+        .select-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .select-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .select-btn:hover::before {
+            left: 100%;
+        }
+
+        .select-btn:active {
+            transform: translateY(0);
+        }
+
+        .select-btn.selected {
+            background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-color);
+            animation: fadeIn 1s ease-out 0.5s backwards;
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .footer-note {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .header .subtitle {
+                font-size: 1rem;
+            }
+
+            .card {
+                padding: 30px 20px;
+            }
+
+            .card-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>UI 統一實施方案對比</h1>
+            <p class="subtitle">選擇最適合您團隊的實施策略</p>
+        </header>
+
+        <div class="cards-grid">
+            <!-- Plan A -->
+            <div class="card recommended">
+                <span class="card-badge">推薦</span>
+                <div class="card-header">
+                    <div class="plan-label">方案 A</div>
+                    <h2 class="card-title">分階段實施</h2>
+                    <p class="card-subtitle">按優先級分階段推進，逐步達成統一目標</p>
+                </div>
+
+                <div class="time-estimate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>總計 6-10 天</span>
+                </div>
+
+                <div class="phases">
+                    <div class="phase">
+                        <div class="phase-header">
+                            <span class="phase-number">1</span>
+                            <span class="phase-title">基礎統一</span>
+                            <span class="phase-time">1-2 天</span>
+                        </div>
+                        <ul class="phase-items">
+                            <li>移除所有 AI Slop 元素</li>
+                            <li>統一顏色主題為 blue</li>
+                            <li>添加標準 Header</li>
+                            <li>支持亮色模式</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase">
+                        <div class="phase-header">
+                            <span class="phase-number">2</span>
+                            <span class="phase-title">樣式統一</span>
+                            <span class="phase-time">2-3 天</span>
+                        </div>
+                        <ul class="phase-items">
+                            <li>統一按鈕樣式</li>
+                            <li>統一卡片樣式</li>
+                            <li>統一響應式設計</li>
+                            <li>統一對話框樣式</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase">
+                        <div class="phase-header">
+                            <span class="phase-number">3</span>
+                            <span class="phase-title">結構優化</span>
+                            <span class="phase-time">3-5 天</span>
+                        </div>
+                        <ul class="phase-items">
+                            <li>統一數據展示方式</li>
+                            <li>統一表格樣式</li>
+                            <li>優化組件結構</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="pros-cons">
+                    <div>
+                        <div class="section-title pros">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            優點
+                        </div>
+                        <ul class="item-list pros">
+                            <li>優先處理最明顯的問題</li>
+                            <li>每個階段都有明顯進展</li>
+                            <li>風險低，可逐步驗證</li>
+                            <li>符合敏捷開發理念</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="section-title cons">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            缺點
+                        </div>
+                        <ul class="item-list cons">
+                            <li>需要較長時間完成全部統一</li>
+                            <li>中間狀態可能存在部分不一致</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="select-btn" onclick="selectPlan('A')">
+                    選擇方案 A
+                </button>
+            </div>
+
+            <!-- Plan B -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="plan-label">方案 B</div>
+                    <h2 class="card-title">按頁面實施</h2>
+                    <p class="card-subtitle">每次完整統一一個頁面，確保頁面級一致性</p>
+                </div>
+
+                <div class="time-estimate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>依頁面數量而定</span>
+                </div>
+
+                <div class="phases">
+                    <div class="phase">
+                        <div class="phase-header">
+                            <span class="phase-number">→</span>
+                            <span class="phase-title">實施順序</span>
+                        </div>
+                        <ul class="phase-items">
+                            <li>Dashboard 頁面</li>
+                            <li>Mapping 頁面</li>
+                            <li>TelegramGroupDetail 頁面</li>
+                            <li>Accounts 頁面</li>
+                            <li>Recharge 頁面</li>
+                            <li>TelegramGroups 頁面</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="pros-cons">
+                    <div>
+                        <div class="section-title pros">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            優點
+                        </div>
+                        <ul class="item-list pros">
+                            <li>每個頁面完成後立即達到 100% 標準</li>
+                            <li>頁面之間相互獨立，不會互相影響</li>
+                            <li>測試和驗收更簡單</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="section-title cons">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            缺點
+                        </div>
+                        <ul class="item-list cons">
+                            <li>不同頁面之間可能長期存在不一致</li>
+                            <li>前期投入大，見效慢</li>
+                            <li>可能需要重複修改相同類型的組件</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="select-btn" onclick="selectPlan('B')">
+                    選擇方案 B
+                </button>
+            </div>
+
+            <!-- Plan C -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="plan-label">方案 C</div>
+                    <h2 class="card-title">按組件類型實施</h2>
+                    <p class="card-subtitle">橫向統一所有同類組件，建立設計系統</p>
+                </div>
+
+                <div class="time-estimate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>依組件類型而定</span>
+                </div>
+
+                <div class="phases">
+                    <div class="phase">
+                        <div class="phase-header">
+                            <span class="phase-number">→</span>
+                            <span class="phase-title">實施順序</span>
+                        </div>
+                        <ul class="phase-items">
+                            <li>所有 Header Section</li>
+                            <li>所有按鈕樣式</li>
+                            <li>所有卡片樣式</li>
+                            <li>所有表格樣式</li>
+                            <li>所有對話框樣式</li>
+                            <li>所有響應式設計</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="pros-cons">
+                    <div>
+                        <div class="section-title pros">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            優點
+                        </div>
+                        <ul class="item-list pros">
+                            <li>同類組件一次性統一，效率高</li>
+                            <li>組件級別的一致性最強</li>
+                            <li>適合建立設計系統</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="section-title cons">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            缺點
+                        </div>
+                        <ul class="item-list cons">
+                            <li>需要同時修改多個頁面</li>
+                            <li>可能影響正在使用的功能</li>
+                            <li>協調難度較大</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="select-btn" onclick="selectPlan('C')">
+                    選擇方案 C
+                </button>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p class="footer-text">點擊上方按鈕選擇您的實施方案</p>
+            <p class="footer-note">建議根據團隊規模、時間要求和項目複雜度選擇合適的方案</p>
+        </footer>
+    </div>
+
+    <script>
+        let selectedPlan = null;
+
+        function selectPlan(plan) {
+            // Remove previous selection
+            document.querySelectorAll('.select-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.textContent = `選擇方案 ${btn.closest('.card').querySelector('.plan-label').textContent.split(' ')[1]}`;
+            });
+
+            // Add selection to clicked button
+            const clickedBtn = event.target;
+            clickedBtn.classList.add('selected');
+            clickedBtn.textContent = '✓ 已選擇';
+            selectedPlan = plan;
+
+            // Show confirmation
+            setTimeout(() => {
+                alert(`您已選擇方案 ${plan}！${plan === 'A' ? '\n\n這是推薦方案，將按階段逐步實施 UI 統一。' : ''}`);
+            }, 300);
+        }
+
+        // Add hover effect to cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>

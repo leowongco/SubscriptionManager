@@ -3,6 +3,7 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface BalanceTrendChartProps {
   data: Array<{
@@ -13,47 +14,83 @@ interface BalanceTrendChartProps {
 }
 
 export function BalanceTrendChart({ data, currency = 'HK$' }: BalanceTrendChartProps) {
+  // Color mode values for light/dark mode support
+  const cardBg = useColorModeValue('white', 'gray.900/40');
+  const cardBorderColor = useColorModeValue('blue.200', 'blue.500/20');
+  const titleColor = useColorModeValue('blue.700', 'blue.400');
+  const iconBg = useColorModeValue('blue.100', 'blue.500/10');
+  const iconColor = useColorModeValue('blue.600', 'blue.400');
+  
+  // Chart colors - using blue as primary color (Phase 1 unified)
+  const gridStroke = useColorModeValue('#E5E7EB', '#374151');
+  const axisStroke = useColorModeValue('#6B7280', '#9CA3AF');
+  const tooltipBg = useColorModeValue('#FFFFFF', '#1F2937');
+  const tooltipBorder = useColorModeValue('#E5E7EB', '#374151');
+  const tooltipColor = useColorModeValue('#1F2937', '#F3F4F6');
+  const tooltipLabelColor = useColorModeValue('#6B7280', '#9CA3AF');
+  
+  // Line colors - blue theme
+  const lineStroke = useColorModeValue('#3B82F6', '#60A5FA'); // blue.500 / blue.400
+  const dotFill = useColorModeValue('#3B82F6', '#60A5FA');
+  const activeDotFill = useColorModeValue('#2563EB', '#3B82F6'); // blue.600 / blue.500
+
   return (
     <Box
-      bg="rgba(23, 23, 23, 0.4)"
+      bg={cardBg}
       backdropFilter="blur(20px)"
-      border="1px solid rgba(38, 38, 38, 0.6)"
+      border="1px solid"
+      borderColor={cardBorderColor}
       rounded="xl"
       shadow="2xl"
+      overflow="hidden"
+      position="relative"
+      role="group"
     >
-      <Flex p={6} flexDirection="row" alignItems="center" justifyContent="space-between" pb={2}>
-        <Text fontSize="sm" fontWeight="semibold" color="indigo.400" textTransform="uppercase" letterSpacing="wider">
+      {/* Hover gradient effect */}
+      <Box
+        position="absolute"
+        inset={0}
+        bg="linear-gradient(to bottom right, var(--chakra-colors-blue-500/10), var(--chakra-colors-blue-600/5))"
+        opacity={0}
+        _groupHover={{ opacity: 1 }}
+        transition="opacity 0.5s"
+        pointerEvents="none"
+      />
+      
+      <Flex p={6} flexDirection="row" alignItems="center" justifyContent="space-between" pb={2} position="relative" zIndex={10}>
+        <Text fontSize={{ base: '10px', md: 'sm' }} fontWeight="semibold" color={titleColor} textTransform="uppercase" letterSpacing="wider">
           餘額趨勢
         </Text>
-        <Box p={2} bg="rgba(99, 102, 241, 0.1)" rounded="lg">
-          <Box as={TrendingUp} h={4} w={4} color="indigo.400" />
+        <Box p={2} bg={iconBg} rounded={{ base: 'lg', md: 'xl' }}>
+          <Box as={TrendingUp} h={{ base: 4, md: 5 }} w={{ base: 4, md: 5 }} color={iconColor} />
         </Box>
       </Flex>
-      <Box p={6} pt={0}>
+      
+      <Box p={6} pt={0} position="relative" zIndex={10}>
         <Box h={{ base: '200px', md: '250px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#9CA3AF"
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis
+                dataKey="date"
+                stroke={axisStroke}
                 fontSize={12}
                 tickLine={false}
               />
-              <YAxis 
-                stroke="#9CA3AF"
+              <YAxis
+                stroke={axisStroke}
                 fontSize={12}
                 tickLine={false}
                 tickFormatter={(value) => `${currency}${value.toFixed(0)}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: '1px solid #374151',
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
                   borderRadius: '8px',
-                  color: '#F3F4F6'
+                  color: tooltipColor
                 }}
-                labelStyle={{ color: '#9CA3AF' }}
+                labelStyle={{ color: tooltipLabelColor }}
                 formatter={(value) => [`${currency}${Number(value).toFixed(2)}`, '餘額']}
               />
               <Legend />
@@ -61,11 +98,11 @@ export function BalanceTrendChart({ data, currency = 'HK$' }: BalanceTrendChartP
                 type="monotone"
                 dataKey="balance"
                 name="餘額"
-                stroke="#818CF8"
+                stroke={lineStroke}
                 strokeWidth={2}
                 strokeDasharray="5 5"
-                dot={{ fill: '#818CF8', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: '#6366F1', strokeWidth: 2 }}
+                dot={{ fill: dotFill, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: activeDotFill, strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

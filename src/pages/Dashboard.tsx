@@ -29,12 +29,24 @@ export default function Dashboard() {
     const emptyBg = useColorModeValue('gray.50', 'gray.900/20');
     const emptyBorderColor = useColorModeValue('gray.200', 'gray.700');
 
-    // Calculations
+    // ========================================
+    // Data Calculations
+    // ========================================
+    
+    /**
+     * Total balance across all accounts (converted to HKD)
+     * Sums up each account's balance multiplied by its currency exchange rate
+     */
     const totalBalanceHKD = accounts?.reduce((sum, acc) => {
         const rate = EXCHANGE_RATES[acc.currency] || 1;
         return sum + (acc.balance * rate);
     }, 0) || 0;
 
+    /**
+     * Estimated monthly expense across all subscriptions (converted to HKD)
+     * - For monthly subscriptions: use base_price directly
+     * - For yearly subscriptions: divide by 12 to get monthly equivalent
+     */
     const monthlyExpenseHKD = accounts?.reduce((sum, acc) => {
         if (!acc.subscriptions || acc.subscriptions.length === 0) return sum;
 
@@ -48,7 +60,14 @@ export default function Dashboard() {
         return sum + accMonthlyBurn;
     }, 0) || 0;
 
-    // Warnings
+    // ========================================
+    // Warning Data Calculations
+    // ========================================
+    
+    /**
+     * Accounts with low balance (less than 2 months of runway)
+     * Attaches _monthlyBurn and _monthsLeft for display purposes
+     */
     const lowBalanceAccounts = accounts?.filter(acc => {
         if (!acc.subscriptions || acc.subscriptions.length === 0) return false;
 
@@ -62,20 +81,30 @@ export default function Dashboard() {
         if (totalMonthlyBurn <= 0) return false;
 
         const monthsLeft = acc.balance / totalMonthlyBurn;
-        // Also attach calculated data for easy render
+        // Attach calculated data for easy render
         acc._monthlyBurn = totalMonthlyBurn;
         acc._monthsLeft = monthsLeft;
 
         return monthsLeft < 2;
     }) || [];
 
+    /**
+     * Services with upcoming price increases (effective date in the future)
+     */
     const upcomingPriceIncreases = services?.filter(s => {
         if (!s.next_price || !s.effective_date) return false;
         const effective = new Date(s.effective_date);
         return effective > new Date(); // still in the future
     }) || [];
 
-    // Mock trend data - in real app, this would come from API
+    // ========================================
+    // Chart Data
+    // ========================================
+    
+    /**
+     * Mock trend data for balance chart
+     * TODO: Replace with real API data in production
+     */
     const balanceTrendData = [
         { date: '12月', balance: 1200 },
         { date: '1月', balance: 1350 },
