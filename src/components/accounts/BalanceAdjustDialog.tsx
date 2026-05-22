@@ -5,18 +5,17 @@ import {
     VStack,
     HStack,
     Badge,
-} from '@chakra-ui/react';
-import {
-    Dialog,
+    DialogRoot,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogBody,
     DialogFooter,
-    DialogClose,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+    DialogCloseTrigger,
+    Input,
+} from '@chakra-ui/react';
 import { Field } from '../ui/field';
+import { useColorModeValue } from '../ui/color-mode';
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/currency';
 
@@ -37,6 +36,16 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
     const [reason, setReason] = useState<string>('');
     const [operator, setOperator] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Color mode values for light/dark mode support
+    const dialogBg = useColorModeValue('white', 'gray.900/90');
+    const dialogColor = useColorModeValue('gray.800', 'gray.50');
+    const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const inputBg = useColorModeValue('gray.50', 'gray.800');
+    const inputBorderColor = useColorModeValue('gray.300', 'gray.600');
+    const labelColor = useColorModeValue('gray.700', 'gray.300');
+    const infoBoxBg = useColorModeValue('gray.50', 'gray.800');
+    const previewBoxBg = useColorModeValue('gray.100', 'gray.700');
 
     const parsedAmount = parseFloat(adjustmentAmount) || 0;
     const newBalance = account ? account.balance + parsedAmount : 0;
@@ -64,22 +73,32 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
     const isValid = adjustmentAmount && reason && operator && !isNaN(parsedAmount);
 
     return (
-        <Dialog open={open} onOpenChange={(details) => onOpenChange(details.open)}>
-            <DialogContent>
+        <DialogRoot open={open} onOpenChange={(details) => onOpenChange(details.open)}>
+            <DialogContent
+                maxW="450px"
+                bg={dialogBg}
+                backdropFilter="blur(40px)"
+                color={dialogColor}
+                borderColor={dialogBorderColor}
+                rounded="2xl"
+                shadow="2xl"
+            >
                 <DialogHeader>
-                    <DialogTitle>調整餘額</DialogTitle>
+                    <DialogTitle fontSize="xl" fontWeight="bold">
+                        調整餘額
+                    </DialogTitle>
                 </DialogHeader>
                 <DialogBody>
                     <VStack gap={4}>
                         {/* 當前餘額顯示 */}
-                        <Box p={4} bg="gray.800" rounded="lg" w="full">
+                        <Box p={4} bg={infoBoxBg} rounded="lg" w="full">
                             <HStack justify="space-between">
-                                <Text color="gray.400" fontSize="sm">Apple ID</Text>
+                                <Text color={labelColor} fontSize="sm">Apple ID</Text>
                                 <Text fontWeight="medium">{account?.apple_id || '-'}</Text>
                             </HStack>
                             <HStack justify="space-between" mt={2}>
                                 <HStack gap={2}>
-                                    <Text color="gray.400" fontSize="sm">當前餘額</Text>
+                                    <Text color={labelColor} fontSize="sm">當前餘額</Text>
                                     {account?.currency && account.currency !== 'HKD' && (
                                         <Badge colorPalette="cyan" fontSize="xs">
                                             {account.currency}
@@ -100,6 +119,8 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
                                 value={adjustmentAmount}
                                 onChange={(e) => setAdjustmentAmount(e.target.value)}
                                 step="0.01"
+                                bg={inputBg}
+                                borderColor={inputBorderColor}
                             />
                             <Text fontSize="xs" color="gray.500" mt={1}>
                                 輸入正數增加餘額，負數減少餘額
@@ -108,9 +129,9 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
 
                         {/* 調整後餘額預覽 */}
                         {adjustmentAmount && !isNaN(parsedAmount) && (
-                            <Box p={3} bg="gray.700" rounded="md" w="full">
+                            <Box p={3} bg={previewBoxBg} rounded="md" w="full">
                                 <HStack justify="space-between">
-                                    <Text color="gray.400" fontSize="sm">調整後餘額</Text>
+                                    <Text color={labelColor} fontSize="sm">調整後餘額</Text>
                                     <Text fontWeight="bold" color={newBalance >= 0 ? 'green.400' : 'red.400'}>
                                         {formatCurrency(newBalance, account?.currency)}
                                     </Text>
@@ -124,6 +145,8 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
                                 placeholder="例如：手動加值、退款調整"
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
+                                bg={inputBg}
+                                borderColor={inputBorderColor}
                             />
                         </Field>
 
@@ -133,17 +156,19 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
                                 placeholder="您的名稱"
                                 value={operator}
                                 onChange={(e) => setOperator(e.target.value)}
+                                bg={inputBg}
+                                borderColor={inputBorderColor}
                             />
                         </Field>
                     </VStack>
                 </DialogBody>
                 <DialogFooter>
                     <HStack gap={3} justify="flex-end" w="full">
-                        <DialogClose asChild>
+                        <DialogCloseTrigger asChild>
                             <Button variant="outline" disabled={isSubmitting}>
                                 取消
                             </Button>
-                        </DialogClose>
+                        </DialogCloseTrigger>
                         <Button
                             colorPalette="blue"
                             disabled={!isValid || isSubmitting}
@@ -154,7 +179,8 @@ export function BalanceAdjustDialog({ open, onOpenChange, account, onConfirm }: 
                         </Button>
                     </HStack>
                 </DialogFooter>
+                <DialogCloseTrigger />
             </DialogContent>
-        </Dialog>
+        </DialogRoot>
     );
 }

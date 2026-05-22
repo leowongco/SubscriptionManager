@@ -71,6 +71,14 @@ export default function Mapping() {
     const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
     const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
+    // Dialog color mode values
+    const dialogBg = useColorModeValue('white', 'gray.900/90');
+    const dialogColor = useColorModeValue('gray.800', 'gray.50');
+    const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const inputBg = useColorModeValue('gray.50', 'gray.950/50');
+    const inputBorderColor = useColorModeValue('gray.300', 'gray.800');
+    const labelColor = useColorModeValue('gray.700', 'gray.300');
+
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [accountForm, setAccountForm] = useState<Partial<Account>>({});
 
@@ -202,14 +210,12 @@ export default function Mapping() {
                         </DialogTrigger>
                         <DialogContent
                             maxW="450px"
-                            w="92vw"
-                            bg="gray.900/90"
+                            bg={dialogBg}
                             backdropFilter="blur(40px)"
-                            color="gray.50"
-                            borderColor="gray.700"
+                            color={dialogColor}
+                            borderColor={dialogBorderColor}
                             rounded="2xl"
                             shadow="2xl"
-                            p={{ base: 5, md: 6 }}
                         >
                             <DialogHeader>
                                 <DialogTitle fontSize="xl" fontWeight="bold">
@@ -219,15 +225,15 @@ export default function Mapping() {
                             <form onSubmit={handleAccountSubmit}>
                                 <VStack gap={{ base: 4, md: 5 }} pt={4}>
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             Apple ID (付款帳號)
                                         </Field.Label>
                                         <Input
                                             value={accountForm.apple_id || ''}
                                             onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })}
                                             required
-                                            bg="gray.950/50"
-                                            borderColor="gray.800"
+                                            bg={inputBg}
+                                            borderColor={inputBorderColor}
                                             rounded="xl"
                                             h={{ base: 11, md: 12 }}
                                             _focus={{ borderColor: 'emerald.500/50' }}
@@ -237,7 +243,7 @@ export default function Mapping() {
                                     </Field.Root>
 
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             初始餘額
                                         </Field.Label>
                                         <Input
@@ -245,8 +251,8 @@ export default function Mapping() {
                                             step="0.01"
                                             value={accountForm.balance || ''}
                                             onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })}
-                                            bg="gray.950/50"
-                                            borderColor="gray.800"
+                                            bg={inputBg}
+                                            borderColor={inputBorderColor}
                                             rounded="xl"
                                             h={{ base: 11, md: 12 }}
                                             _focus={{ borderColor: 'emerald.500/50' }}
@@ -406,14 +412,12 @@ export default function Mapping() {
                                     </DialogTrigger>
                                     <DialogContent
                                         maxW="450px"
-                                        w="92vw"
-                                        bg="gray.900/95"
+                                        bg={dialogBg}
                                         backdropFilter="blur(40px)"
-                                        borderColor="gray.700"
-                                        color="gray.50"
+                                        borderColor={dialogBorderColor}
+                                        color={dialogColor}
                                         rounded="2xl"
                                         shadow="2xl"
-                                        p={{ base: 5, md: 6 }}
                                     >
                                         <DialogHeader>
                                             <DialogTitle fontSize="xl" fontWeight="bold">
@@ -422,10 +426,10 @@ export default function Mapping() {
                                         </DialogHeader>
                                         <VStack gap={4} pt={2}>
                                             <Box
-                                                bg="gray.950/50"
+                                                bg={inputBg}
                                                 rounded="xl"
                                                 border="1px solid"
-                                                borderColor="gray.700"
+                                                borderColor={dialogBorderColor}
                                                 p={3}
                                                 maxH="200px"
                                                 overflowY="auto"
@@ -613,14 +617,12 @@ export default function Mapping() {
                                             </DialogTrigger>
                                             <DialogContent
                                                 maxW="400px"
-                                                w="92vw"
-                                                bg="gray.900/90"
+                                                bg={dialogBg}
                                                 backdropFilter="blur(40px)"
-                                                borderColor="gray.700"
-                                                color="gray.50"
+                                                borderColor={dialogBorderColor}
+                                                color={dialogColor}
                                                 rounded="2xl"
                                                 shadow="2xl"
-                                                p={{ base: 5, md: 6 }}
                                             >
                                                 <DialogHeader>
                                                     <DialogTitle fontSize="xl" fontWeight="bold">
@@ -630,15 +632,15 @@ export default function Mapping() {
                                                 <form onSubmit={handleMemberSubmit}>
                                                     <VStack gap={{ base: 4, md: 5 }} pt={4}>
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 電子郵件 (Email) / 代號
                                                             </Field.Label>
                                                             <Input
                                                                 value={memberForm.email || ''}
                                                                 onChange={e => setMemberForm({ ...memberForm, email: e.target.value })}
                                                                 required
-                                                                bg="gray.950/50"
-                                                                borderColor="gray.800"
+                                                                bg={inputBg}
+                                                                borderColor={inputBorderColor}
                                                                 rounded="xl"
                                                                 h={{ base: 11, md: 12 }}
                                                                 _focus={{ borderColor: 'emerald.500/50' }}
@@ -648,14 +650,14 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 備註 (選填)
                                                             </Field.Label>
                                                             <Input
                                                                 value={memberForm.memo || ''}
                                                                 onChange={e => setMemberForm({ ...memberForm, memo: e.target.value })}
-                                                                bg="gray.950/50"
-                                                                borderColor="gray.800"
+                                                                bg={inputBg}
+                                                                borderColor={inputBorderColor}
                                                                 rounded="xl"
                                                                 h={{ base: 11, md: 12 }}
                                                                 fontSize="xs"
