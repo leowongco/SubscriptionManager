@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
   Text,
   VStack,
   HStack,
@@ -10,11 +9,13 @@ import {
   Spinner,
   Icon,
   Input,
+  Flex,
 } from '@chakra-ui/react';
 import { Plus, Users, DollarSign, TrendingUp, Search } from 'lucide-react';
 import GroupCard from '../components/telegram-groups/GroupCard';
 import CreateGroupDialog from '../components/telegram-groups/CreateGroupDialog';
 import { toaster } from '../components/ui/toaster';
+import { useColorModeValue } from '@/components/ui/color-mode';
 import type { TelegramGroup, CreateGroupRequest } from '../types/telegram-groups';
 
 export default function TelegramGroups() {
@@ -23,6 +24,23 @@ export default function TelegramGroups() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<TelegramGroup | null>(null);
+
+  // Color mode values for light/dark mode support
+  const headerBg = useColorModeValue('white', 'bg.subtle');
+  const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerTitleColor = useColorModeValue('gray.900', 'white');
+  const headerTextColor = useColorModeValue('gray.600', 'gray.300');
+  
+  const cardBg = useColorModeValue('white', 'gray.900/40');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
+  const iconColor = useColorModeValue('blue.600', 'blue.400');
+  const greenIconColor = useColorModeValue('green.600', 'green.400');
+  const orangeIconColor = useColorModeValue('orange.600', 'orange.400');
+  const spinnerColor = useColorModeValue('blue.600', 'blue.400');
+  const inputPlaceholderColor = useColorModeValue('gray.400', 'gray.500');
 
   // 載入數據
   const loadGroups = async () => {
@@ -116,141 +134,180 @@ export default function TelegramGroups() {
 
   if (loading) {
     return (
-      <Container maxW="container.xl" py={8}>
+      <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
         <VStack justify="center" minH="400px">
-          <Spinner size="xl" color="blue.400" />
-          <Text color="gray.400">載入中...</Text>
+          <Spinner size="xl" color={spinnerColor} />
+          <Text color={secondaryTextColor}>載入中...</Text>
         </VStack>
-      </Container>
+      </VStack>
     );
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <VStack align="stretch" gap={6}>
-        {/* 頁面標題和操作按鈕 */}
-        <HStack justify="space-between" align="center">
-          <VStack align="start" gap={1}>
-            <Text fontSize="2xl" fontWeight="bold" color="white">
+    <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
+      {/* Header Section */}
+      <Box
+        position="relative"
+        overflow="hidden"
+        rounded={{ base: '2xl', md: '3xl' }}
+        bg={headerBg}
+        border="1px solid"
+        borderColor={headerBorderColor}
+        p={{ base: 5, md: 8 }}
+        shadow="2xl"
+        backdropFilter="blur(20px)"
+        transition="all 0.3s"
+      >
+        <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
+          <Box position="relative" zIndex={10}>
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
               Telegram 群組管理
             </Text>
-            <Text fontSize="sm" color="gray.400">
+            <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
               管理團購群組、查看收款狀態
             </Text>
-          </VStack>
+          </Box>
           <Button
-            size="sm"
             colorPalette="blue"
             onClick={handleCreate}
+            rounded="xl"
+            h={12}
+            px={6}
+            shadow="lg"
+            _hover={{ transform: 'scale(1.02)' }}
+            transition="all"
+            position="relative"
+            zIndex={10}
           >
             <HStack gap={2}>
               <Box as={Plus} w={4} h={4} />
               <Text>新增群組</Text>
             </HStack>
           </Button>
-        </HStack>
+        </Flex>
+      </Box>
 
-        {/* 統計區 */}
-        <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
-          <Box
-            p={5}
-            bg="gray.800"
-            rounded="xl"
-            border="1px"
-            borderColor="gray.700"
-          >
-            <HStack gap={3}>
-              <Box as={Users} w={8} h={8} color="blue.400" />
-              <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.400">
-                  總群組數
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="white">
-                  {totalGroups}
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
-
-          <Box
-            p={5}
-            bg="gray.800"
-            rounded="xl"
-            border="1px"
-            borderColor="gray.700"
-          >
-            <HStack gap={3}>
-              <Box as={TrendingUp} w={8} h={8} color="green.400" />
-              <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.400">
-                  活躍群組數
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="white">
-                  {activeGroups}
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
-
-          <Box
-            p={5}
-            bg="gray.800"
-            rounded="xl"
-            border="1px"
-            borderColor="gray.700"
-          >
-            <HStack gap={3}>
-              <Box as={DollarSign} w={8} h={8} color="orange.400" />
-              <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.400">
-                  關聯 Apple ID
-                </Text>
-                <Text fontSize="2xl" fontWeight="bold" color="white">
-                  {totalAccounts}
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
-        </SimpleGrid>
-
-        {/* 搜尋框 */}
+      {/* Statistics Cards */}
+      <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
         <Box
-          p={4}
-          bg="gray.800"
+          p={5}
+          bg={cardBg}
+          backdropFilter="blur(20px)"
           rounded="xl"
-          border="1px"
-          borderColor="gray.700"
+          border="1px solid"
+          borderColor={cardBorderColor}
+          shadow="xl"
+          transition="all"
+          _hover={{ transform: 'scale(1.02)' }}
         >
           <HStack gap={3}>
-            <Box as={Search} w={5} h={5} color="gray.400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜尋群組名稱或備註..."
-              bg="transparent"
-              border="none"
-              color="white"
-              _placeholder={{ color: 'gray.500' }}
-              _focus={{ borderColor: 'transparent' }}
-            />
+            <Box p={2} bg={useColorModeValue('blue.100', 'blue.500/10')} rounded="xl">
+              <Box as={Users} w={5} h={5} color={iconColor} />
+            </Box>
+            <VStack align="start" gap={1}>
+              <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+                總群組數
+              </Text>
+              <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                {totalGroups}
+              </Text>
+            </VStack>
           </HStack>
         </Box>
+
+        <Box
+          p={5}
+          bg={cardBg}
+          backdropFilter="blur(20px)"
+          rounded="xl"
+          border="1px solid"
+          borderColor={cardBorderColor}
+          shadow="xl"
+          transition="all"
+          _hover={{ transform: 'scale(1.02)' }}
+        >
+          <HStack gap={3}>
+            <Box p={2} bg={useColorModeValue('green.100', 'green.500/10')} rounded="xl">
+              <Box as={TrendingUp} w={5} h={5} color={greenIconColor} />
+            </Box>
+            <VStack align="start" gap={1}>
+              <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+                活躍群組數
+              </Text>
+              <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                {activeGroups}
+              </Text>
+            </VStack>
+          </HStack>
+        </Box>
+
+        <Box
+          p={5}
+          bg={cardBg}
+          backdropFilter="blur(20px)"
+          rounded="xl"
+          border="1px solid"
+          borderColor={cardBorderColor}
+          shadow="xl"
+          transition="all"
+          _hover={{ transform: 'scale(1.02)' }}
+        >
+          <HStack gap={3}>
+            <Box p={2} bg={useColorModeValue('orange.100', 'orange.500/10')} rounded="xl">
+              <Box as={DollarSign} w={5} h={5} color={orangeIconColor} />
+            </Box>
+            <VStack align="start" gap={1}>
+              <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+                關聯 Apple ID
+              </Text>
+              <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                {totalAccounts}
+              </Text>
+            </VStack>
+          </HStack>
+        </Box>
+      </SimpleGrid>
+
+      {/* Search Box */}
+      <Box
+        p={4}
+        bg={cardBg}
+        backdropFilter="blur(20px)"
+        rounded="xl"
+        border="1px solid"
+        borderColor={cardBorderColor}
+        shadow="xl"
+      >
+        <HStack gap={3}>
+          <Box as={Search} w={5} h={5} color={secondaryTextColor} />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜尋群組名稱或備註..."
+            bg="transparent"
+            border="none"
+            color={textColor}
+            _placeholder={{ color: inputPlaceholderColor }}
+            _focus={{ borderColor: 'transparent' }}
+          />
+        </HStack>
+      </Box>
 
         {/* 群組列表 */}
         {filteredGroups.length === 0 ? (
           <VStack
             justify="center"
             minH="300px"
-            bg="gray.800"
+            bg={cardBg}
             rounded="xl"
             border="1px"
-            borderColor="gray.700"
+            borderColor={cardBorderColor}
           >
-            <Icon as={Users} w={12} h={12} color="gray.400" />
-            <Text fontSize="lg" color="gray.400">
+            <Icon as={Users} w={12} h={12} color={secondaryTextColor} />
+            <Text fontSize="lg" color={secondaryTextColor}>
               沒有找到群組
             </Text>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color={mutedTextColor}>
               {searchQuery ? '嘗試其他搜尋條件' : '點擊「新增群組」開始'}
             </Text>
           </VStack>
@@ -274,6 +331,5 @@ export default function TelegramGroups() {
           editingGroup={editingGroup}
         />
       </VStack>
-    </Container>
   );
 }

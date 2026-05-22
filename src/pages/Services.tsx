@@ -24,6 +24,7 @@ import {
     Table,
     Spinner,
 } from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface Service {
     id: string;
@@ -48,6 +49,24 @@ export default function Services() {
         next_price: null,
         effective_date: null
     });
+    
+    // Color mode values for light/dark mode support
+    const headerBg = useColorModeValue('white', 'bg.subtle');
+    const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const headerTitleColor = useColorModeValue('gray.900', 'white');
+    const headerTextColor = useColorModeValue('gray.600', 'gray.300');
+    
+    const dialogBg = useColorModeValue('white', 'gray.900/90');
+    const dialogColor = useColorModeValue('gray.800', 'gray.50');
+    const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const inputBg = useColorModeValue('gray.50', 'gray.950/50');
+    const inputBorderColor = useColorModeValue('gray.300', 'gray.800');
+    const labelColor = useColorModeValue('gray.700', 'gray.300');
+    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+    const tableHeaderColor = useColorModeValue('gray.700', 'gray.300');
+    const tableBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const tableBg = useColorModeValue('white', 'gray.900/40');
+    const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,25 +100,26 @@ export default function Services() {
     };
 
     return (
-        <VStack gap={10} maxW="7xl" mx="auto" pb={10} align="stretch">
+        <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
             {/* Header Section */}
             <Box
                 position="relative"
                 overflow="hidden"
-                rounded="3xl"
-                bg="bg.subtle"
+                rounded={{ base: '2xl', md: '3xl' }}
+                bg={headerBg}
                 border="1px solid"
-                borderColor="gray.700"
-                p={8}
+                borderColor={headerBorderColor}
+                p={{ base: 5, md: 8 }}
                 shadow="2xl"
                 backdropFilter="blur(20px)"
+                transition="all 0.3s"
             >
                 <Flex justify="space-between" alignItems="center">
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize="3xl" fontWeight="black" letterSpacing="tight" color="white" textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
                             服務與定價維護
                         </Text>
-                        <Text color="gray.400" mt={2} fontSize="sm" fontWeight="medium">
+                        <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
                             管理訂閱服務及未來價格調整計畫，精準掌控成本。
                         </Text>
                     </Box>
@@ -124,10 +144,10 @@ export default function Services() {
                         </DialogTrigger>
                         <DialogContent
                             maxW="450px"
-                            bg="gray.900/90"
+                            bg={dialogBg}
                             backdropFilter="blur(40px)"
-                            color="gray.50"
-                            borderColor="gray.700"
+                            color={dialogColor}
+                            borderColor={dialogBorderColor}
                             rounded="2xl"
                             shadow="2xl"
                         >
@@ -139,15 +159,15 @@ export default function Services() {
                             <form onSubmit={handleSubmit}>
                                 <VStack gap={5} pt={4}>
                                     <Field.Root>
-                                        <Field.Label fontSize="xs" color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             服務名稱
                                         </Field.Label>
                                         <Input
                                             value={formData.name || ''}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             required
-                                            bg="gray.950/50"
-                                            borderColor="gray.800"
+                                            bg={inputBg}
+                                            borderColor={inputBorderColor}
                                             rounded="xl"
                                             h={12}
                                             _focus={{ borderColor: 'blue.500/50' }}
@@ -155,7 +175,7 @@ export default function Services() {
                                     </Field.Root>
 
                                     <Field.Root>
-                                        <Field.Label fontSize="xs" color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             基礎價格
                                         </Field.Label>
                                         <Input
@@ -164,8 +184,8 @@ export default function Services() {
                                             value={formData.base_price || ''}
                                             onChange={e => setFormData({ ...formData, base_price: parseFloat(e.target.value) })}
                                             required
-                                            bg="gray.950/50"
-                                            borderColor="gray.800"
+                                            bg={inputBg}
+                                            borderColor={inputBorderColor}
                                             rounded="xl"
                                             h={12}
                                             _focus={{ borderColor: 'blue.500/50' }}
@@ -175,15 +195,15 @@ export default function Services() {
 
                                     <Grid templateColumns="2" gap={5}>
                                         <Field.Root>
-                                            <Field.Label fontSize="xs" color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                 幣種
                                             </Field.Label>
                                             <NativeSelectRoot>
                                                 <NativeSelectField
                                                     value={formData.currency}
                                                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                                                    bg="gray.950/50"
-                                                    borderColor="gray.800"
+                                                    bg={inputBg}
+                                                    borderColor={inputBorderColor}
                                                     rounded="xl"
                                                     h={12}
                                                 >
@@ -195,7 +215,7 @@ export default function Services() {
                                         </Field.Root>
 
                                         <Field.Root>
-                                            <Field.Label fontSize="xs" color="gray.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                 計費週期
                                             </Field.Label>
                                             <NativeSelectRoot>
@@ -228,7 +248,7 @@ export default function Services() {
                                         </Text>
                                         <Grid templateColumns="2" gap={4}>
                                             <Field.Root>
-                                                <Field.Label fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                <Field.Label fontSize="xs" color={mutedTextColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                     新價格
                                                 </Field.Label>
                                                 <Input
@@ -245,7 +265,7 @@ export default function Services() {
                                                 />
                                             </Field.Root>
                                             <Field.Root>
-                                                <Field.Label fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                <Field.Label fontSize="xs" color={mutedTextColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                     生效日期
                                                 </Field.Label>
                                                 <Input
@@ -286,8 +306,8 @@ export default function Services() {
             <Box
                 rounded="3xl"
                 border="1px solid"
-                borderColor="gray.700"
-                bg="gray.900/40"
+                borderColor={tableBorderColor}
+                bg={tableBg}
                 backdropFilter="blur(20px)"
                 overflow="hidden"
                 shadow="2xl"
@@ -295,21 +315,21 @@ export default function Services() {
                 <Box h={1.5} w="full" bg="blue.500" />
                 <Box overflowX="auto">
                     <Table.Root>
-                        <Table.Header bg="gray.950/60">
-                            <Table.Row borderColor="gray.700">
-                                <Table.ColumnHeader color="gray.400" fontWeight="semibold" letterSpacing="wider" pl={6} py={4}>
+                        <Table.Header bg={useColorModeValue('gray.50', 'gray.950/60')}>
+                            <Table.Row borderColor={tableBorderColor}>
+                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider" pl={6} py={4}>
                                     服務名稱
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.400" fontWeight="semibold" letterSpacing="wider">
+                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider">
                                     當前價格
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.400" fontWeight="semibold" letterSpacing="wider">
+                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider">
                                     週期
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.400" fontWeight="semibold" letterSpacing="wider">
+                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider">
                                     未來調整計畫
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right" color="gray.400" fontWeight="semibold" letterSpacing="wider" pr={6}>
+                                <Table.ColumnHeader textAlign="right" color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider" pr={6}>
                                     操作
                                 </Table.ColumnHeader>
                             </Table.Row>
@@ -317,14 +337,14 @@ export default function Services() {
                         <Table.Body>
                             {services === undefined && (
                                 <Table.Row>
-                                    <Table.Cell colSpan={5} textAlign="center" py={12} color="gray.500">
+                                    <Table.Cell colSpan={5} textAlign="center" py={12} color={mutedTextColor}>
                                         <Spinner size="sm" /> 讀取服務資料中...
                                     </Table.Cell>
                                 </Table.Row>
                             )}
                             {services?.length === 0 && (
                                 <Table.Row>
-                                    <Table.Cell colSpan={5} textAlign="center" py={12} color="gray.500">
+                                    <Table.Cell colSpan={5} textAlign="center" py={12} color={mutedTextColor}>
                                         尚未設定任何服務，點擊「新增服務」開始。
                                     </Table.Cell>
                                 </Table.Row>
@@ -341,8 +361,8 @@ export default function Services() {
                                     </Table.Cell>
                                     <Table.Cell>
                                         <Flex alignItems="baseline" gap={1.5}>
-                                            <Text color="gray.500" fontSize="xs">{service.currency}</Text>
-                                            <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color="gray.100">
+                                            <Text color={mutedTextColor} fontSize="xs">{service.currency}</Text>
+                                            <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.900', 'gray.100')}>
                                                 {service.base_price.toFixed(2)}
                                             </Text>
                                         </Flex>
@@ -375,7 +395,7 @@ export default function Services() {
                                                 <Text color="orange.400" fontWeight="black" fontFamily="mono" fontSize="sm" display="flex" alignItems="center" gap={1}>
                                                     <Text as="span" opacity={0.5} fontSize="xs">➔</Text> {service.currency} {service.next_price.toFixed(2)}
                                                 </Text>
-                                                <Text color="gray.500" fontSize="10px" textTransform="uppercase" fontWeight="semibold" letterSpacing="wider">
+                                                <Text color={mutedTextColor} fontSize="10px" textTransform="uppercase" fontWeight="semibold" letterSpacing="wider">
                                                     生效日: {new Date(service.effective_date).toLocaleDateString()}
                                                 </Text>
                                             </Box>
@@ -389,7 +409,7 @@ export default function Services() {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => openEdit(service)}
-                                                color="gray.400"
+                                                color={secondaryTextColor}
                                                 _hover={{ color: 'blue.400', bg: 'blue.500/10' }}
                                                 rounded="lg"
                                                 aria-label="編輯服務"
@@ -400,7 +420,7 @@ export default function Services() {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => handleDelete(service.id)}
-                                                color="gray.400"
+                                                color={secondaryTextColor}
                                                 _hover={{ color: 'red.400', bg: 'red.500/10' }}
                                                 rounded="lg"
                                                 aria-label="刪除服務"

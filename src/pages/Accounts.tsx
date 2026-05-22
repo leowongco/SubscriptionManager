@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-    Container,
+    Box,
     Text,
     VStack,
     HStack,
@@ -10,6 +10,7 @@ import {
     Spinner,
     EmptyState,
     Icon,
+    Flex,
 } from '@chakra-ui/react';
 import { Plus, CreditCard, Search, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -17,6 +18,7 @@ import { AccountCard } from '@/components/accounts/AccountCard';
 import { BalanceAdjustDialog } from '@/components/accounts/BalanceAdjustDialog';
 import { toaster } from '@/components/ui/toaster';
 import { formatCurrency } from '@/lib/currency';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface Subscription {
     id: string;
@@ -46,6 +48,18 @@ export default function Accounts() {
     // Dialog 狀態
     const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    
+    // Color mode values for light/dark mode support
+    const headerBg = useColorModeValue('white', 'bg.subtle');
+    const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const headerTitleColor = useColorModeValue('gray.900', 'white');
+    const headerTextColor = useColorModeValue('gray.600', 'gray.300');
+    
+    const cardBg = useColorModeValue('white', 'gray.900/40');
+    const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const textColor = useColorModeValue('gray.900', 'white');
+    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+    const iconColor = useColorModeValue('gray.500', 'gray.300');
 
     // 載入數據
     const loadAccounts = async () => {
@@ -156,100 +170,130 @@ export default function Accounts() {
     };
 
     return (
-        <Container maxW="container.xl" py={8}>
-            <VStack align="stretch" gap={6}>
-                {/* 頁面標題 */}
-                <HStack justify="space-between" flexWrap="wrap" gap={4}>
-                    <VStack align="start" gap={1}>
-                        <Text fontSize="2xl" fontWeight="bold">
+        <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
+            {/* Header Section */}
+            <Box
+                position="relative"
+                overflow="hidden"
+                rounded={{ base: '2xl', md: '3xl' }}
+                bg={headerBg}
+                border="1px solid"
+                borderColor={headerBorderColor}
+                p={{ base: 5, md: 8 }}
+                shadow="2xl"
+                backdropFilter="blur(20px)"
+                transition="all 0.3s"
+            >
+                <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
+                    <Box position="relative" zIndex={10}>
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
                             Apple ID 管理
                         </Text>
-                        <Text color="gray.400" fontSize="sm">
+                        <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
                             管理所有 Apple ID、查看餘額和訂閱服務
                         </Text>
-                    </VStack>
-                    <HStack gap={3}>
-                        <Button colorPalette="blue" variant="outline">
+                    </Box>
+                    <HStack gap={3} position="relative" zIndex={10}>
+                        <Button colorPalette="blue" variant="outline" rounded="xl" h={12} px={6} shadow="lg" _hover={{ transform: 'scale(1.02)' }} transition="all">
                             <Icon as={CreditCard} />
                             批次加值
                         </Button>
-                        <Button colorPalette="blue">
+                        <Button colorPalette="blue" rounded="xl" h={12} px={6} shadow="lg" _hover={{ transform: 'scale(1.02)' }} transition="all">
                             <Icon as={Plus} />
                             新增 Apple ID
                         </Button>
                     </HStack>
-                </HStack>
+                </Flex>
+            </Box>
 
-                {/* 篩選區 */}
-                <HStack gap={4} flexWrap="wrap">
-                    <HStack flex={1} minW="200px">
-                        <Icon as={Search} color="gray.400" />
-                        <Input
-                            placeholder="搜尋 Apple ID 或 Telegram Group..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            variant="flushed"
-                        />
+            {/* Filter Section */}
+            <Box
+                rounded="3xl"
+                border="1px solid"
+                borderColor={cardBorderColor}
+                bg={cardBg}
+                backdropFilter="blur(20px)"
+                overflow="hidden"
+                shadow="xl"
+                p={{ base: 4, md: 6 }}
+            >
+                <VStack gap={4} align="stretch">
+                    {/* Search and Filter Buttons */}
+                    <HStack gap={4} flexWrap="wrap">
+                        <HStack flex={1} minW="200px">
+                            <Icon as={Search} color={iconColor} />
+                            <Input
+                                placeholder="搜尋 Apple ID 或 Telegram Group..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                variant="flushed"
+                                borderColor={cardBorderColor}
+                            />
+                        </HStack>
+                        <HStack gap={2}>
+                            <Button
+                                size="sm"
+                                variant={balanceFilter === 'all' ? 'solid' : 'outline'}
+                                colorPalette={balanceFilter === 'all' ? 'blue' : 'gray'}
+                                onClick={() => setBalanceFilter('all')}
+                                rounded="lg"
+                            >
+                                全部
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={balanceFilter === 'low' ? 'solid' : 'outline'}
+                                colorPalette={balanceFilter === 'low' ? 'orange' : 'gray'}
+                                onClick={() => setBalanceFilter('low')}
+                                rounded="lg"
+                            >
+                                餘額不足
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={balanceFilter === 'negative' ? 'solid' : 'outline'}
+                                colorPalette={balanceFilter === 'negative' ? 'red' : 'gray'}
+                                onClick={() => setBalanceFilter('negative')}
+                                rounded="lg"
+                            >
+                                餘額為負
+                            </Button>
+                        </HStack>
                     </HStack>
-                    <HStack gap={2}>
-                        <Button
-                            size="sm"
-                            variant={balanceFilter === 'all' ? 'solid' : 'outline'}
-                            colorPalette={balanceFilter === 'all' ? 'blue' : 'gray'}
-                            onClick={() => setBalanceFilter('all')}
-                        >
-                            全部
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant={balanceFilter === 'low' ? 'solid' : 'outline'}
-                            colorPalette={balanceFilter === 'low' ? 'orange' : 'gray'}
-                            onClick={() => setBalanceFilter('low')}
-                        >
-                            餘額不足
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant={balanceFilter === 'negative' ? 'solid' : 'outline'}
-                            colorPalette={balanceFilter === 'negative' ? 'red' : 'gray'}
-                            onClick={() => setBalanceFilter('negative')}
-                        >
-                            餘額為負
-                        </Button>
-                    </HStack>
-                </HStack>
 
-                {/* 統計信息 */}
-                <HStack gap={6} p={4} bg="gray.800" rounded="lg">
-                    <VStack align="start" gap={0}>
-                        <Text fontSize="sm" color="gray.400">總 Apple ID 數</Text>
-                        <Text fontSize="2xl" fontWeight="bold">{accounts.length}</Text>
-                    </VStack>
-                    <VStack align="start" gap={0}>
-                        <Text fontSize="sm" color="gray.400">總餘額</Text>
-                        <Text fontSize="2xl" fontWeight="bold" color="green.400">
-                            ${accounts.reduce((sum, a) => sum + (a.balance || 0), 0).toFixed(2)}
-                        </Text>
-                    </VStack>
-                    <VStack align="start" gap={0}>
-                        <Text fontSize="sm" color="gray.400">餘額不足</Text>
-                        <Text fontSize="2xl" fontWeight="bold" color="orange.400">
-                            {accounts.filter(a => a.balance >= 0 && a.balance < 100).length}
-                        </Text>
-                    </VStack>
-                    <VStack align="start" gap={0}>
-                        <Text fontSize="sm" color="gray.400">餘額為負</Text>
-                        <Text fontSize="2xl" fontWeight="bold" color="red.400">
-                            {accounts.filter(a => a.balance < 0).length}
-                        </Text>
-                    </VStack>
-                </HStack>
+                    {/* Statistics */}
+                    <HStack gap={6} p={4} bg={useColorModeValue('gray.50', 'gray.800/60')} rounded="xl" border="1px solid" borderColor={cardBorderColor}>
+                        <VStack align="start" gap={0}>
+                            <Text fontSize="sm" color={secondaryTextColor}>總 Apple ID 數</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color={textColor}>{accounts.length}</Text>
+                        </VStack>
+                        <VStack align="start" gap={0}>
+                            <Text fontSize="sm" color={secondaryTextColor}>總餘額</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue('green.600', 'green.400')}>
+                                ${accounts.reduce((sum, a) => sum + (a.balance || 0), 0).toFixed(2)}
+                            </Text>
+                        </VStack>
+                        <VStack align="start" gap={0}>
+                            <Text fontSize="sm" color={secondaryTextColor}>餘額不足</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue('orange.600', 'orange.400')}>
+                                {accounts.filter(a => a.balance >= 0 && a.balance < 100).length}
+                            </Text>
+                        </VStack>
+                        <VStack align="start" gap={0}>
+                            <Text fontSize="sm" color={secondaryTextColor}>餘額為負</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue('red.600', 'red.400')}>
+                                {accounts.filter(a => a.balance < 0).length}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                </VStack>
+            </Box>
 
                 {/* 帳戶列表 */}
                 {loading ? (
                     <VStack py={12}>
                         <Spinner size="lg" color="blue.400" />
-                        <Text color="gray.400">載入中...</Text>
+                        <Text color={secondaryTextColor}>載入中...</Text>
                     </VStack>
                 ) : filteredAccounts.length === 0 ? (
                     <EmptyState.Root>
@@ -294,6 +338,5 @@ export default function Accounts() {
                     onConfirm={handleAdjustBalance}
                 />
             </VStack>
-        </Container>
     );
 }

@@ -28,11 +28,23 @@ import { toaster } from '@/components/ui/toaster';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import type { RechargeAccount, RechargePreview as RechargePreviewType, RechargeProgress as RechargeProgressType } from '@/types/recharge';
 import { format } from 'date-fns';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 export default function Recharge() {
   const { data: accounts, isLoading: accountsLoading } = useSWR<any[]>('accounts', api.getAccounts);
   const { data: telegramGroups } = useSWR<any[]>('telegram-groups', api.getTelegramGroups);
   const { data: history, mutate: mutateHistory } = useSWR<any[]>('history', api.getHistory);
+
+  // Color mode values
+  const headerBg = useColorModeValue('white', 'bg.subtle');
+  const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerTitleColor = useColorModeValue('gray.900', 'white');
+  const headerTextColor = useColorModeValue('gray.600', 'gray.300');
+  
+  const cardBg = useColorModeValue('white', 'gray.900/40');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
   // 篩選狀態
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -276,37 +288,45 @@ export default function Recharge() {
         position="relative"
         overflow="hidden"
         rounded={{ base: '2xl', md: '3xl' }}
-        bg="gray.800"
+        bg={headerBg}
         border="1px solid"
-        borderColor="gray.700"
+        borderColor={headerBorderColor}
         p={{ base: 5, md: 8 }}
         shadow="2xl"
+        backdropFilter="blur(20px)"
+        transition="all 0.3s"
       >
         <Box position="relative" zIndex={10}>
           <HStack gap={3}>
-            <Icon as={CreditCard} color="blue.400" boxSize={8} />
-            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="white">
+            <Box p={2} bg={useColorModeValue('blue.100', 'blue.500/10')} rounded="xl">
+              <Icon as={CreditCard} color={useColorModeValue('blue.600', 'blue.400')} boxSize={6} />
+            </Box>
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
               批次加值中心
             </Text>
           </HStack>
-          <Text color="gray.400" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
+          <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
             快速為多個 Apple ID 批量登錄禮品卡充值紀錄，支援按 Telegram Group 篩選。
           </Text>
         </Box>
       </Box>
 
-      {/* 篩選區 */}
+      {/* Filter Section */}
       <Box
-        bg="gray.800"
+        bg={cardBg}
+        backdropFilter="blur(20px)"
         border="1px solid"
-        borderColor="gray.700"
+        borderColor={cardBorderColor}
         borderRadius="xl"
         p={6}
+        shadow="xl"
       >
         <VStack gap={4} align="stretch">
           <HStack gap={2}>
-            <Icon as={Filter} color="blue.400" />
-            <Text color="white" fontSize="lg" fontWeight="bold">
+            <Box p={2} bg={useColorModeValue('blue.100', 'blue.500/10')} rounded="lg">
+              <Icon as={Filter} color={useColorModeValue('blue.600', 'blue.400')} boxSize={5} />
+            </Box>
+            <Text color={headerTitleColor} fontSize="lg" fontWeight="bold">
               篩選條件
             </Text>
           </HStack>
@@ -314,23 +334,23 @@ export default function Recharge() {
           <Flex gap={4} wrap="wrap">
             {/* Telegram Group 選擇 */}
             <Box flex="1" minW="200px">
-              <Text color="gray.400" fontSize="sm" mb={2}>
+              <Text color={secondaryTextColor} fontSize="sm" mb={2} fontWeight="medium">
                 Telegram Group
               </Text>
               <Select
                 value={selectedGroupId}
                 onValueChange={(val) => setSelectedGroupId(val)}
               >
-                <SelectTrigger className="bg-gray-900 border-gray-600 text-white rounded-lg">
+                <SelectTrigger className="bg-gray-50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg">
                   <SelectValue>選擇 Telegram Group</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                   <SelectItem value="">
-                    <Text color="gray.400">全部群組</Text>
+                    <Text color={secondaryTextColor}>全部群組</Text>
                   </SelectItem>
                   {telegramGroups?.map((group: any) => (
                     <SelectItem key={group.id} value={group.id}>
-                      <Text color="white">{group.name}</Text>
+                      <Text color={headerTitleColor}>{group.name}</Text>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -339,51 +359,51 @@ export default function Recharge() {
             
             {/* Apple ID 搜尋 */}
             <Box flex="1" minW="200px">
-              <Text color="gray.400" fontSize="sm" mb={2}>
+              <Text color={secondaryTextColor} fontSize="sm" mb={2} fontWeight="medium">
                 Apple ID 搜尋
               </Text>
               <Input
                 placeholder="搜尋 Apple ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                bg="gray.900"
-                borderColor="gray.600"
-                color="white"
-                _placeholder={{ color: 'gray.500' }}
+                bg={useColorModeValue('gray.50', 'gray.900/50')}
+                borderColor={useColorModeValue('gray.300', 'gray.700')}
+                color={headerTitleColor}
+                _placeholder={{ color: mutedTextColor }}
                 borderRadius="lg"
               />
             </Box>
             
             {/* 幣種篩選 */}
             <Box flex="1" minW="200px">
-              <Text color="gray.400" fontSize="sm" mb={2}>
+              <Text color={secondaryTextColor} fontSize="sm" mb={2} fontWeight="medium">
                 幣種
               </Text>
               <Select
                 value={currencyFilter}
                 onValueChange={(val) => setCurrencyFilter(val)}
               >
-                <SelectTrigger className="bg-gray-900 border-gray-600 text-white rounded-lg">
+                <SelectTrigger className="bg-gray-50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg">
                   <SelectValue>選擇幣種</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                   <SelectItem value="">
-                    <Text color="gray.400">全部幣種</Text>
+                    <Text color={secondaryTextColor}>全部幣種</Text>
                   </SelectItem>
                   <SelectItem value="HKD">
-                    <Text color="white">HKD</Text>
+                    <Text color={headerTitleColor}>HKD</Text>
                   </SelectItem>
                   <SelectItem value="USD">
-                    <Text color="white">USD</Text>
+                    <Text color={headerTitleColor}>USD</Text>
                   </SelectItem>
                   <SelectItem value="TWD">
-                    <Text color="white">TWD</Text>
+                    <Text color={headerTitleColor}>TWD</Text>
                   </SelectItem>
                   <SelectItem value="TRY">
-                    <Text color="white">TRY</Text>
+                    <Text color={headerTitleColor}>TRY</Text>
                   </SelectItem>
                   <SelectItem value="ARS">
-                    <Text color="white">ARS</Text>
+                    <Text color={headerTitleColor}>ARS</Text>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -413,7 +433,7 @@ export default function Recharge() {
               <Flex gap={4} wrap="wrap">
                 {/* 加值金額 */}
                 <Box flex="1" minW="200px">
-                  <Text color="gray.400" fontSize="sm" mb={2}>
+                  <Text color={secondaryTextColor} fontSize="sm" mb={2}>
                     加值金額 *
                   </Text>
                   <Input
@@ -434,7 +454,7 @@ export default function Recharge() {
                 
                 {/* 加值原因 */}
                 <Box flex="1" minW="200px">
-                  <Text color="gray.400" fontSize="sm" mb={2}>
+                  <Text color={secondaryTextColor} fontSize="sm" mb={2}>
                     加值原因 *
                   </Text>
                   <Input
@@ -451,7 +471,7 @@ export default function Recharge() {
                 
                 {/* 操作者 */}
                 <Box flex="1" minW="200px">
-                  <Text color="gray.400" fontSize="sm" mb={2}>
+                  <Text color={secondaryTextColor} fontSize="sm" mb={2}>
                     操作者 *
                   </Text>
                   <Input
@@ -469,7 +489,7 @@ export default function Recharge() {
               
               {/* 禮品卡序號 */}
               <Box>
-                <Text color="gray.400" fontSize="sm" mb={2}>
+                <Text color={secondaryTextColor} fontSize="sm" mb={2}>
                   禮品卡序號 / 備註（選填）
                 </Text>
                 <Input
@@ -528,7 +548,7 @@ export default function Recharge() {
       <VStack gap={4} align="stretch">
         <HStack justify="space-between" borderBottom="1px solid" borderColor="gray.700" pb={3}>
           <HStack gap={2}>
-            <Icon as={HistoryIcon} color="gray.400" />
+            <Icon as={HistoryIcon} color={secondaryTextColor} />
             <Text color="white" fontSize="xl" fontWeight="bold">
               歷史加值紀錄
             </Text>
@@ -548,31 +568,31 @@ export default function Recharge() {
           {!history ? (
             <VStack py={12}>
               <Spinner size="lg" color="blue.400" />
-              <Text color="gray.400">載入中...</Text>
+              <Text color={secondaryTextColor}>載入中...</Text>
             </VStack>
           ) : historyData.length === 0 ? (
             <VStack py={12}>
-              <Icon as={HistoryIcon} color="gray.500" boxSize={8} />
-              <Text color="gray.500">暫無加值紀錄</Text>
+              <Icon as={HistoryIcon} color={mutedTextColor} boxSize={8} />
+              <Text color={mutedTextColor}>暫無加值紀錄</Text>
             </VStack>
           ) : (
             <Box overflowX="auto">
               <Table.Root width="full">
                 <Table.Header bg="gray.900">
                   <Table.Row>
-                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       日期
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       帳號
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="right" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="right" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       金額
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       類型
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="left" color="gray.400" fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       備註
                     </Table.ColumnHeader>
                   </Table.Row>
@@ -585,7 +605,7 @@ export default function Recharge() {
                       borderColor="gray.700"
                       _hover={{ bg: 'gray.700/30' }}
                     >
-                      <Table.Cell p={4} color="gray.400" fontSize="sm" fontFamily="mono">
+                      <Table.Cell p={4} color={secondaryTextColor} fontSize="sm" fontFamily="mono">
                         {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
                       </Table.Cell>
                       <Table.Cell p={4} color="white" fontSize="sm" fontWeight="medium">
@@ -599,7 +619,7 @@ export default function Recharge() {
                           {item.type || 'recharge'}
                         </Badge>
                       </Table.Cell>
-                      <Table.Cell p={4} color="gray.400" fontSize="sm">
+                      <Table.Cell p={4} color={secondaryTextColor} fontSize="sm">
                         {item.memo}
                       </Table.Cell>
                     </Table.Row>
@@ -618,11 +638,11 @@ export default function Recharge() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               borderColor="gray.600"
-              color="gray.300"
+              color={secondaryTextColor}
             >
               <Icon as={ChevronLeft} />
             </Button>
-            <Text color="gray.400" fontSize="sm">
+            <Text color={secondaryTextColor} fontSize="sm">
               第 {currentPage} 頁，共 {totalPages} 頁
             </Text>
             <Button
@@ -630,7 +650,7 @@ export default function Recharge() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               borderColor="gray.600"
-              color="gray.300"
+              color={secondaryTextColor}
             >
               <Icon as={ChevronRight} />
             </Button>
