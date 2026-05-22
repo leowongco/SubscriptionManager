@@ -1,5 +1,6 @@
 import { Box, Text } from '@chakra-ui/react';
 import { forwardRef, type ReactNode } from 'react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface FieldProps {
     label?: string;
@@ -11,10 +12,13 @@ interface FieldProps {
 
 export const Field = forwardRef<HTMLDivElement, FieldProps>(
     ({ label, required, error, helperText, children }, ref) => {
+        const labelColor = useColorModeValue('gray.700', 'gray.300');
+        const helperTextColor = useColorModeValue('gray.500', 'gray.500');
+        
         return (
             <Box ref={ref} w="full">
                 {label && (
-                    <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.300">
+                    <Text fontSize="sm" fontWeight="medium" mb={2} color={labelColor}>
                         {label}
                         {required && <Text as="span" color="red.400" ml={1}>*</Text>}
                     </Text>
@@ -26,7 +30,7 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(
                     </Text>
                 )}
                 {helperText && !error && (
-                    <Text fontSize="xs" color="gray.500" mt={1}>
+                    <Text fontSize="xs" color={helperTextColor} mt={1}>
                         {helperText}
                     </Text>
                 )}

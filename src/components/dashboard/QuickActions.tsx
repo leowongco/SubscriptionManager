@@ -3,6 +3,7 @@
 import { type ReactNode } from 'react';
 import { Box, Flex, Text, Button } from '@chakra-ui/react';
 import { Plus, Calendar, Download, Zap } from 'lucide-react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface QuickActionProps {
   icon: ReactNode;
@@ -69,21 +70,28 @@ export function QuickActions() {
     console.log('Export report');
   };
 
+  // Color mode values for light/dark mode support
+  const cardBg = useColorModeValue('white', 'gray.900/40');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const iconBg = useColorModeValue('indigo.100', 'indigo.500/10');
+  const iconColor = useColorModeValue('indigo.600', 'indigo.400');
+  const titleColor = useColorModeValue('gray.900', 'gray.100');
+
   return (
     <Box
-      bg="gray.900/40"
+      bg={cardBg}
       backdropFilter="blur(20px)"
       border="1px solid"
-      borderColor="gray.700"
+      borderColor={cardBorderColor}
       rounded="xl"
       shadow="2xl"
     >
       <Box p={{ base: 4, md: 6 }}>
         <Flex alignItems="center" gap={2} mb={4}>
-          <Box p={1.5} bg="indigo.500/10" rounded="lg">
-            <Box as={Zap} w={5} h={5} color="indigo.400" />
+          <Box p={1.5} bg={iconBg} rounded="lg">
+            <Box as={Zap} w={5} h={5} color={iconColor} />
           </Box>
-          <Text fontSize="lg" fontWeight="bold" color="gray.100">快速行動</Text>
+          <Text fontSize="lg" fontWeight="bold" color={titleColor}>快速行動</Text>
         </Flex>
         
         <Flex flexWrap="wrap" gap={3}>

@@ -63,8 +63,9 @@ export function BalanceTrendChart({ data, currency = 'HK$' }: BalanceTrendChartP
                 name="餘額"
                 stroke="#818CF8"
                 strokeWidth={2}
-                dot={{ fill: '#818CF8', strokeWidth: 2 }}
-                activeDot={{ r: 6, fill: '#6366F1' }}
+                strokeDasharray="5 5"
+                dot={{ fill: '#818CF8', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: '#6366F1', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

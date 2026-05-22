@@ -78,7 +78,7 @@ export default function AccountSelector({
       >
         <VStack gap={4}>
           <Spinner size="lg" color="blue.400" />
-          <Text color="gray.400">載入帳號中...</Text>
+          <Text color="gray.300">載入帳號中...</Text>
         </VStack>
       </Box>
     );
@@ -115,7 +115,7 @@ export default function AccountSelector({
               left={3}
               top="50%"
               transform="translateY(-50%)"
-              color="gray.400"
+              color="gray.300"
             />
             <Input
               placeholder="搜尋 Apple ID、Google Account 或群組名稱..."
@@ -140,7 +140,7 @@ export default function AccountSelector({
             >
               <Icon
                 as={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? CheckSquare : Square}
-                color={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? 'blue.400' : 'gray.400'}
+                color={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? 'blue.400' : 'gray.300'}
               />
               <Text color="gray.300" fontSize="sm">
                 {selectedIds.length === filteredAccounts.length ? '取消全選' : '全選'}
@@ -201,7 +201,7 @@ export default function AccountSelector({
                   )}
                   
                   <HStack justify="space-between">
-                    <Text color="gray.400" fontSize="xs">
+                    <Text color="gray.300" fontSize="xs">
                       目前餘額
                     </Text>
                     <Text color="green.400" fontSize="sm" fontWeight="bold">

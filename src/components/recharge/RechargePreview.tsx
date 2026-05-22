@@ -38,7 +38,7 @@ export default function RechargePreview({
       >
         <VStack gap={4}>
           <Icon as={AlertCircle} color="yellow.400" boxSize={8} />
-          <Text color="gray.400">
+          <Text color="gray.300">
             請先選擇要加值的帳號
           </Text>
         </VStack>
@@ -114,7 +114,7 @@ export default function RechargePreview({
 
                 {/* 目前餘額 */}
                 <HStack justify="space-between">
-                  <Text color="gray.400" fontSize="xs">
+                  <Text color="gray.300" fontSize="xs">
                     目前餘額
                   </Text>
                   <Text color="gray.300" fontSize="sm">

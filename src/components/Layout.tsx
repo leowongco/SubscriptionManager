@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, Users, Settings, CreditCard, Menu, X, Apple, MessageCircle } from 'lucide-react';
+import { Home, Users, Settings, CreditCard, Menu, X, Apple, MessageCircle, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -16,10 +16,25 @@ import {
   DrawerCloseTrigger,
   Portal,
 } from '@chakra-ui/react';
+import { useColorMode, useColorModeValue } from '@/components/ui/color-mode';
 
 export default function Layout() {
     const [open, setOpen] = useState(false);
     const location = useLocation();
+    const { colorMode, toggleColorMode } = useColorMode();
+    
+    // Color mode values
+    const bgColor = useColorModeValue('gray.50', 'gray.900');
+    const textColor = useColorModeValue('gray.900', 'white');
+    const sidebarBg = useColorModeValue('white', 'gray.800');
+    const sidebarBorder = useColorModeValue('gray.200', 'gray.700');
+    const navItemBgActive = useColorModeValue('rgba(37, 99, 235, 0.1)', 'rgba(37, 99, 235, 0.1)');
+    const navItemColorActive = useColorModeValue('blue.600', 'blue.400');
+    const navItemColor = useColorModeValue('gray.600', 'gray.300');
+    const navItemHoverBg = useColorModeValue('gray.100', 'gray.700');
+    const navItemHoverColor = useColorModeValue('gray.900', 'white');
+    const mobileHeaderBg = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(31, 41, 55, 0.8)');
+    const drawerBg = useColorModeValue('white', 'gray.800');
 
     // Close menu when route changes
     useEffect(() => {
@@ -43,26 +58,38 @@ export default function Layout() {
     };
 
     return (
-        <Flex minH="100vh" bg="gray.900" color="white">
+        <Flex minH="100vh" bg={bgColor} color={textColor}>
             {/* Sidebar (Desktop) */}
             <Box
                 w={{ base: '48', md: '56', lg: '64' }}
-                bg="gray.800"
+                bg={sidebarBg}
                 borderRight="1px"
-                borderColor="gray.700"
+                borderColor={sidebarBorder}
                 display={{ base: 'none', md: 'flex' }}
                 flexDirection="column"
                 flexShrink={0}
             >
                 <Box p={6}>
-                    <Text
-                        fontSize="xl"
-                        fontWeight="black"
-                        color="blue.400"
-                        letterSpacing="tight"
-                    >
-                        Subscription Master
-                    </Text>
+                    <HStack justify="space-between" align="center">
+                        <Text
+                            fontSize="xl"
+                            fontWeight="black"
+                            color="blue.400"
+                            letterSpacing="tight"
+                        >
+                            Subscription Master
+                        </Text>
+                        <IconButton
+                            aria-label="切換主題"
+                            onClick={toggleColorMode}
+                            variant="ghost"
+                            size="sm"
+                            color={navItemColor}
+                            _hover={{ color: navItemHoverColor, bg: navItemHoverBg }}
+                        >
+                            {colorMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                        </IconButton>
+                    </HStack>
                 </Box>
                 <VStack as="nav" flex={1} px={4} gap={2} mt={4} align="stretch">
                     {navigation.map((item) => (
@@ -81,14 +108,14 @@ export default function Layout() {
                                 transition="all 0.2s"
                                 fontSize="sm"
                                 fontWeight="semibold"
-                                bg={isActive(item.href) ? 'rgba(37, 99, 235, 0.1)' : 'transparent'}
-                                color={isActive(item.href) ? 'blue.400' : 'gray.400'}
+                                bg={isActive(item.href) ? navItemBgActive : 'transparent'}
+                                color={isActive(item.href) ? navItemColorActive : navItemColor}
                                 border={isActive(item.href) ? '1px solid' : 'none'}
                                 borderColor={isActive(item.href) ? 'rgba(59, 130, 246, 0.2)' : 'transparent'}
                                 shadow={isActive(item.href) ? '0 0 15px rgba(59,130,246,0.1)' : 'none'}
                                 _hover={{
-                                    color: isActive(item.href) ? 'blue.400' : 'white',
-                                    bg: isActive(item.href) ? 'rgba(37, 99, 235, 0.1)' : 'gray.700',
+                                    color: isActive(item.href) ? navItemColorActive : navItemHoverColor,
+                                    bg: isActive(item.href) ? navItemBgActive : navItemHoverBg,
                                 }}
                             >
                                 <Box as={item.icon} w={5} h={5} />
@@ -97,8 +124,8 @@ export default function Layout() {
                         </Link>
                     ))}
                 </VStack>
-                <Box p={6} borderTop="1px" borderColor="rgba(55, 65, 81, 0.5)" bg="rgba(3, 7, 18, 0.2)">
-                    <Text fontSize="10px" color="gray.600" textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
+                <Box p={6} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
+                    <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
                         Version 1.0 Pro Max
                     </Text>
                 </Box>
@@ -111,11 +138,11 @@ export default function Layout() {
                     display={{ base: 'flex', md: 'none' }}
                     h={16}
                     borderBottom="1px"
-                    borderColor="gray.700"
+                    borderColor={sidebarBorder}
                     alignItems="center"
                     justifyContent="space-between"
                     px={6}
-                    bg="rgba(31, 41, 55, 0.8)"
+                    bg={mobileHeaderBg}
                     position="sticky"
                     top={0}
                     zIndex={50}
@@ -127,15 +154,26 @@ export default function Layout() {
                     >
                         Sub Master
                     </Text>
-                    <IconButton
-                        aria-label="Open menu"
-                        variant="ghost"
-                        color="gray.400"
-                        _hover={{ color: 'white' }}
-                        onClick={() => setOpen(true)}
-                    >
-                        <Menu />
-                    </IconButton>
+                    <HStack gap={2}>
+                        <IconButton
+                            aria-label="切換主題"
+                            onClick={toggleColorMode}
+                            variant="ghost"
+                            color={navItemColor}
+                            _hover={{ color: navItemHoverColor }}
+                        >
+                            {colorMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        </IconButton>
+                        <IconButton
+                            aria-label="Open menu"
+                            variant="ghost"
+                            color={navItemColor}
+                            _hover={{ color: navItemHoverColor }}
+                            onClick={() => setOpen(true)}
+                        >
+                            <Menu />
+                        </IconButton>
+                    </HStack>
                 </Box>
 
                 {/* Mobile Drawer */}
@@ -144,18 +182,18 @@ export default function Layout() {
                         <Drawer.Backdrop bg="rgba(0, 0, 0, 0.6)" backdropFilter="blur(4px)" />
                     </Portal>
                     <Portal>
-                        <DrawerContent bg="gray.800" borderColor="gray.700" borderLeft="1px">
-                            <DrawerHeader borderBottom="1px" borderColor="rgba(55, 65, 81, 0.5)">
+                        <DrawerContent bg={drawerBg} borderColor={sidebarBorder} borderLeft="1px">
+                            <DrawerHeader borderBottom="1px" borderColor={sidebarBorder}>
                                 <HStack justify="space-between">
-                                    <Text fontWeight="black" color="gray.300" letterSpacing="wider">
+                                    <Text fontWeight="black" color={navItemColor} letterSpacing="wider">
                                         選單
                                     </Text>
                                     <DrawerCloseTrigger asChild>
                                         <IconButton
                                             aria-label="Close menu"
                                             variant="ghost"
-                                            color="gray.500"
-                                            _hover={{ color: 'white' }}
+                                            color={navItemColor}
+                                            _hover={{ color: navItemHoverColor }}
                                         >
                                             <X />
                                         </IconButton>
@@ -181,13 +219,13 @@ export default function Layout() {
                                                 transition="all 0.2s"
                                                 fontSize="sm"
                                                 fontWeight="bold"
-                                                bg={isActive(item.href) ? 'rgba(37, 99, 235, 0.2)' : 'transparent'}
-                                                color={isActive(item.href) ? 'blue.400' : 'gray.400'}
+                                                bg={isActive(item.href) ? navItemBgActive : 'transparent'}
+                                                color={isActive(item.href) ? navItemColorActive : navItemColor}
                                                 border={isActive(item.href) ? '1px solid' : 'none'}
                                                 borderColor={isActive(item.href) ? 'rgba(59, 130, 246, 0.3)' : 'transparent'}
                                                 _hover={{
-                                                    color: isActive(item.href) ? 'blue.400' : 'white',
-                                                    bg: isActive(item.href) ? 'rgba(37, 99, 235, 0.2)' : 'gray.700',
+                                                    color: isActive(item.href) ? navItemColorActive : navItemHoverColor,
+                                                    bg: isActive(item.href) ? navItemBgActive : navItemHoverBg,
                                                 }}
                                             >
                                                 <Box as={item.icon} w={5} h={5} flexShrink={0} />
@@ -197,8 +235,8 @@ export default function Layout() {
                                     ))}
                                 </VStack>
                             </DrawerBody>
-                            <DrawerFooter p={6} borderTop="1px" borderColor="rgba(55, 65, 81, 0.5)" bg="rgba(3, 7, 18, 0.2)">
-                                <Text fontSize="10px" color="gray.600" textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
+                            <DrawerFooter p={6} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
+                                <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
                                     Version 1.0 Pro Max
                                 </Text>
                             </DrawerFooter>

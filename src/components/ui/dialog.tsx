@@ -1,5 +1,6 @@
 import * as React from "react"
 import { Dialog } from "@chakra-ui/react"
+import { useColorModeValue } from "@/components/ui/color-mode"
 
 const DialogRoot = Dialog.Root
 const DialogTrigger = Dialog.Trigger
@@ -98,14 +99,17 @@ DialogTitle.displayName = "DialogTitle"
 const DialogDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <Dialog.Description
-    ref={ref}
-    fontSize="sm"
-    color="gray.400"
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const descriptionColor = useColorModeValue('gray.600', 'gray.300');
+  return (
+    <Dialog.Description
+      ref={ref}
+      fontSize="sm"
+      color={descriptionColor}
+      {...props}
+    />
+  );
+})
 DialogDescription.displayName = "DialogDescription"
 
 export {

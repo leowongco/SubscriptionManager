@@ -62,7 +62,7 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
                 <Progress.Range borderRadius="full" />
               </Progress.Track>
             </Progress.Root>
-            <Text color="gray.400" fontSize="xs" mt={2} textAlign="right">
+            <Text color="gray.300" fontSize="xs" mt={2} textAlign="right">
               {percentage.toFixed(1)}%
             </Text>
           </Box>
@@ -75,7 +75,7 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
               p={3}
               textAlign="center"
             >
-              <Text color="gray.400" fontSize="xs">
+              <Text color="gray.300" fontSize="xs">
                 總數
               </Text>
               <Text color="white" fontSize="xl" fontWeight="bold">
@@ -105,10 +105,10 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
               border={failed > 0 ? '1px solid' : 'none'}
               borderColor={failed > 0 ? 'red.500' : 'transparent'}
             >
-              <Text color={failed > 0 ? 'red.400' : 'gray.400'} fontSize="xs">
+              <Text color={failed > 0 ? 'red.400' : 'gray.300'} fontSize="xs">
                 失敗
               </Text>
-              <Text color={failed > 0 ? 'red.400' : 'gray.400'} fontSize="xl" fontWeight="bold">
+              <Text color={failed > 0 ? 'red.400' : 'gray.300'} fontSize="xl" fontWeight="bold">
                 {failed}
               </Text>
             </Box>

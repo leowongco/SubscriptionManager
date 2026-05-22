@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, CustomInputProps>(
         fontSize={{ base: "base", md: "sm" }}
         shadow="sm"
         transition="all 0.2s"
-        _placeholder={{ color: "gray.400" }}
+        _placeholder={{ color: "gray.300" }}
         _focus={{
           outline: "none",
           ring: "1px",

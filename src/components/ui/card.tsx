@@ -1,5 +1,6 @@
 import { forwardRef } from "react"
 import { Box, Flex, Text } from "@chakra-ui/react"
+import { useColorModeValue } from "@/components/ui/color-mode"
 
 const Card = forwardRef<
   HTMLDivElement,
@@ -49,14 +50,17 @@ CardTitle.displayName = "CardTitle"
 const CardDescription = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <Text
-    ref={ref}
-    fontSize="sm"
-    color="gray.500"
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const descriptionColor = useColorModeValue('gray.500', 'gray.500');
+  return (
+    <Text
+      ref={ref}
+      fontSize="sm"
+      color={descriptionColor}
+      {...props}
+    />
+  );
+})
 CardDescription.displayName = "CardDescription"
 
 const CardContent = forwardRef<
