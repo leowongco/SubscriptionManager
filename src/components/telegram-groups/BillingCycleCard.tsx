@@ -6,6 +6,7 @@ import {
   HStack,
   Badge,
 } from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 import type { BillingCycle, MemberPayment } from '../../types/telegram-groups';
 
 interface BillingCycleCardProps {
@@ -32,23 +33,37 @@ export default function BillingCycleCard({ cycle, memberPayments = [] }: Billing
   const totalAmount = cycle.amount_per_member * totalCount;
   const collectedAmount = cycle.amount_per_member * paidCount;
 
+  // Color mode values for light/dark mode support
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
+  const amountBg = useColorModeValue('gray.100', 'gray.700');
+  const progressBg = useColorModeValue('gray.200', 'gray.700');
+  const progressFillColor = useColorModeValue('green.500', 'green.400');
+  const amountColor = useColorModeValue('green.600', 'green.400');
+
   return (
     <Box
       p={5}
-      bg="gray.800"
+      bg={cardBg}
+      backdropFilter="blur(20px)"
+      border="1px solid"
+      borderColor={cardBorderColor}
       rounded="xl"
-      border="1px"
-      borderColor="gray.700"
-      transition="all 0.2s"
-      _hover={{ borderColor: 'gray.600' }}
+      shadow="xl"
+      overflow="hidden"
+      transition="all"
+      _hover={{ shadow: '2xl', transform: 'translateY(-2px)' }}
     >
       <VStack align="stretch" gap={4}>
         {/* 頂部：日期範圍和狀態 */}
         <HStack justify="space-between" align="start">
           <VStack align="start" gap={1}>
             <HStack gap={2}>
-              <Box as={Calendar} w={4} h={4} color="gray.400" />
-              <Text fontSize="sm" color="gray.400">
+              <Box as={Calendar} w={4} h={4} color={secondaryTextColor} />
+              <Text fontSize="sm" color={secondaryTextColor}>
                 {cycle.start_date} ~ {cycle.end_date}
               </Text>
             </HStack>
@@ -59,23 +74,23 @@ export default function BillingCycleCard({ cycle, memberPayments = [] }: Billing
         </HStack>
 
         {/* 金額信息 */}
-        <HStack justify="space-between" p={3} bg="gray.700" rounded="md">
+        <HStack justify="space-between" p={3} bg={amountBg} rounded="md">
           <VStack align="start" gap={1}>
-            <Text fontSize="xs" color="gray.500">
+            <Text fontSize="xs" color={mutedTextColor}>
               每人金額
             </Text>
             <HStack gap={1}>
-              <Box as={DollarSign} w={4} h={4} color="green.400" />
-              <Text fontWeight="bold" color="green.400">
+              <Box as={DollarSign} w={4} h={4} color={amountColor} />
+              <Text fontWeight="bold" color={amountColor}>
                 ${cycle.amount_per_member.toFixed(2)}
               </Text>
             </HStack>
           </VStack>
           <VStack align="end" gap={1}>
-            <Text fontSize="xs" color="gray.500">
+            <Text fontSize="xs" color={mutedTextColor}>
               總金額
             </Text>
-            <Text fontWeight="bold" color="white">
+            <Text fontWeight="bold" color={textColor}>
               ${totalAmount.toFixed(2)}
             </Text>
           </VStack>
@@ -85,32 +100,32 @@ export default function BillingCycleCard({ cycle, memberPayments = [] }: Billing
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
             <HStack gap={2}>
-              <Box as={Users} w={4} h={4} color="gray.400" />
-              <Text fontSize="sm" color="gray.400">
+              <Box as={Users} w={4} h={4} color={secondaryTextColor} />
+              <Text fontSize="sm" color={secondaryTextColor}>
                 收款進度
               </Text>
             </HStack>
-            <Text fontSize="sm" color="gray.400">
+            <Text fontSize="sm" color={secondaryTextColor}>
               {paidCount} / {totalCount} 人
             </Text>
           </HStack>
           <Box
             w="full"
             h="8px"
-            bg="gray.700"
+            bg={progressBg}
             rounded="full"
             overflow="hidden"
           >
             <Box
               h="full"
               w={`${progressPercent}%`}
-              bg="green.500"
+              bg={progressFillColor}
               rounded="full"
               transition="width 0.3s"
             />
           </Box>
           <HStack justify="space-between">
-            <Text fontSize="xs" color="gray.500">
+            <Text fontSize="xs" color={mutedTextColor}>
               已收: ${collectedAmount.toFixed(2)}
             </Text>
             <Text fontSize="xs" color="gray.500">
@@ -122,7 +137,7 @@ export default function BillingCycleCard({ cycle, memberPayments = [] }: Billing
         {/* 成員付款狀態列表（最多顯示 5 個） */}
         {memberPayments.length > 0 && (
           <VStack align="stretch" gap={2}>
-            <Text fontSize="sm" color="gray.400" fontWeight="medium">
+            <Text fontSize="sm" color="gray.300" fontWeight="medium">
               成員付款狀態
             </Text>
             {memberPayments.slice(0, 5).map((payment) => (

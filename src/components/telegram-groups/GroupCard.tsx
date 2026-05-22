@@ -8,6 +8,7 @@ import {
   Button,
   Badge,
 } from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 import type { TelegramGroup } from '../../types/telegram-groups';
 
 interface GroupCardProps {
@@ -29,27 +30,42 @@ const billingCycleColors = {
 
 export default function GroupCard({ group, onEdit }: GroupCardProps) {
   const accountCount = group.account_count || 0;
+  
+  // Color mode values for light/dark mode support
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const cardHoverBorderColor = useColorModeValue('gray.300', 'gray.600');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
+  const linkColor = useColorModeValue('blue.600', 'blue.400');
+  const linkHoverColor = useColorModeValue('blue.700', 'blue.300');
+  const iconColor = useColorModeValue('blue.600', 'blue.400');
+  const progressBg = useColorModeValue('gray.200', 'gray.700');
 
   return (
     <Box
       p={5}
-      bg="gray.800"
+      bg={cardBg}
+      backdropFilter="blur(20px)"
+      border="1px solid"
+      borderColor={cardBorderColor}
       rounded="xl"
-      border="1px"
-      borderColor="gray.700"
-      transition="all 0.2s"
-      _hover={{ borderColor: 'gray.600', shadow: 'lg' }}
+      shadow="xl"
+      overflow="hidden"
+      transition="all"
+      _hover={{ shadow: '2xl', transform: 'translateY(-2px)' }}
     >
       <VStack align="stretch" gap={4}>
         {/* 頂部：群組名稱和收費週期 */}
         <HStack justify="space-between" align="start">
           <VStack align="start" gap={1}>
-            <Text fontWeight="bold" fontSize="lg" color="white">
+            <Text fontWeight="bold" fontSize="lg" color={textColor}>
               {group.name}
             </Text>
             {group.telegram_link && (
               <HStack gap={1}>
-                <Box as={ExternalLink} w={4} h={4} color="blue.400" />
+                <Box as={ExternalLink} w={4} h={4} color={iconColor} />
                 <a
                   href={group.telegram_link}
                   target="_blank"
@@ -58,8 +74,8 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
                 >
                   <Text
                     fontSize="sm"
-                    color="blue.400"
-                    _hover={{ color: 'blue.300', textDecoration: 'underline' }}
+                    color={linkColor}
+                    _hover={{ color: linkHoverColor, textDecoration: 'underline' }}
                   >
                     Telegram 群組
                   </Text>
@@ -75,12 +91,12 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
         {/* 扣費日和帳號數量 */}
         <HStack gap={4} justify="space-between">
           <HStack gap={2}>
-            <Box as={Calendar} w={4} h={4} color="gray.400" />
-            <Text fontSize="sm" color="gray.400">
+            <Box as={Calendar} w={4} h={4} color={secondaryTextColor} />
+            <Text fontSize="sm" color={secondaryTextColor}>
               每月 {group.billing_day} 日扣費
             </Text>
           </HStack>
-          <Text fontSize="sm" color="gray.400">
+          <Text fontSize="sm" color={secondaryTextColor}>
             {accountCount} 個 Apple ID
           </Text>
         </HStack>
@@ -88,15 +104,15 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
         {/* 收款進度（模擬數據，實際需要從 API 獲取） */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
-            <Text fontSize="sm" color="gray.400">本期收款進度</Text>
-            <Text fontSize="sm" color="gray.400">
+            <Text fontSize="sm" color={secondaryTextColor}>本期收款進度</Text>
+            <Text fontSize="sm" color={secondaryTextColor}>
               0 / {accountCount}
             </Text>
           </HStack>
           <Box
             w="full"
             h="8px"
-            bg="gray.700"
+            bg={progressBg}
             rounded="full"
             overflow="hidden"
           >
@@ -143,7 +159,7 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
 
         {/* 備註 */}
         {group.notes && (
-          <Text fontSize="xs" color="gray.500" mt={2}>
+          <Text fontSize="xs" color={mutedTextColor} mt={2}>
             備註: {group.notes}
           </Text>
         )}
