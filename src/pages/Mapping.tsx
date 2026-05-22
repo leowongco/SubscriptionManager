@@ -1,3 +1,18 @@
+/**
+ * Mapping Page - 訂閱關係對應管理
+ *
+ * 結構說明：
+ * - Header Section: 頁面標題與新增帳號按鈕
+ * - Account Cards: 帳號卡片列表，每個卡片包含：
+ *   - Subscription Dialog: 訂閱管理對話框
+ *   - Member Dialog: 成員管理對話框
+ *
+ * 對話框設計決策：
+ * - 對話框與頁面邏輯緊密耦合，不提取為獨立組件
+ * - 使用清晰的註釋分隔各個區塊
+ * - 統一對話框樣式以保持一致性
+ */
+
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
@@ -25,6 +40,10 @@ import {
 } from '@chakra-ui/react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useColorModeValue } from '@/components/ui/color-mode';
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
 
 interface Subscription {
     id: string;
@@ -55,11 +74,20 @@ interface Member {
     memo: string | null;
 }
 
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export default function Mapping() {
+    // ========================================================================
+    // Data Fetching
+    // ========================================================================
     const { data: accounts, mutate: mutateAccounts } = useSWR<Account[]>('accounts', api.getAccounts);
     const { data: services } = useSWR<any[]>('services', api.getServices);
 
-    // Color mode values for light/dark mode support
+    // ========================================================================
+    // Theme & Color Mode Values
+    // ========================================================================
     const headerBg = useColorModeValue('white', 'bg.subtle');
     const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
     const headerTitleColor = useColorModeValue('gray.900', 'white');
@@ -71,7 +99,6 @@ export default function Mapping() {
     const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
     const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
-    // Dialog color mode values
     const dialogBg = useColorModeValue('white', 'gray.900/90');
     const dialogColor = useColorModeValue('gray.800', 'gray.50');
     const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
@@ -79,6 +106,9 @@ export default function Mapping() {
     const inputBorderColor = useColorModeValue('gray.300', 'gray.800');
     const labelColor = useColorModeValue('gray.700', 'gray.300');
 
+    // ========================================================================
+    // Dialog States
+    // ========================================================================
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [accountForm, setAccountForm] = useState<Partial<Account>>({});
 
@@ -90,8 +120,14 @@ export default function Mapping() {
     const [subscriptionForm, setSubscriptionForm] = useState<Partial<Subscription>>({});
     const [selectedSubAccountId, setSelectedSubAccountId] = useState<string | null>(null);
 
+    // ========================================================================
+    // Helper Functions
+    // ========================================================================
     const getTodayString = () => new Date().toISOString().split('T')[0];
 
+    // ========================================================================
+    // Account Handlers
+    // ========================================================================
     const handleAccountSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (accountForm.id) {
@@ -102,6 +138,16 @@ export default function Mapping() {
         setIsAccountOpen(false);
     };
 
+    const deleteAccount = async (id: string) => {
+        if (confirm('確定要刪除此帳號及所有關聯成員嗎？')) {
+            await api.deleteAccount(id);
+            mutateAccounts();
+        }
+    };
+
+    // ========================================================================
+    // Subscription Handlers
+    // ========================================================================
     const handleSubscriptionSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -130,6 +176,9 @@ export default function Mapping() {
         }
     };
 
+    // ========================================================================
+    // Member Handlers
+    // ========================================================================
     const handleMemberSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (memberForm.id) {
@@ -146,13 +195,6 @@ export default function Mapping() {
         mutateAccounts();
     };
 
-    const deleteAccount = async (id: string) => {
-        if (confirm('確定要刪除此帳號及所有關聯成員嗎？')) {
-            await api.deleteAccount(id);
-            mutateAccounts();
-        }
-    };
-
     const deleteMember = async (id: string) => {
         if (confirm('確定要移除此成員嗎？')) {
             await api.deleteMember(id);
@@ -160,6 +202,9 @@ export default function Mapping() {
         }
     };
 
+    // ========================================================================
+    // Render
+    // ========================================================================
     return (
         <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
             {/* Header Section */}
@@ -189,6 +234,9 @@ export default function Mapping() {
                         </Text>
                     </Box>
 
+                    {/* ──────────────────────────────────────────────────────────────── */}
+                    {/* Account Dialog - 新增/編輯 Apple ID */}
+                    {/* ──────────────────────────────────────────────────────────────── */}
                     <DialogRoot open={isAccountOpen} onOpenChange={(e) => setIsAccountOpen(e.open)}>
                         <DialogTrigger asChild>
                             <Button
@@ -385,6 +433,9 @@ export default function Mapping() {
                             </Flex>
 
                             <Flex mt={4} gap={2} alignItems="center" justify="space-between">
+                                {/* ──────────────────────────────────────────────────────────────── */}
+                                {/* Subscription Dialog - 管理訂閱服務 */}
+                                {/* ──────────────────────────────────────────────────────────────── */}
                                 <DialogRoot
                                     open={isSubscriptionOpen && selectedSubAccountId === account.id}
                                     onOpenChange={(open) => {
@@ -591,6 +642,9 @@ export default function Mapping() {
                                                 {sub.group_name}
                                             </Text>
                                         </VStack>
+                                        {/* ──────────────────────────────────────────────────────────────── */}
+                                        {/* Member Dialog - 新增成員 */}
+                                        {/* ──────────────────────────────────────────────────────────────── */}
                                         <DialogRoot
                                             open={isMemberOpen && selectedSubscriptionId === sub.id}
                                             onOpenChange={(open) => {
