@@ -28,18 +28,18 @@ import {
     Flex,
     Grid,
     SimpleGrid,
-    DialogRoot,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogCloseTrigger,
     Field,
     NativeSelectRoot,
     NativeSelectField,
 } from '@chakra-ui/react';
+import {
+    DialogRoot,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogCloseTrigger,
+} from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useColorModeValue } from '@/components/ui/color-mode';
 
 // ============================================================================
 // Type Definitions
@@ -84,27 +84,6 @@ export default function Mapping() {
     // ========================================================================
     const { data: accounts, mutate: mutateAccounts } = useSWR<Account[]>('accounts', api.getAccounts);
     const { data: services } = useSWR<any[]>('services', api.getServices);
-
-    // ========================================================================
-    // Theme & Color Mode Values
-    // ========================================================================
-    const headerBg = useColorModeValue('white', 'bg.subtle');
-    const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const headerTitleColor = useColorModeValue('gray.900', 'white');
-    const headerTextColor = useColorModeValue('gray.600', 'gray.300');
-
-    const cardBg = useColorModeValue('white', 'gray.900/40');
-    const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const textColor = useColorModeValue('gray.900', 'white');
-    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
-    const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
-
-    const dialogBg = useColorModeValue('white', 'gray.900/90');
-    const dialogColor = useColorModeValue('gray.800', 'gray.50');
-    const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const inputBg = useColorModeValue('gray.50', 'gray.950/50');
-    const inputBorderColor = useColorModeValue('gray.300', 'gray.800');
-    const labelColor = useColorModeValue('gray.700', 'gray.300');
 
     // ========================================================================
     // Dialog States
@@ -212,9 +191,9 @@ export default function Mapping() {
                 position="relative"
                 overflow="hidden"
                 rounded={{ base: '2xl', md: '3xl' }}
-                bg={headerBg}
+                bg="bg.panel"
                 border="1px solid"
-                borderColor={headerBorderColor}
+                borderColor="border.default"
                 p={{ base: 6, md: 8 }}
                 shadow="2xl"
                 backdropFilter="blur(20px)"
@@ -226,10 +205,10 @@ export default function Mapping() {
                     gap={6}
                 >
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.emphasized" textShadow="md">
                             訂閱關係對應
                         </Text>
-                        <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
+                        <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
                             管理 Apple ID、獨立服務、與成員的繳費關係。
                         </Text>
                     </Box>
@@ -237,61 +216,60 @@ export default function Mapping() {
                     {/* ──────────────────────────────────────────────────────────────── */}
                     {/* Account Dialog - 新增/編輯 Apple ID */}
                     {/* ──────────────────────────────────────────────────────────────── */}
+                    <Button
+                        onClick={() => {
+                            setAccountForm({ balance: 0 });
+                            setIsAccountOpen(true);
+                        }}
+                        w={{ base: 'full', md: 'auto' }}
+                        position="relative"
+                        zIndex={10}
+                        colorPalette="green"
+                        rounded="xl"
+                        h={{ base: 11, md: 12 }}
+                        px={6}
+                        shadow="lg"
+                        _hover={{ transform: 'scale(1.02)' }}
+                        transition="all"
+                    >
+                        <Box as={Plus} w={{ base: 4, md: 5 }} h={{ base: 4, md: 5 }} mr={2} />
+                        新增帳號
+                    </Button>
+                    
                     <DialogRoot open={isAccountOpen} onOpenChange={(e) => setIsAccountOpen(e.open)}>
-                        <DialogTrigger asChild>
-                            <Button
-                                onClick={() => setAccountForm({ balance: 0 })}
-                                w={{ base: 'full', md: 'auto' }}
-                                position="relative"
-                                zIndex={10}
-                                colorPalette="green"
-                                rounded="xl"
-                                h={{ base: 11, md: 12 }}
-                                px={6}
-                                shadow="lg"
-                                _hover={{ transform: 'scale(1.02)' }}
-                                transition="all"
-                            >
-                                <Box as={Plus} w={{ base: 4, md: 5 }} h={{ base: 4, md: 5 }} mr={2} />
-                                新增帳號
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent
-                            maxW="450px"
-                            bg={dialogBg}
-                            backdropFilter="blur(40px)"
-                            color={dialogColor}
-                            borderColor={dialogBorderColor}
-                            rounded="2xl"
-                            shadow="2xl"
-                        >
+                        <DialogContent maxW="480px" variant="glass">
                             <DialogHeader>
-                                <DialogTitle fontSize="xl" fontWeight="bold">
+                                <DialogTitle>
                                     {accountForm.id ? '編輯帳號' : '新增帳號'}
                                 </DialogTitle>
+                                <DialogCloseTrigger />
                             </DialogHeader>
                             <form onSubmit={handleAccountSubmit}>
-                                <VStack gap={{ base: 4, md: 5 }} pt={4}>
+                                <VStack gap={{ base: 4, md: 5 }}>
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             Apple ID (付款帳號)
                                         </Field.Label>
                                         <Input
                                             value={accountForm.apple_id || ''}
                                             onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })}
                                             required
-                                            bg={inputBg}
-                                            borderColor={inputBorderColor}
+                                            bg="bg.subtle"
+                                            borderColor="border.emphasized"
                                             rounded="xl"
                                             h={{ base: 11, md: 12 }}
-                                            _focus={{ borderColor: 'emerald.500/50' }}
+                                            _focus={{
+                                                borderColor: "focus.ring",
+                                                boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                                            }}
                                             fontFamily="mono"
                                             fontSize={{ base: 'xs', md: 'sm' }}
+                                            transition="all 0.2s"
                                         />
                                     </Field.Root>
 
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             初始餘額
                                         </Field.Label>
                                         <Input
@@ -299,13 +277,17 @@ export default function Mapping() {
                                             step="0.01"
                                             value={accountForm.balance || ''}
                                             onChange={e => setAccountForm({ ...accountForm, balance: parseFloat(e.target.value) })}
-                                            bg={inputBg}
-                                            borderColor={inputBorderColor}
+                                            bg="bg.subtle"
+                                            borderColor="border.emphasized"
                                             rounded="xl"
                                             h={{ base: 11, md: 12 }}
-                                            _focus={{ borderColor: 'emerald.500/50' }}
+                                            _focus={{
+                                                borderColor: "focus.ring",
+                                                boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                                            }}
                                             fontFamily="mono"
                                             fontSize={{ base: 'xs', md: 'sm' }}
+                                            transition="all 0.2s"
                                         />
                                     </Field.Root>
 
@@ -319,20 +301,20 @@ export default function Mapping() {
                                         fontWeight="bold"
                                         shadow="lg"
                                         _hover={{ transform: 'scale(1.02)' }}
-                                        transition="all"
+                                        _active={{ transform: 'scale(0.98)' }}
+                                        transition="all 0.2s"
                                     >
                                         儲存帳號
                                     </Button>
                                 </VStack>
                             </form>
-                            <DialogCloseTrigger />
                         </DialogContent>
                     </DialogRoot>
                 </Flex>
             </Box>
 
             {!accounts && (
-                <Text color="gray.500" textAlign="center" animation="pulse">
+                <Text color="fg.muted" textAlign="center" animation="pulse">
                     讀取關係資料中...
                 </Text>
             )}
@@ -341,10 +323,10 @@ export default function Mapping() {
                 {accounts?.map(account => (
                     <Box
                         key={account.id}
-                        bg="gray.900/40"
+                        bg="bg.panel"
                         backdropFilter="blur(20px)"
                         border="1px solid"
-                        borderColor="gray.700"
+                        borderColor="border.default"
                         shadow="xl"
                         overflow="hidden"
                         position="relative"
@@ -358,7 +340,7 @@ export default function Mapping() {
                         <Box
                             position="absolute"
                             inset={0}
-                            bg="linear-gradient(to bottom right, rgba(16, 185, 129, 0.05), rgba(20, 184, 166, 0.05))"
+                            bg="emerald.500/5"
                             opacity={0}
                             _groupHover={{ opacity: 1 }}
                             transition="opacity"
@@ -366,7 +348,7 @@ export default function Mapping() {
                         />
                         
                         {/* Top gradient bar */}
-                        <Box h={1} w="full" bg="linear-gradient(to right, var(--chakra-colors-emerald-500), var(--chakra-colors-teal-500))" />
+                        <Box h={1} w="full" bgGradient="to-r" gradientFrom="emerald.500" gradientTo="teal.500" />
 
                         {/* Header */}
                         <Box
@@ -374,14 +356,14 @@ export default function Mapping() {
                             position="relative"
                             zIndex={10}
                             borderBottom="1px solid"
-                            borderColor="gray.700"
-                            bg="gray.950/40"
+                            borderColor="border.default"
+                            bg="bg.muted"
                             px={5}
                             pt={4}
                         >
                             <Flex justify="space-between" alignItems="start">
                                 <Box minW={0} pr={2}>
-                                    <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" color="white" display="flex" alignItems="center" gap={2} textShadow="md" truncate>
+                                    <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" color="fg.default" display="flex" alignItems="center" gap={2} textShadow="md" truncate>
                                         {account.apple_id}
                                     </Text>
                                     <Box mt={1}>
@@ -401,20 +383,20 @@ export default function Mapping() {
                                                 ))}
                                             </Flex>
                                         ) : (
-                                            <Text color="gray.500" fontSize="10px">
+                                            <Text color="fg.muted" fontSize="10px">
                                                 無啟用中訂閱
                                             </Text>
                                         )}
                                     </Box>
                                 </Box>
                                 <VStack align="end" flexShrink={0}>
-                                    <Text fontSize="10px" color="gray.500" fontWeight="semibold" letterSpacing="wider" fontFamily="mono">
+                                    <Text fontSize="10px" color="fg.muted" fontWeight="semibold" letterSpacing="wider" fontFamily="mono">
                                         {account.subscriptions?.[0]?.currency || '$'}
                                     </Text>
                                     <Text
                                         fontSize={{ base: 'xl', md: '2xl' }}
                                         fontWeight="black"
-                                        color="gray.100"
+                                        color="fg.default"
                                         fontFamily="mono"
                                         textShadow="sm"
                                         cursor="pointer"
@@ -436,51 +418,43 @@ export default function Mapping() {
                                 {/* ──────────────────────────────────────────────────────────────── */}
                                 {/* Subscription Dialog - 管理訂閱服務 */}
                                 {/* ──────────────────────────────────────────────────────────────── */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    h={7}
+                                    px={2}
+                                    borderColor="emerald.500/20"
+                                    color="emerald.400"
+                                    _hover={{ bg: 'emerald.500/10' }}
+                                    fontSize="10px"
+                                    onClick={() => {
+                                        setSelectedSubAccountId(account.id);
+                                        setSubscriptionForm({ start_date: getTodayString() });
+                                        setIsSubscriptionOpen(true);
+                                    }}
+                                >
+                                    <Box as={ListPlus} w={3.5} h={3.5} mr={1} /> 管理訂閱
+                                </Button>
+                                
                                 <DialogRoot
                                     open={isSubscriptionOpen && selectedSubAccountId === account.id}
                                     onOpenChange={(open) => {
                                         if (!open) setIsSubscriptionOpen(false);
                                     }}
                                 >
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            h={7}
-                                            px={2}
-                                            borderColor="emerald.500/20"
-                                            color="emerald.400"
-                                            _hover={{ bg: 'emerald.500/10' }}
-                                            fontSize="10px"
-                                            onClick={() => {
-                                                setSelectedSubAccountId(account.id);
-                                                setSubscriptionForm({ start_date: getTodayString() });
-                                                setIsSubscriptionOpen(true);
-                                            }}
-                                        >
-                                            <Box as={ListPlus} w={3.5} h={3.5} mr={1} /> 管理訂閱
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent
-                                        maxW="450px"
-                                        bg={dialogBg}
-                                        backdropFilter="blur(40px)"
-                                        borderColor={dialogBorderColor}
-                                        color={dialogColor}
-                                        rounded="2xl"
-                                        shadow="2xl"
-                                    >
+                                    <DialogContent maxW="480px" variant="glass">
                                         <DialogHeader>
-                                            <DialogTitle fontSize="xl" fontWeight="bold">
+                                            <DialogTitle>
                                                 訂閱管理 - {account.apple_id}
                                             </DialogTitle>
+                                            <DialogCloseTrigger />
                                         </DialogHeader>
-                                        <VStack gap={4} pt={2}>
+                                        <VStack gap={4}>
                                             <Box
-                                                bg={inputBg}
+                                                bg="bg.subtle"
                                                 rounded="xl"
                                                 border="1px solid"
-                                                borderColor={dialogBorderColor}
+                                                borderColor="border.default"
                                                 p={3}
                                                 maxH="200px"
                                                 overflowY="auto"
@@ -492,24 +466,24 @@ export default function Mapping() {
                                                             key={sub.id}
                                                             justify="space-between"
                                                             alignItems="center"
-                                                            bg="gray.900/50"
+                                                            bg="bg.muted"
                                                             p={2}
                                                             rounded="lg"
                                                             border="1px solid"
-                                                            borderColor="gray.700"
+                                                            borderColor="border.default"
                                                             mb={2}
                                                             _last={{ mb: 0 }}
                                                         >
                                                             <Box>
                                                                 <Text fontSize="sm" fontWeight="semibold" color="emerald.300">
                                                                     {sub.service_name}{' '}
-                                                                    <Text as="span" fontSize="10px" color="gray.300" fontWeight="normal">
+                                                                    <Text as="span" fontSize="10px" color="fg.muted" fontWeight="normal">
                                                                         ({sub.group_name})
                                                                     </Text>
                                                                 </Text>
-                                                                <Text fontSize="10px" color="gray.500" fontFamily="mono">
+                                                                <Text fontSize="10px" color="fg.muted" fontFamily="mono">
                                                                     {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
-                                                                    <Badge ml={2} bg="gray.800" fontSize="10px" color="gray.300">
+                                                                    <Badge ml={2} bg="bg.muted" fontSize="10px" color="fg.muted">
                                                                         每月 {new Date(sub.start_date).getDate()} 日扣
                                                                     </Badge>
                                                                 </Text>
@@ -517,7 +491,7 @@ export default function Mapping() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                color="gray.500"
+                                                                color="fg.muted"
                                                                 _hover={{ color: 'red.400', bg: 'red.500/10' }}
                                                                 onClick={() => removeSubscription(sub.id)}
                                                                 aria-label="移除訂閱"
@@ -527,25 +501,25 @@ export default function Mapping() {
                                                         </Flex>
                                                     ))
                                                 ) : (
-                                                    <Text textAlign="center" fontSize="xs" color="gray.500" py={4}>
+                                                    <Text textAlign="center" fontSize="xs" color="fg.muted" py={4}>
                                                         無訂閱項目
                                                     </Text>
                                                 )}
                                             </Box>
 
                                             <Box as="form" onSubmit={handleSubscriptionSubmit} w="full">
-                                                <VStack gap={4} pt={2} borderTop="1px solid" borderColor="gray.700">
+                                                <VStack gap={4} pt={2} borderTop="1px solid" borderColor="border.default">
                                                     <Grid templateColumns="2" gap={4}>
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 新增服務
                                                             </Field.Label>
                                                             <NativeSelectRoot>
                                                                 <NativeSelectField
                                                                     value={subscriptionForm.service_id}
                                                                     onChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v.target.value })}
-                                                                    bg="gray.950/50"
-                                                                    borderColor="gray.800"
+                                                                    bg="bg.subtle"
+                                                                    borderColor="border.emphasized"
                                                                     rounded="xl"
                                                                     h={10}
                                                                     fontSize="xs"
@@ -559,7 +533,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 群組名稱
                                                             </Field.Label>
                                                             <Input
@@ -567,8 +541,8 @@ export default function Mapping() {
                                                                 onChange={e => setSubscriptionForm({ ...subscriptionForm, group_name: e.target.value })}
                                                                 required
                                                                 placeholder="如：家庭方案、用戶群..."
-                                                                bg="gray.950/50"
-                                                                borderColor="gray.800"
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
                                                                 rounded="xl"
                                                                 h={10}
                                                                 fontSize="xs"
@@ -576,7 +550,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="gray.300" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 扣款起始日
                                                             </Field.Label>
                                                             <Input
@@ -584,8 +558,8 @@ export default function Mapping() {
                                                                 value={subscriptionForm.start_date?.split('T')[0] || ''}
                                                                 onChange={e => setSubscriptionForm({ ...subscriptionForm, start_date: e.target.value })}
                                                                 required
-                                                                bg="gray.950/50"
-                                                                borderColor="gray.800"
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
                                                                 rounded="xl"
                                                                 h={10}
                                                                 fontSize="xs"
@@ -624,97 +598,98 @@ export default function Mapping() {
                             py={3}
                             position="relative"
                             zIndex={10}
-                            bg="gray.900/20"
+                            bg="bg.subtle"
                         >
                             {(account.subscriptions?.length || 0) === 0 && (
-                                <Text color="gray.500" fontSize="xs" textAlign="center" py={4}>
+                                <Text color="fg.muted" fontSize="xs" textAlign="center" py={4}>
                                     無啟用中訂閱，請先「管理訂閱」新增服務。
                                 </Text>
                             )}
                             {account.subscriptions?.map(sub => (
                                 <Box key={sub.id} mb={6} _last={{ mb: 0 }}>
-                                    <Flex justify="space-between" alignItems="center" borderBottom="1px solid" borderColor="gray.700" pb={2} mb={3}>
+                                    <Flex justify="space-between" alignItems="center" borderBottom="1px solid" borderColor="border.default" pb={2} mb={3}>
                                         <VStack align="start" gap={0}>
-                                            <Text fontSize="sm" fontWeight="bold" color="white" letterSpacing="wide">
+                                            <Text fontSize="sm" fontWeight="bold" color="fg.default" letterSpacing="wide">
                                                 {sub.service_name}
                                             </Text>
-                                            <Text fontSize="10px" color="emerald.400/80" fontFamily="mono">
+                                            <Text fontSize="10px" color="emerald.400" fontFamily="mono">
                                                 {sub.group_name}
                                             </Text>
                                         </VStack>
                                         {/* ──────────────────────────────────────────────────────────────── */}
                                         {/* Member Dialog - 新增成員 */}
                                         {/* ──────────────────────────────────────────────────────────────── */}
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            h={6}
+                                            px={2}
+                                            color="emerald.400"
+                                            _hover={{ color: 'emerald.300', bg: 'emerald.500/10' }}
+                                            fontSize="10px"
+                                            onClick={() => {
+                                                setSelectedSubscriptionId(sub.id);
+                                                setMemberForm({ payment_status: 0 });
+                                                setIsMemberOpen(true);
+                                            }}
+                                        >
+                                            <Box as={UserPlus} w={3} h={3} mr={1} /> 加人
+                                        </Button>
+                                        
                                         <DialogRoot
                                             open={isMemberOpen && selectedSubscriptionId === sub.id}
                                             onOpenChange={(open) => {
                                                 if (!open) setIsMemberOpen(false);
                                             }}
                                         >
-                                            <DialogTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    h={6}
-                                                    px={2}
-                                                    color="emerald.400"
-                                                    _hover={{ color: 'emerald.300', bg: 'emerald.500/10' }}
-                                                    fontSize="10px"
-                                                    onClick={() => {
-                                                        setSelectedSubscriptionId(sub.id);
-                                                        setMemberForm({ payment_status: 0 });
-                                                        setIsMemberOpen(true);
-                                                    }}
-                                                >
-                                                    <Box as={UserPlus} w={3} h={3} mr={1} /> 加人
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent
-                                                maxW="400px"
-                                                bg={dialogBg}
-                                                backdropFilter="blur(40px)"
-                                                borderColor={dialogBorderColor}
-                                                color={dialogColor}
-                                                rounded="2xl"
-                                                shadow="2xl"
-                                            >
+                                            <DialogContent maxW="420px" variant="glass">
                                                 <DialogHeader>
-                                                    <DialogTitle fontSize="xl" fontWeight="bold">
+                                                    <DialogTitle>
                                                         新增 {sub.service_name} 成員
                                                     </DialogTitle>
+                                                    <DialogCloseTrigger />
                                                 </DialogHeader>
                                                 <form onSubmit={handleMemberSubmit}>
-                                                    <VStack gap={{ base: 4, md: 5 }} pt={4}>
+                                                    <VStack gap={{ base: 4, md: 5 }}>
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 電子郵件 (Email) / 代號
                                                             </Field.Label>
                                                             <Input
                                                                 value={memberForm.email || ''}
                                                                 onChange={e => setMemberForm({ ...memberForm, email: e.target.value })}
                                                                 required
-                                                                bg={inputBg}
-                                                                borderColor={inputBorderColor}
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
                                                                 rounded="xl"
                                                                 h={{ base: 11, md: 12 }}
-                                                                _focus={{ borderColor: 'emerald.500/50' }}
+                                                                _focus={{
+                                                                    borderColor: "focus.ring",
+                                                                    boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                                                                }}
                                                                 fontFamily="mono"
                                                                 fontSize={{ base: 'xs', md: 'sm' }}
+                                                                transition="all 0.2s"
                                                             />
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 備註 (選填)
                                                             </Field.Label>
                                                             <Input
                                                                 value={memberForm.memo || ''}
                                                                 onChange={e => setMemberForm({ ...memberForm, memo: e.target.value })}
-                                                                bg={inputBg}
-                                                                borderColor={inputBorderColor}
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
                                                                 rounded="xl"
                                                                 h={{ base: 11, md: 12 }}
                                                                 fontSize="xs"
+                                                                _focus={{
+                                                                    borderColor: "focus.ring",
+                                                                    boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                                                                }}
+                                                                transition="all 0.2s"
                                                             />
                                                         </Field.Root>
 
@@ -735,20 +710,20 @@ export default function Mapping() {
                                                             fontWeight="bold"
                                                             shadow="lg"
                                                             _hover={{ transform: 'scale(1.02)' }}
-                                                            transition="all"
+                                                            _active={{ transform: 'scale(0.98)' }}
+                                                            transition="all 0.2s"
                                                         >
                                                             儲存成員
                                                         </Button>
                                                     </VStack>
                                                 </form>
-                                                <DialogCloseTrigger />
                                             </DialogContent>
                                         </DialogRoot>
                                     </Flex>
 
                                     <VStack gap={1.5}>
                                         {sub.members?.length === 0 && (
-                                            <Text fontSize="9px" color="gray.500" textAlign="center" py={2} bg="gray.950/30" rounded="lg" border="1px solid" borderColor="gray.700">
+                                            <Text fontSize="9px" color="fg.muted" textAlign="center" py={2} bg="bg.muted" rounded="lg" border="1px solid" borderColor="border.default">
                                                 尚無成員
                                             </Text>
                                         )}
@@ -759,11 +734,11 @@ export default function Mapping() {
                                                 alignItems="center"
                                                 py={1.5}
                                                 px={3}
-                                                bg="gray.950/50"
+                                                bg="bg.muted"
                                                 rounded="lg"
                                                 border="1px solid"
-                                                borderColor="gray.700"
-                                                _hover={{ borderColor: 'emerald.500/30', bg: 'gray.900/80' }}
+                                                borderColor="border.default"
+                                                _hover={{ borderColor: 'emerald.500/30', bg: 'bg.hover' }}
                                                 transition="all"
                                             >
                                                 <HStack gap={2} overflow="hidden">
@@ -785,11 +760,11 @@ export default function Mapping() {
                                                         />
                                                     </Button>
                                                     <VStack align="start" gap={0} truncate>
-                                                        <Text fontSize="xs" fontWeight="bold" color="gray.300" fontFamily="mono" letterSpacing="tighter" truncate>
+                                                        <Text fontSize="xs" fontWeight="bold" color="fg.muted" fontFamily="mono" letterSpacing="tighter" truncate>
                                                             {member.email}
                                                         </Text>
                                                         {member.memo && (
-                                                            <Text fontSize="9px" color="gray.500" truncate>
+                                                            <Text fontSize="9px" color="fg.muted" truncate>
                                                                 {member.memo}
                                                             </Text>
                                                         )}
@@ -801,7 +776,7 @@ export default function Mapping() {
                                                     p={1.5}
                                                     minW="auto"
                                                     h="auto"
-                                                    color="gray.500"
+                                                    color="fg.muted"
                                                     _hover={{ color: 'red.400', bg: 'red.500/10' }}
                                                     onClick={() => deleteMember(member.id)}
                                                     aria-label="刪除成員"
@@ -819,9 +794,9 @@ export default function Mapping() {
                         <HStack
                             p={4}
                             borderTop="1px solid"
-                            borderColor="gray.700"
+                            borderColor="border.default"
                             justify="space-between"
-                            bg="gray.950/60"
+                            bg="bg.muted"
                             backdropFilter="blur(10px)"
                             position="relative"
                             zIndex={10}
@@ -844,7 +819,7 @@ export default function Mapping() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                color="gray.500"
+                                color="fg.muted"
                                 _hover={{ color: 'red.400', bg: 'red.500/10' }}
                                 fontSize={{ base: '10px', md: 'xs' }}
                                 fontWeight="bold"

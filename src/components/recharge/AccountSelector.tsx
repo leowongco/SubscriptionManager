@@ -70,15 +70,17 @@ export default function AccountSelector({
   if (loading) {
     return (
       <Box
-        bg="gray.800"
+        bg="bg.panel"
+        backdropFilter="blur(20px)"
         border="1px solid"
-        borderColor="gray.700"
+        borderColor="border.default"
         borderRadius="xl"
         p={6}
+        shadow="xl"
       >
         <VStack gap={4}>
           <Spinner size="lg" color="blue.400" />
-          <Text color="gray.300">載入帳號中...</Text>
+          <Text color="fg.muted">載入帳號中...</Text>
         </VStack>
       </Box>
     );
@@ -86,19 +88,23 @@ export default function AccountSelector({
 
   return (
     <Box
-      bg="gray.800"
+      bg="bg.panel"
+      backdropFilter="blur(20px)"
       border="1px solid"
-      borderColor="gray.700"
+      borderColor="border.default"
       borderRadius="xl"
       overflow="hidden"
+      shadow="xl"
     >
       {/* Header */}
-      <Box p={6} borderBottom="1px solid" borderColor="gray.700">
+      <Box p={6} borderBottom="1px solid" borderColor="border.default">
         <VStack gap={4} align="stretch">
           <HStack justify="space-between">
             <HStack gap={2}>
-              <Icon as={Users} color="blue.400" />
-              <Text color="white" fontSize="lg" fontWeight="bold">
+              <Box p={2} bg="bg.subtle" rounded="lg">
+                <Icon as={Users} color="blue.400" boxSize={5} />
+              </Box>
+              <Text color="fg.default" fontSize="lg" fontWeight="bold">
                 選擇加值帳號
               </Text>
             </HStack>
@@ -115,18 +121,19 @@ export default function AccountSelector({
               left={3}
               top="50%"
               transform="translateY(-50%)"
-              color="gray.300"
+              color="fg.muted"
             />
             <Input
               placeholder="搜尋 Apple ID、Google Account 或群組名稱..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               pl={10}
-              bg="gray.900"
-              borderColor="gray.600"
-              color="white"
-              _placeholder={{ color: 'gray.500' }}
-              _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)' }}
+              bg="bg.subtle"
+              borderColor="border.default"
+              color="fg.default"
+              _placeholder={{ color: 'fg.muted' }}
+              _focus={{ borderColor: 'focus.ring', boxShadow: '0 0 0 1px var(--chakra-colors-focus-ring)' }}
+              borderRadius="lg"
             />
           </Box>
 
@@ -140,17 +147,17 @@ export default function AccountSelector({
             >
               <Icon
                 as={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? CheckSquare : Square}
-                color={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? 'blue.400' : 'gray.300'}
+                color={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? 'blue.400' : 'fg.muted'}
               />
-              <Text color="gray.300" fontSize="sm">
+              <Text color="fg.muted" fontSize="sm">
                 {selectedIds.length === filteredAccounts.length ? '取消全選' : '全選'}
               </Text>
             </HStack>
             
             {selectedIds.length > 0 && (
               <HStack gap={2}>
-                <Icon as={Wallet} color="green.400" />
-                <Text color="green.400" fontSize="sm" fontWeight="medium">
+                <Icon as={Wallet} color="blue.400" />
+                <Text color="blue.400" fontSize="sm" fontWeight="medium">
                   總餘額: ${totalBalance.toFixed(2)}
                 </Text>
               </HStack>
@@ -169,25 +176,25 @@ export default function AccountSelector({
               <Box
                 key={account.id}
                 p={4}
-                bg={isSelected ? 'rgba(49, 130, 206, 0.2)' : 'rgba(26, 32, 44, 0.5)'}
+                bg={isSelected ? 'bg.emphasized' : 'bg.subtle'}
                 borderRadius="lg"
                 border="1px solid"
-                borderColor={isSelected ? 'blue.500' : 'gray.700'}
+                borderColor={isSelected ? 'blue.500' : 'border.default'}
                 cursor="pointer"
                 onClick={() => handleToggle(account.id)}
                 transition="all 0.2s"
                 _hover={{
-                  borderColor: isSelected ? 'blue.400' : 'gray.600',
-                  bg: isSelected ? 'rgba(49, 130, 206, 0.3)' : 'rgba(26, 32, 44, 0.7)',
+                  borderColor: isSelected ? 'blue.400' : 'border.emphasized',
+                  bg: isSelected ? 'bg.hover' : 'bg.muted',
                 }}
               >
                 <HStack justify="space-between" mb={2}>
                   <HStack gap={2}>
                     <Icon
                       as={isSelected ? CheckSquare : Square}
-                      color={isSelected ? 'blue.400' : 'gray.500'}
+                      color={isSelected ? 'blue.400' : 'fg.muted'}
                     />
-                    <Text color="white" fontSize="sm" fontWeight="medium">
+                    <Text color="fg.default" fontSize="sm" fontWeight="medium">
                       {account.apple_id || account.google_account || '未知帳號'}
                     </Text>
                   </HStack>
@@ -195,16 +202,16 @@ export default function AccountSelector({
 
                 <VStack gap={1} align="stretch">
                   {account.telegram_group_name && (
-                    <Badge colorPalette="purple" variant="subtle" fontSize="xs" width="fit-content">
+                    <Badge colorPalette="blue" variant="subtle" fontSize="xs" width="fit-content">
                       {account.telegram_group_name}
                     </Badge>
                   )}
                   
                   <HStack justify="space-between">
-                    <Text color="gray.300" fontSize="xs">
+                    <Text color="fg.muted" fontSize="xs">
                       目前餘額
                     </Text>
-                    <Text color="green.400" fontSize="sm" fontWeight="bold">
+                    <Text color="blue.400" fontSize="sm" fontWeight="bold">
                       ${account.balance.toFixed(2)}
                     </Text>
                   </HStack>
@@ -216,8 +223,8 @@ export default function AccountSelector({
 
         {filteredAccounts.length === 0 && (
           <VStack gap={2} py={8}>
-            <Icon as={Users} color="gray.500" boxSize={8} />
-            <Text color="gray.500">
+            <Icon as={Users} color="fg.muted" boxSize={8} />
+            <Text color="fg.muted">
               {searchQuery ? '沒有找到符合條件的帳號' : '沒有可選擇的帳號'}
             </Text>
           </VStack>

@@ -30,15 +30,15 @@ export default function RechargePreview({
   if (previews.length === 0) {
     return (
       <Box
-        bg="gray.800"
+        bg="bg.panel"
         border="1px solid"
-        borderColor="gray.700"
+        borderColor="border.default"
         borderRadius="xl"
         p={6}
       >
         <VStack gap={4}>
-          <Icon as={AlertCircle} color="yellow.400" boxSize={8} />
-          <Text color="gray.300">
+          <Icon as={AlertCircle} color="fg.warning" boxSize={8} />
+          <Text color="fg.muted">
             請先選擇要加值的帳號
           </Text>
         </VStack>
@@ -48,19 +48,19 @@ export default function RechargePreview({
 
   return (
     <Box
-      bg="gray.800"
+      bg="bg.panel"
       border="1px solid"
-      borderColor="gray.700"
+      borderColor="border.default"
       borderRadius="xl"
       overflow="hidden"
     >
       {/* Header */}
-      <Box p={6} borderBottom="1px solid" borderColor="gray.700">
+      <Box p={6} borderBottom="1px solid" borderColor="border.default">
         <VStack gap={4} align="stretch">
           <HStack justify="space-between">
             <HStack gap={2}>
               <Icon as={CreditCard} color="blue.400" />
-              <Text color="white" fontSize="lg" fontWeight="bold">
+              <Text color="fg.default" fontSize="lg" fontWeight="bold">
                 加值預覽
               </Text>
             </HStack>
@@ -71,7 +71,7 @@ export default function RechargePreview({
 
           {/* 總金額統計 */}
           <Box
-            bg="rgba(72, 187, 120, 0.1)"
+            bg="bg.subtle"
             border="1px solid"
             borderColor="green.500"
             borderRadius="lg"
@@ -79,12 +79,12 @@ export default function RechargePreview({
           >
             <HStack justify="space-between">
               <HStack gap={2}>
-                <Icon as={Wallet} color="green.400" />
-                <Text color="gray.300" fontSize="sm">
+                <Icon as={Wallet} color="fg.success" />
+                <Text color="fg.muted" fontSize="sm">
                   總加值金額
                 </Text>
               </HStack>
-              <Text color="green.400" fontSize="xl" fontWeight="bold">
+              <Text color="fg.success" fontSize="xl" fontWeight="bold">
                 ${totalAmount.toFixed(2)}
               </Text>
             </HStack>
@@ -99,25 +99,25 @@ export default function RechargePreview({
             <Box
               key={preview.account_id}
               p={4}
-              bg="gray.900"
+              bg="bg.subtle"
               borderRadius="lg"
               border="1px solid"
-              borderColor="gray.700"
+              borderColor="border.default"
             >
               <VStack gap={2} align="stretch">
                 {/* Apple ID */}
-                <Text color="white" fontSize="sm" fontWeight="medium">
+                <Text color="fg.default" fontSize="sm" fontWeight="medium">
                   {preview.apple_id || '未知帳號'}
                 </Text>
 
-                <Separator borderColor="gray.700" />
+                <Separator borderColor="border.default" />
 
                 {/* 目前餘額 */}
                 <HStack justify="space-between">
-                  <Text color="gray.300" fontSize="xs">
+                  <Text color="fg.muted" fontSize="xs">
                     目前餘額
                   </Text>
-                  <Text color="gray.300" fontSize="sm">
+                  <Text color="fg.muted" fontSize="sm">
                     ${preview.current_balance.toFixed(2)}
                   </Text>
                 </HStack>
@@ -132,14 +132,14 @@ export default function RechargePreview({
                   </Text>
                 </HStack>
 
-                <Separator borderColor="gray.700" />
+                <Separator borderColor="border.default" />
 
                 {/* 加值後餘額 */}
                 <HStack justify="space-between">
-                  <Text color="green.400" fontSize="xs" fontWeight="medium">
+                  <Text color="fg.success" fontSize="xs" fontWeight="medium">
                     加值後餘額
                   </Text>
-                  <Text color="green.400" fontSize="sm" fontWeight="bold">
+                  <Text color="fg.success" fontSize="sm" fontWeight="bold">
                     ${preview.new_balance.toFixed(2)}
                   </Text>
                 </HStack>
@@ -150,17 +150,17 @@ export default function RechargePreview({
       </Box>
 
       {/* 操作按鈕 */}
-      <Box p={6} borderTop="1px solid" borderColor="gray.700">
+      <Box p={6} borderTop="1px solid" borderColor="border.default">
         <HStack gap={4} justify="flex-end">
           <Button
             variant="outline"
             onClick={onCancel}
             disabled={loading}
-            borderColor="gray.600"
-            color="gray.300"
+            borderColor="border.emphasized"
+            color="fg.muted"
             _hover={{
-              bg: 'gray.700',
-              borderColor: 'gray.500',
+              bg: 'bg.hover',
+              borderColor: 'border.default',
             }}
           >
             <Icon as={XCircle} mr={2} />

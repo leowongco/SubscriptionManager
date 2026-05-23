@@ -11,14 +11,21 @@ import {
     EmptyState,
     Icon,
     Flex,
+    Field,
 } from '@chakra-ui/react';
+import {
+    DialogRoot,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogCloseTrigger,
+} from '@/components/ui/dialog';
 import { Plus, CreditCard, Search, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { AccountCard } from '@/components/accounts/AccountCard';
 import { BalanceAdjustDialog } from '@/components/accounts/BalanceAdjustDialog';
 import { toaster } from '@/components/ui/toaster';
 import { formatCurrency } from '@/lib/currency';
-import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface Subscription {
     id: string;
@@ -48,18 +55,9 @@ export default function Accounts() {
     // Dialog 狀態
     const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [newAccountForm, setNewAccountForm] = useState<Partial<Account>>({ balance: 0 });
     
-    // Color mode values for light/dark mode support
-    const headerBg = useColorModeValue('white', 'bg.subtle');
-    const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const headerTitleColor = useColorModeValue('gray.900', 'white');
-    const headerTextColor = useColorModeValue('gray.600', 'gray.300');
-    
-    const cardBg = useColorModeValue('white', 'gray.900/40');
-    const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const textColor = useColorModeValue('gray.900', 'white');
-    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
-    const iconColor = useColorModeValue('gray.500', 'gray.300');
 
     // 載入數據
     const loadAccounts = async () => {
@@ -169,6 +167,29 @@ export default function Accounts() {
         }
     };
 
+    // 處理新增帳號
+    const handleCreateAccount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.createAccount(newAccountForm);
+            toaster.create({
+                title: '新增成功',
+                description: `Apple ID "${newAccountForm.apple_id}" 已新增`,
+                type: 'success',
+            });
+            setCreateDialogOpen(false);
+            setNewAccountForm({ balance: 0 });
+            await loadAccounts();
+        } catch (error) {
+            console.error('Failed to create account:', error);
+            toaster.create({
+                title: '新增失敗',
+                description: '無法新增 Apple ID，請稍後再試',
+                type: 'error',
+            });
+        }
+    };
+
     return (
         <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
             {/* Header Section */}
@@ -176,9 +197,9 @@ export default function Accounts() {
                 position="relative"
                 overflow="hidden"
                 rounded={{ base: '2xl', md: '3xl' }}
-                bg={headerBg}
+                bg="bg.panel"
                 border="1px solid"
-                borderColor={headerBorderColor}
+                borderColor="border.default"
                 p={{ base: 5, md: 8 }}
                 shadow="2xl"
                 backdropFilter="blur(20px)"
@@ -186,10 +207,10 @@ export default function Accounts() {
             >
                 <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
                             Apple ID 管理
                         </Text>
-                        <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
+                        <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
                             管理所有 Apple ID、查看餘額和訂閱服務
                         </Text>
                     </Box>
@@ -198,10 +219,95 @@ export default function Accounts() {
                             <Icon as={CreditCard} />
                             批次加值
                         </Button>
-                        <Button colorPalette="blue" rounded="xl" h={12} px={6} shadow="lg" _hover={{ transform: 'scale(1.02)' }} transition="all">
+                        
+                        {/* 新增 Apple ID Dialog */}
+                        <Button
+                            onClick={() => {
+                                setNewAccountForm({ balance: 0 });
+                                setCreateDialogOpen(true);
+                            }}
+                            colorPalette="blue"
+                            rounded="xl"
+                            h={12}
+                            px={6}
+                            shadow="lg"
+                            _hover={{ transform: 'scale(1.02)' }}
+                            transition="all"
+                        >
                             <Icon as={Plus} />
                             新增 Apple ID
                         </Button>
+                        
+                        <DialogRoot open={createDialogOpen} onOpenChange={(e) => setCreateDialogOpen(e.open)}>
+                            <DialogContent maxW="480px" variant="glass">
+                                <DialogHeader>
+                                    <DialogTitle>新增 Apple ID</DialogTitle>
+                                    <DialogCloseTrigger />
+                                </DialogHeader>
+                                <form onSubmit={handleCreateAccount}>
+                                    <VStack gap={5}>
+                                        <Field.Root>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                Apple ID (付款帳號)
+                                            </Field.Label>
+                                            <Input
+                                                value={newAccountForm.apple_id || ''}
+                                                onChange={e => setNewAccountForm({ ...newAccountForm, apple_id: e.target.value })}
+                                                required
+                                                bg="bg.subtle"
+                                                borderColor="border.default"
+                                                rounded="xl"
+                                                h={12}
+                                                _focus={{
+                                                    borderColor: "focus.ring",
+                                                    boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                                                }}
+                                                fontFamily="mono"
+                                                transition="all 0.2s"
+                                            />
+                                        </Field.Root>
+
+                                        <Field.Root>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                初始餘額
+                                            </Field.Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                value={newAccountForm.balance || ''}
+                                                onChange={e => setNewAccountForm({ ...newAccountForm, balance: parseFloat(e.target.value) })}
+                                                bg="bg.subtle"
+                                                borderColor="border.default"
+                                                rounded="xl"
+                                                h={12}
+                                                _focus={{
+                                                    borderColor: "focus.ring",
+                                                    boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                                                }}
+                                                fontFamily="mono"
+                                                transition="all 0.2s"
+                                            />
+                                        </Field.Root>
+
+                                        <Button
+                                            type="submit"
+                                            w="full"
+                                            colorPalette="blue"
+                                            rounded="xl"
+                                            h={12}
+                                            fontSize="md"
+                                            fontWeight="bold"
+                                            shadow="lg"
+                                            _hover={{ transform: 'scale(1.02)' }}
+                                            _active={{ transform: 'scale(0.98)' }}
+                                            transition="all 0.2s"
+                                        >
+                                            儲存帳號
+                                        </Button>
+                                    </VStack>
+                                </form>
+                            </DialogContent>
+                        </DialogRoot>
                     </HStack>
                 </Flex>
             </Box>
@@ -210,8 +316,8 @@ export default function Accounts() {
             <Box
                 rounded="3xl"
                 border="1px solid"
-                borderColor={cardBorderColor}
-                bg={cardBg}
+                borderColor="border.default"
+                bg="bg.panel"
                 backdropFilter="blur(20px)"
                 overflow="hidden"
                 shadow="xl"
@@ -221,13 +327,13 @@ export default function Accounts() {
                     {/* Search and Filter Buttons */}
                     <HStack gap={4} flexWrap="wrap">
                         <HStack flex={1} minW="200px">
-                            <Icon as={Search} color={iconColor} />
+                            <Icon as={Search} color="fg.muted" />
                             <Input
                                 placeholder="搜尋 Apple ID 或 Telegram Group..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 variant="flushed"
-                                borderColor={cardBorderColor}
+                                borderColor="border.default"
                             />
                         </HStack>
                         <HStack gap={2}>
@@ -262,26 +368,26 @@ export default function Accounts() {
                     </HStack>
 
                     {/* Statistics */}
-                    <HStack gap={6} p={4} bg={useColorModeValue('gray.50', 'gray.800/60')} rounded="xl" border="1px solid" borderColor={cardBorderColor}>
+                    <HStack gap={6} p={4} bg="bg.subtle" rounded="xl" border="1px solid" borderColor="border.default">
                         <VStack align="start" gap={0}>
-                            <Text fontSize="sm" color={secondaryTextColor}>總 Apple ID 數</Text>
-                            <Text fontSize="2xl" fontWeight="bold" color={textColor}>{accounts.length}</Text>
+                            <Text fontSize="sm" color="fg.muted">總 Apple ID 數</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color="fg.default">{accounts.length}</Text>
                         </VStack>
                         <VStack align="start" gap={0}>
-                            <Text fontSize="sm" color={secondaryTextColor}>總餘額</Text>
-                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue('green.600', 'green.400')}>
+                            <Text fontSize="sm" color="fg.muted">總餘額</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color="fg.success">
                                 ${accounts.reduce((sum, a) => sum + (a.balance || 0), 0).toFixed(2)}
                             </Text>
                         </VStack>
                         <VStack align="start" gap={0}>
-                            <Text fontSize="sm" color={secondaryTextColor}>餘額不足</Text>
-                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue('orange.600', 'orange.400')}>
+                            <Text fontSize="sm" color="fg.muted">餘額不足</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color="fg.warning">
                                 {accounts.filter(a => a.balance >= 0 && a.balance < 100).length}
                             </Text>
                         </VStack>
                         <VStack align="start" gap={0}>
-                            <Text fontSize="sm" color={secondaryTextColor}>餘額為負</Text>
-                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue('red.600', 'red.400')}>
+                            <Text fontSize="sm" color="fg.muted">餘額為負</Text>
+                            <Text fontSize="2xl" fontWeight="bold" color="fg.error">
                                 {accounts.filter(a => a.balance < 0).length}
                             </Text>
                         </VStack>
@@ -293,7 +399,7 @@ export default function Accounts() {
                 {loading ? (
                     <VStack py={12}>
                         <Spinner size="lg" color="blue.400" />
-                        <Text color={secondaryTextColor}>載入中...</Text>
+                        <Text color="fg.muted">載入中...</Text>
                     </VStack>
                 ) : filteredAccounts.length === 0 ? (
                     <EmptyState.Root>

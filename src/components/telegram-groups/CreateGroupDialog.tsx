@@ -7,6 +7,8 @@ import {
   Input,
   NativeSelectRoot,
   NativeSelectField,
+} from '@chakra-ui/react';
+import {
   DialogRoot,
   DialogContent,
   DialogHeader,
@@ -14,8 +16,7 @@ import {
   DialogBody,
   DialogFooter,
   DialogCloseTrigger,
-} from '@chakra-ui/react';
-import { useColorModeValue } from '../ui/color-mode';
+} from '../ui/dialog';
 import type { CreateGroupRequest } from '../../types/telegram-groups';
 
 interface CreateGroupDialogProps {
@@ -47,14 +48,6 @@ export default function CreateGroupDialog({
   const [notes, setNotes] = useState(editingGroup?.notes || '');
   const [loading, setLoading] = useState(false);
 
-  // Color mode values for light/dark mode support
-  const dialogBg = useColorModeValue('white', 'gray.900/90');
-  const dialogColor = useColorModeValue('gray.800', 'gray.50');
-  const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
-  const inputBg = useColorModeValue('gray.50', 'gray.800');
-  const inputBorderColor = useColorModeValue('gray.300', 'gray.600');
-  const labelColor = useColorModeValue('gray.700', 'gray.300');
-
   const handleSubmit = async () => {
     if (!name.trim()) {
       return;
@@ -79,117 +72,184 @@ export default function CreateGroupDialog({
 
   return (
     <DialogRoot open={open} onOpenChange={(e) => onOpenChange(e.open)}>
-      <DialogContent
-        maxW="450px"
-        bg={dialogBg}
-        backdropFilter="blur(40px)"
-        color={dialogColor}
-        borderColor={dialogBorderColor}
-        rounded="2xl"
-        shadow="2xl"
-      >
+      <DialogContent maxW="480px" variant="glass">
         <DialogHeader>
-          <DialogTitle fontSize="xl" fontWeight="bold">
+          <DialogTitle>
             {editingGroup ? '編輯群組' : '新增 Telegram 群組'}
           </DialogTitle>
+          <DialogCloseTrigger />
         </DialogHeader>
 
         <DialogBody>
-          <VStack align="stretch" gap={4}>
+          <VStack align="stretch" gap={5}>
             {/* 群組名稱 */}
             <VStack align="start" gap={2}>
-              <Text fontSize="sm" color={labelColor}>
-                群組名稱 <Text as="span" color="red.400">*</Text>
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="fg.muted"
+              >
+                群組名稱 <Text as="span" color="fg.error">*</Text>
               </Text>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例如：Netflix 家庭共享群"
-                bg={inputBg}
+                bg="bg.subtle"
                 border="1px"
-                borderColor={inputBorderColor}
-                _placeholder={{ color: 'gray.500' }}
+                borderColor="border.default"
+                rounded="xl"
+                h={12}
+                _placeholder={{ color: 'fg.muted' }}
+                _focus={{
+                  borderColor: 'blue.400',
+                  boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                }}
+                transition="all 0.2s"
               />
             </VStack>
 
             {/* Telegram 連結 */}
             <VStack align="start" gap={2}>
-              <Text fontSize="sm" color={labelColor}>
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="fg.muted"
+              >
                 Telegram 群組連結
               </Text>
               <Input
                 value={telegramLink}
                 onChange={(e) => setTelegramLink(e.target.value)}
                 placeholder="https://t.me/your-group"
-                bg={inputBg}
+                bg="bg.subtle"
                 border="1px"
-                borderColor={inputBorderColor}
-                _placeholder={{ color: 'gray.500' }}
+                borderColor="border.default"
+                rounded="xl"
+                h={12}
+                _placeholder={{ color: 'fg.muted' }}
+                _focus={{
+                  borderColor: 'blue.400',
+                  boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                }}
+                transition="all 0.2s"
               />
             </VStack>
 
-            {/* 扣費日 */}
-            <VStack align="start" gap={2}>
-              <Text fontSize="sm" color={labelColor}>
-                扣費日 <Text as="span" color="red.400">*</Text>
-              </Text>
-              <NativeSelectRoot>
-                <NativeSelectField
-                  value={billingDay}
-                  onChange={(e) => setBillingDay(e.target.value)}
-                  bg={inputBg}
-                  borderColor={inputBorderColor}
+            {/* 扣費日和計費週期 - 使用 Grid */}
+            <HStack gap={4}>
+              {/* 扣費日 */}
+              <VStack align="start" gap={2} flex={1}>
+                <Text
+                  fontSize="xs"
+                  fontWeight="semibold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="fg.muted"
                 >
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <option key={day} value={day}>
-                      每月 {day} 號
-                    </option>
-                  ))}
-                </NativeSelectField>
-              </NativeSelectRoot>
-            </VStack>
+                  扣費日 <Text as="span" color="fg.error">*</Text>
+                </Text>
+                <NativeSelectRoot>
+                  <NativeSelectField
+                    value={billingDay}
+                    onChange={(e) => setBillingDay(e.target.value)}
+                    bg="bg.subtle"
+                    borderColor="border.default"
+                    rounded="xl"
+                    h={12}
+                    _focus={{
+                      borderColor: 'blue.400',
+                      boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                    }}
+                  >
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                      <option key={day} value={day}>
+                        每月 {day} 號
+                      </option>
+                    ))}
+                  </NativeSelectField>
+                </NativeSelectRoot>
+              </VStack>
 
-            {/* 計費週期 */}
-            <VStack align="start" gap={2}>
-              <Text fontSize="sm" color={labelColor}>
-                計費週期 <Text as="span" color="red.400">*</Text>
-              </Text>
-              <NativeSelectRoot>
-                <NativeSelectField
-                  value={billingCycleType}
-                  onChange={(e) => setBillingCycleType(e.target.value as 'monthly' | 'biannually' | 'yearly')}
-                  bg={inputBg}
-                  borderColor={inputBorderColor}
+              {/* 計費週期 */}
+              <VStack align="start" gap={2} flex={1}>
+                <Text
+                  fontSize="xs"
+                  fontWeight="semibold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="fg.muted"
                 >
-                  <option value="monthly">每月</option>
-                  <option value="biannually">每半年</option>
-                  <option value="yearly">每年</option>
-                </NativeSelectField>
-              </NativeSelectRoot>
-            </VStack>
+                  計費週期 <Text as="span" color="fg.error">*</Text>
+                </Text>
+                <NativeSelectRoot>
+                  <NativeSelectField
+                    value={billingCycleType}
+                    onChange={(e) => setBillingCycleType(e.target.value as 'monthly' | 'biannually' | 'yearly')}
+                    bg="bg.subtle"
+                    borderColor="border.default"
+                    rounded="xl"
+                    h={12}
+                    _focus={{
+                      borderColor: 'blue.400',
+                      boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                    }}
+                  >
+                    <option value="monthly">每月</option>
+                    <option value="biannually">每半年</option>
+                    <option value="yearly">每年</option>
+                  </NativeSelectField>
+                </NativeSelectRoot>
+              </VStack>
+            </HStack>
 
             {/* 備註 */}
             <VStack align="start" gap={2}>
-              <Text fontSize="sm" color={labelColor}>
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="fg.muted"
+              >
                 備註
               </Text>
               <Input
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="選填備註"
-                bg={inputBg}
+                bg="bg.subtle"
                 border="1px"
-                borderColor={inputBorderColor}
-                _placeholder={{ color: 'gray.500' }}
+                borderColor="border.default"
+                rounded="xl"
+                h={12}
+                _placeholder={{ color: 'fg.muted' }}
+                _focus={{
+                  borderColor: 'blue.400',
+                  boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                }}
+                transition="all 0.2s"
               />
             </VStack>
           </VStack>
         </DialogBody>
 
         <DialogFooter>
-          <HStack gap={3}>
+          <HStack gap={3} justify="end" w="full">
             <DialogCloseTrigger asChild>
-              <Button variant="outline" colorPalette="gray">
+              <Button
+                variant="outline"
+                colorPalette="gray"
+                rounded="xl"
+                h={11}
+                px={6}
+                transition="all 0.2s"
+                _hover={{ transform: 'scale(1.02)' }}
+              >
                 取消
               </Button>
             </DialogCloseTrigger>
@@ -198,12 +258,18 @@ export default function CreateGroupDialog({
               loading={loading}
               onClick={handleSubmit}
               disabled={!name.trim()}
+              rounded="xl"
+              h={11}
+              px={8}
+              fontWeight="semibold"
+              transition="all 0.2s"
+              _hover={{ transform: 'scale(1.02)' }}
+              _active={{ transform: 'scale(0.98)' }}
             >
               {editingGroup ? '保存' : '新增'}
             </Button>
           </HStack>
         </DialogFooter>
-        <DialogCloseTrigger />
       </DialogContent>
     </DialogRoot>
   );

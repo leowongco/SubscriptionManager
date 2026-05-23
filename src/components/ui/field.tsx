@@ -3,7 +3,7 @@ import { forwardRef, type ReactNode } from 'react';
 import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface FieldProps {
-    label?: string;
+    label?: ReactNode;
     required?: boolean;
     error?: string;
     helperText?: string;

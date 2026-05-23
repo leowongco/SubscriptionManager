@@ -51,7 +51,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             ).bind(cycleId).first();
 
             if (!cycle) {
-                return new Response('帳單週期不存在', { status: 404 });
+                return new Response(JSON.stringify({ error: '帳單週期不存在' }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
 
             // 獲取成員付款狀態
@@ -129,7 +132,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         return Response.json(enrichedResults);
     } catch (error: any) {
         console.error('獲取帳單週期失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -145,19 +151,31 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
         // 验证必填字段
         if (!body.telegram_group_id) {
-            return new Response('缺少必填字段: telegram_group_id', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少必填字段: telegram_group_id' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         if (!body.start_date) {
-            return new Response('缺少必填字段: start_date', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少必填字段: start_date' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         if (!body.end_date) {
-            return new Response('缺少必填字段: end_date', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少必填字段: end_date' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         if (!body.amount_per_member || body.amount_per_member <= 0) {
-            return new Response('每人金額必須大於 0', { status: 400 });
+            return new Response(JSON.stringify({ error: '每人金額必須大於 0' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查群組是否存在
@@ -166,7 +184,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         ).bind(body.telegram_group_id).first();
 
         if (!group) {
-            return new Response('Telegram 群組不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: 'Telegram 群組不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         const id = body.id || crypto.randomUUID();
@@ -237,7 +258,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         }, { status: 201 });
     } catch (error: any) {
         console.error('創建帳單週期失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -251,7 +275,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         const id = url.searchParams.get('id');
 
         if (!id) {
-            return new Response('缺少帳單週期 ID', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少帳單週期 ID' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         const request = context.request;
@@ -263,17 +290,26 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         ).bind(id).first();
 
         if (!existingCycle) {
-            return new Response('帳單週期不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: '帳單週期不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 验证狀態
         if (body.status && !['active', 'completed', 'refunded'].includes(body.status)) {
-            return new Response('狀態必須是 active, completed 或 refunded', { status: 400 });
+            return new Response(JSON.stringify({ error: '狀態必須是 active, completed 或 refunded' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 验证金額
         if (body.amount_per_member && body.amount_per_member <= 0) {
-            return new Response('每人金額必須大於 0', { status: 400 });
+            return new Response(JSON.stringify({ error: '每人金額必須大於 0' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 更新帳單週期記錄
@@ -306,7 +342,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         return Response.json(cycle);
     } catch (error: any) {
         console.error('更新帳單週期失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -320,7 +359,10 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
         const id = url.searchParams.get('id');
 
         if (!id) {
-            return new Response('缺少帳單週期 ID', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少帳單週期 ID' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查帳單週期是否存在
@@ -329,7 +371,10 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
         ).bind(id).first();
 
         if (!existingCycle) {
-            return new Response('帳單週期不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: '帳單週期不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查是否有已付款的記錄
@@ -339,8 +384,11 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
 
         if (paidPayments.length > 0) {
             return new Response(
-                `無法刪除帳單週期，已有 ${paidPayments.length} 位成員付款。請先處理退款。`,
-                { status: 400 }
+                JSON.stringify({ error: `無法刪除帳單週期，已有 ${paidPayments.length} 位成員付款。請先處理退款。` }),
+                {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                }
             );
         }
 
@@ -370,6 +418,9 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
         return Response.json({ success: true, message: '帳單週期已刪除' });
     } catch (error: any) {
         console.error('刪除帳單週期失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };

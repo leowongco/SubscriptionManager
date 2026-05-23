@@ -30,31 +30,15 @@ import { toaster } from '@/components/ui/toaster';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import type { RechargeAccount, RechargePreview as RechargePreviewType, RechargeProgress as RechargeProgressType } from '@/types/recharge';
 import { format } from 'date-fns';
-import { useColorModeValue } from '@/components/ui/color-mode';
 
 export default function Recharge() {
   const { data: accounts, isLoading: accountsLoading } = useSWR<any[]>('accounts', api.getAccounts);
   const { data: telegramGroups } = useSWR<any[]>('telegram-groups', api.getTelegramGroups);
   const { data: history, mutate: mutateHistory } = useSWR<any[]>('history', api.getHistory);
 
-  // Color mode values
-  const headerBg = useColorModeValue('white', 'bg.subtle');
-  const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
-  const headerTitleColor = useColorModeValue('gray.900', 'white');
-  const headerTextColor = useColorModeValue('gray.600', 'gray.300');
-  
-  const cardBg = useColorModeValue('white', 'gray.900/40');
-  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
-  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
-  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
-  
-  // 表格顏色
-  const tableBg = useColorModeValue('white', 'bg.subtle');
-  const tableBorderColor = useColorModeValue('gray.200', 'white/10');
-
   // 篩選狀態
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [currencyFilter, setCurrencyFilter] = useState<string>('');
 
   // 加值表單狀態
@@ -294,9 +278,9 @@ export default function Recharge() {
         position="relative"
         overflow="hidden"
         rounded={{ base: '2xl', md: '3xl' }}
-        bg={headerBg}
+        bg="bg.panel"
         border="1px solid"
-        borderColor={headerBorderColor}
+        borderColor="border.default"
         p={{ base: 5, md: 8 }}
         shadow="2xl"
         backdropFilter="blur(20px)"
@@ -304,14 +288,14 @@ export default function Recharge() {
       >
         <Box position="relative" zIndex={10}>
           <HStack gap={3}>
-            <Box p={2} bg={useColorModeValue('blue.100', 'blue.500/10')} rounded="xl">
-              <Icon as={CreditCard} color={useColorModeValue('blue.600', 'blue.400')} boxSize={6} />
+            <Box p={2} bg="bg.subtle" rounded="xl">
+              <Icon as={CreditCard} color="blue.400" boxSize={6} />
             </Box>
-            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
               批次加值中心
             </Text>
           </HStack>
-          <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
+          <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
             快速為多個 Apple ID 批量登錄禮品卡充值紀錄，支援按 Telegram Group 篩選。
           </Text>
         </Box>
@@ -319,20 +303,20 @@ export default function Recharge() {
 
       {/* Filter Section */}
       <Box
-        bg={cardBg}
+        bg="bg.panel"
         backdropFilter="blur(20px)"
         border="1px solid"
-        borderColor={cardBorderColor}
+        borderColor="border.default"
         borderRadius="xl"
         p={6}
         shadow="xl"
       >
         <VStack gap={4} align="stretch">
           <HStack gap={2}>
-            <Box p={2} bg={useColorModeValue('blue.100', 'blue.500/10')} rounded="lg">
-              <Icon as={Filter} color={useColorModeValue('blue.600', 'blue.400')} boxSize={5} />
+            <Box p={2} bg="bg.subtle" rounded="lg">
+              <Icon as={Filter} color="blue.400" boxSize={5} />
             </Box>
-            <Text color={headerTitleColor} fontSize="lg" fontWeight="bold">
+            <Text color="fg.default" fontSize="lg" fontWeight="bold">
               篩選條件
             </Text>
           </HStack>
@@ -340,7 +324,7 @@ export default function Recharge() {
           <Flex gap={4} wrap="wrap">
             {/* Telegram Group 選擇 */}
             <Box flex="1" minW="200px">
-              <Text color={secondaryTextColor} fontSize="sm" mb={2} fontWeight="medium">
+              <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                 Telegram Group
               </Text>
               <Select
@@ -352,11 +336,11 @@ export default function Recharge() {
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                   <SelectItem value="">
-                    <Text color={secondaryTextColor}>全部群組</Text>
+                    <Text color="fg.muted">全部群組</Text>
                   </SelectItem>
                   {telegramGroups?.map((group: any) => (
                     <SelectItem key={group.id} value={group.id}>
-                      <Text color={headerTitleColor}>{group.name}</Text>
+                      <Text color="fg.default">{group.name}</Text>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -365,24 +349,24 @@ export default function Recharge() {
             
             {/* Apple ID 搜尋 */}
             <Box flex="1" minW="200px">
-              <Text color={secondaryTextColor} fontSize="sm" mb={2} fontWeight="medium">
+              <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                 Apple ID 搜尋
               </Text>
               <Input
                 placeholder="搜尋 Apple ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                bg={useColorModeValue('gray.50', 'gray.900/50')}
-                borderColor={useColorModeValue('gray.300', 'gray.700')}
-                color={headerTitleColor}
-                _placeholder={{ color: mutedTextColor }}
+                bg="bg.subtle"
+                borderColor="border.default"
+                color="fg.default"
+                _placeholder={{ color: 'fg.muted' }}
                 borderRadius="lg"
               />
             </Box>
             
             {/* 幣種篩選 */}
             <Box flex="1" minW="200px">
-              <Text color={secondaryTextColor} fontSize="sm" mb={2} fontWeight="medium">
+              <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                 幣種
               </Text>
               <Select
@@ -394,22 +378,22 @@ export default function Recharge() {
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                   <SelectItem value="">
-                    <Text color={secondaryTextColor}>全部幣種</Text>
+                    <Text color="fg.muted">全部幣種</Text>
                   </SelectItem>
                   <SelectItem value="HKD">
-                    <Text color={headerTitleColor}>HKD</Text>
+                    <Text color="fg.default">HKD</Text>
                   </SelectItem>
                   <SelectItem value="USD">
-                    <Text color={headerTitleColor}>USD</Text>
+                    <Text color="fg.default">USD</Text>
                   </SelectItem>
                   <SelectItem value="TWD">
-                    <Text color={headerTitleColor}>TWD</Text>
+                    <Text color="fg.default">TWD</Text>
                   </SelectItem>
                   <SelectItem value="TRY">
-                    <Text color={headerTitleColor}>TRY</Text>
+                    <Text color="fg.default">TRY</Text>
                   </SelectItem>
                   <SelectItem value="ARS">
-                    <Text color={headerTitleColor}>ARS</Text>
+                    <Text color="fg.default">ARS</Text>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -422,16 +406,20 @@ export default function Recharge() {
       {!showPreview && !rechargeProgress && (
         <>
           <Box
-            bg="gray.800"
+            bg="bg.panel"
+            backdropFilter="blur(20px)"
             border="1px solid"
-            borderColor="gray.700"
+            borderColor="border.default"
             borderRadius="xl"
             p={6}
+            shadow="xl"
           >
             <VStack gap={4} align="stretch">
               <HStack gap={2}>
-                <Icon as={CreditCard} color="green.400" />
-                <Text color="white" fontSize="lg" fontWeight="bold">
+                <Box p={2} bg="bg.subtle" rounded="lg">
+                  <Icon as={CreditCard} color="blue.400" boxSize={5} />
+                </Box>
+                <Text color="fg.default" fontSize="lg" fontWeight="bold">
                   加值設定
                 </Text>
               </HStack>
@@ -439,7 +427,7 @@ export default function Recharge() {
               <Flex gap={4} wrap="wrap">
                 {/* 加值金額 */}
                 <Box flex="1" minW="200px">
-                  <Text color={secondaryTextColor} fontSize="sm" mb={2}>
+                  <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                     加值金額 *
                   </Text>
                   <Input
@@ -448,10 +436,10 @@ export default function Recharge() {
                     placeholder="0.00"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    bg="gray.900"
-                    borderColor="gray.600"
-                    color="white"
-                    _placeholder={{ color: 'gray.500' }}
+                    bg="bg.subtle"
+                    borderColor="border.default"
+                    color="fg.default"
+                    _placeholder={{ color: 'fg.muted' }}
                     borderRadius="lg"
                     fontSize="lg"
                     fontWeight="bold"
@@ -460,34 +448,34 @@ export default function Recharge() {
                 
                 {/* 加值原因 */}
                 <Box flex="1" minW="200px">
-                  <Text color={secondaryTextColor} fontSize="sm" mb={2}>
+                  <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                     加值原因 *
                   </Text>
                   <Input
                     placeholder="例如：禮品卡加值"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    bg="gray.900"
-                    borderColor="gray.600"
-                    color="white"
-                    _placeholder={{ color: 'gray.500' }}
+                    bg="bg.subtle"
+                    borderColor="border.default"
+                    color="fg.default"
+                    _placeholder={{ color: 'fg.muted' }}
                     borderRadius="lg"
                   />
                 </Box>
                 
                 {/* 操作者 */}
                 <Box flex="1" minW="200px">
-                  <Text color={secondaryTextColor} fontSize="sm" mb={2}>
+                  <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                     操作者 *
                   </Text>
                   <Input
                     placeholder="輸入您的名稱"
                     value={operator}
                     onChange={(e) => setOperator(e.target.value)}
-                    bg="gray.900"
-                    borderColor="gray.600"
-                    color="white"
-                    _placeholder={{ color: 'gray.500' }}
+                    bg="bg.subtle"
+                    borderColor="border.default"
+                    color="fg.default"
+                    _placeholder={{ color: 'fg.muted' }}
                     borderRadius="lg"
                   />
                 </Box>
@@ -495,17 +483,17 @@ export default function Recharge() {
               
               {/* 禮品卡序號 */}
               <Box>
-                <Text color={secondaryTextColor} fontSize="sm" mb={2}>
+                <Text color="fg.muted" fontSize="sm" mb={2} fontWeight="medium">
                   禮品卡序號 / 備註（選填）
                 </Text>
                 <Input
                   placeholder="輸入禮品卡序號或備註..."
                   value={giftCard}
                   onChange={(e) => setGiftCard(e.target.value)}
-                  bg="gray.900"
-                  borderColor="gray.600"
-                  color="white"
-                  _placeholder={{ color: 'gray.500' }}
+                  bg="bg.subtle"
+                  borderColor="border.default"
+                  color="fg.default"
+                  _placeholder={{ color: 'fg.muted' }}
                   borderRadius="lg"
                 />
               </Box>
@@ -552,10 +540,12 @@ export default function Recharge() {
 
       {/* 歷史記錄 */}
       <VStack gap={4} align="stretch">
-        <HStack justify="space-between" borderBottom="1px solid" borderColor="gray.700" pb={3}>
+        <HStack justify="space-between" borderBottom="1px solid" borderColor="border.default" pb={3}>
           <HStack gap={2}>
-            <Icon as={HistoryIcon} color={secondaryTextColor} />
-            <Text color="white" fontSize="xl" fontWeight="bold">
+            <Box p={2} bg="bg.subtle" rounded="lg">
+              <Icon as={HistoryIcon} color="blue.400" boxSize={5} />
+            </Box>
+            <Text color="fg.default" fontSize="xl" fontWeight="bold">
               歷史加值紀錄
             </Text>
           </HStack>
@@ -567,8 +557,8 @@ export default function Recharge() {
         <Box
           rounded="3xl"
           border="1px solid"
-          borderColor={tableBorderColor}
-          bg={tableBg}
+          borderColor="border.default"
+          bg="bg.panel"
           backdropFilter="blur(20px)"
           overflow="hidden"
           shadow="2xl"
@@ -578,7 +568,7 @@ export default function Recharge() {
           {!history ? (
             <VStack py={12}>
               <Spinner size="lg" color="blue.400" />
-              <Text color={secondaryTextColor}>載入中...</Text>
+              <Text color="fg.muted">載入中...</Text>
             </VStack>
           ) : historyData.length === 0 ? (
             <EmptyState.Root>
@@ -595,21 +585,21 @@ export default function Recharge() {
           ) : (
             <Box overflowX="auto">
               <Table.Root width="full">
-                <Table.Header bg={useColorModeValue('gray.50', 'gray.900')}>
+                <Table.Header bg="bg.subtle">
                   <Table.Row>
-                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color="fg.muted" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       日期
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color="fg.muted" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       帳號
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="right" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="right" color="fg.muted" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       金額
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color="fg.muted" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       類型
                     </Table.ColumnHeader>
-                    <Table.ColumnHeader p={4} textAlign="left" color={secondaryTextColor} fontSize="xs" fontWeight="bold" textTransform="uppercase">
+                    <Table.ColumnHeader p={4} textAlign="left" color="fg.muted" fontSize="xs" fontWeight="bold" textTransform="uppercase">
                       備註
                     </Table.ColumnHeader>
                   </Table.Row>
@@ -619,16 +609,16 @@ export default function Recharge() {
                     <Table.Row
                       key={idx}
                       borderBottom="1px solid"
-                      borderColor={tableBorderColor}
-                      _hover={{ bg: useColorModeValue('gray.50', 'gray.800/30') }}
+                      borderColor="border.default"
+                      _hover={{ bg: 'bg.hover' }}
                     >
-                      <Table.Cell p={4} color={secondaryTextColor} fontSize="sm" fontFamily="mono">
+                      <Table.Cell p={4} color="fg.muted" fontSize="sm" fontFamily="mono">
                         {item.created_at ? format(new Date(item.created_at), 'yyyy/MM/dd HH:mm') : '-'}
                       </Table.Cell>
-                      <Table.Cell p={4} color={headerTitleColor} fontSize="sm" fontWeight="medium">
+                      <Table.Cell p={4} color="fg.default" fontSize="sm" fontWeight="medium">
                         {item.apple_id ? item.apple_id.split('@')[0] : 'Unknown'}
                       </Table.Cell>
-                      <Table.Cell p={4} textAlign="right" color="green.400" fontSize="sm" fontWeight="bold" fontFamily="mono">
+                      <Table.Cell p={4} textAlign="right" color="blue.400" fontSize="sm" fontWeight="bold" fontFamily="mono">
                         +{typeof item.amount === 'number' ? item.amount.toFixed(2) : '0.00'}
                       </Table.Cell>
                       <Table.Cell p={4}>
@@ -636,7 +626,7 @@ export default function Recharge() {
                           {item.type || 'recharge'}
                         </Badge>
                       </Table.Cell>
-                      <Table.Cell p={4} color={secondaryTextColor} fontSize="sm">
+                      <Table.Cell p={4} color="fg.muted" fontSize="sm">
                         {item.memo}
                       </Table.Cell>
                     </Table.Row>
@@ -654,20 +644,20 @@ export default function Recharge() {
               variant="outline"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              borderColor="gray.600"
-              color={secondaryTextColor}
+              borderColor="border.emphasized"
+              color="fg.muted"
             >
               <Icon as={ChevronLeft} />
             </Button>
-            <Text color={secondaryTextColor} fontSize="sm">
+            <Text color="fg.muted" fontSize="sm">
               第 {currentPage} 頁，共 {totalPages} 頁
             </Text>
             <Button
               variant="outline"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              borderColor="gray.600"
-              color={secondaryTextColor}
+              borderColor="border.emphasized"
+              color="fg.muted"
             >
               <Icon as={ChevronRight} />
             </Button>

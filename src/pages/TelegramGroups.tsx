@@ -16,7 +16,6 @@ import { Plus, Users, DollarSign, TrendingUp, Search, AlertCircle } from 'lucide
 import GroupCard from '../components/telegram-groups/GroupCard';
 import CreateGroupDialog from '../components/telegram-groups/CreateGroupDialog';
 import { toaster } from '../components/ui/toaster';
-import { useColorModeValue } from '@/components/ui/color-mode';
 import type { TelegramGroup, CreateGroupRequest } from '../types/telegram-groups';
 
 export default function TelegramGroups() {
@@ -25,23 +24,6 @@ export default function TelegramGroups() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<TelegramGroup | null>(null);
-
-  // Color mode values for light/dark mode support
-  const headerBg = useColorModeValue('white', 'bg.subtle');
-  const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
-  const headerTitleColor = useColorModeValue('gray.900', 'white');
-  const headerTextColor = useColorModeValue('gray.600', 'gray.300');
-  
-  const cardBg = useColorModeValue('white', 'gray.900/40');
-  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.900', 'white');
-  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
-  const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
-  const iconColor = useColorModeValue('blue.600', 'blue.400');
-  const greenIconColor = useColorModeValue('green.600', 'green.400');
-  const orangeIconColor = useColorModeValue('orange.600', 'orange.400');
-  const spinnerColor = useColorModeValue('blue.600', 'blue.400');
-  const inputPlaceholderColor = useColorModeValue('gray.400', 'gray.500');
 
   // 載入數據
   const loadGroups = async () => {
@@ -137,8 +119,8 @@ export default function TelegramGroups() {
     return (
       <VStack gap={{ base: 6, md: 10 }} maxW="7xl" mx="auto" pb={10} px={{ base: 0, sm: 4 }} align="stretch">
         <VStack justify="center" minH="400px">
-          <Spinner size="xl" color={spinnerColor} />
-          <Text color={secondaryTextColor}>載入中...</Text>
+          <Spinner size="xl" colorPalette="blue" />
+          <Text color="fg.muted">載入中...</Text>
         </VStack>
       </VStack>
     );
@@ -151,9 +133,9 @@ export default function TelegramGroups() {
         position="relative"
         overflow="hidden"
         rounded={{ base: '2xl', md: '3xl' }}
-        bg={headerBg}
+        bg="bg.panel"
         border="1px solid"
-        borderColor={headerBorderColor}
+        borderColor="border.default"
         p={{ base: 5, md: 8 }}
         shadow="2xl"
         backdropFilter="blur(20px)"
@@ -161,10 +143,10 @@ export default function TelegramGroups() {
       >
         <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
           <Box position="relative" zIndex={10}>
-            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
               Telegram 群組管理
             </Text>
-            <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
+            <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
               管理團購群組、查看收款狀態
             </Text>
           </Box>
@@ -192,24 +174,24 @@ export default function TelegramGroups() {
       <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
         <Box
           p={5}
-          bg={cardBg}
+          bg="bg.panel"
           backdropFilter="blur(20px)"
           rounded="xl"
           border="1px solid"
-          borderColor={cardBorderColor}
+          borderColor="border.default"
           shadow="xl"
           transition="all"
           _hover={{ transform: 'scale(1.02)' }}
         >
           <HStack gap={3}>
-            <Box p={2} bg={useColorModeValue('blue.100', 'blue.500/10')} rounded="xl">
-              <Box as={Users} w={5} h={5} color={iconColor} />
+            <Box p={2} bg="bg.subtle" rounded="xl">
+              <Box as={Users} w={5} h={5} colorPalette="blue" />
             </Box>
             <VStack align="start" gap={1}>
-              <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+              <Text fontSize="sm" color="fg.muted" fontWeight="medium">
                 總群組數
               </Text>
-              <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+              <Text fontSize="2xl" fontWeight="bold" color="fg.default">
                 {totalGroups}
               </Text>
             </VStack>
@@ -218,24 +200,24 @@ export default function TelegramGroups() {
 
         <Box
           p={5}
-          bg={cardBg}
+          bg="bg.panel"
           backdropFilter="blur(20px)"
           rounded="xl"
           border="1px solid"
-          borderColor={cardBorderColor}
+          borderColor="border.default"
           shadow="xl"
           transition="all"
           _hover={{ transform: 'scale(1.02)' }}
         >
           <HStack gap={3}>
-            <Box p={2} bg={useColorModeValue('green.100', 'green.500/10')} rounded="xl">
-              <Box as={TrendingUp} w={5} h={5} color={greenIconColor} />
+            <Box p={2} bg="bg.subtle" rounded="xl">
+              <Box as={TrendingUp} w={5} h={5} colorPalette="green" />
             </Box>
             <VStack align="start" gap={1}>
-              <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+              <Text fontSize="sm" color="fg.muted" fontWeight="medium">
                 活躍群組數
               </Text>
-              <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+              <Text fontSize="2xl" fontWeight="bold" color="fg.default">
                 {activeGroups}
               </Text>
             </VStack>
@@ -244,24 +226,24 @@ export default function TelegramGroups() {
 
         <Box
           p={5}
-          bg={cardBg}
+          bg="bg.panel"
           backdropFilter="blur(20px)"
           rounded="xl"
           border="1px solid"
-          borderColor={cardBorderColor}
+          borderColor="border.default"
           shadow="xl"
           transition="all"
           _hover={{ transform: 'scale(1.02)' }}
         >
           <HStack gap={3}>
-            <Box p={2} bg={useColorModeValue('orange.100', 'orange.500/10')} rounded="xl">
-              <Box as={DollarSign} w={5} h={5} color={orangeIconColor} />
+            <Box p={2} bg="bg.subtle" rounded="xl">
+              <Box as={DollarSign} w={5} h={5} colorPalette="orange" />
             </Box>
             <VStack align="start" gap={1}>
-              <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+              <Text fontSize="sm" color="fg.muted" fontWeight="medium">
                 關聯 Apple ID
               </Text>
-              <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+              <Text fontSize="2xl" fontWeight="bold" color="fg.default">
                 {totalAccounts}
               </Text>
             </VStack>
@@ -272,23 +254,23 @@ export default function TelegramGroups() {
       {/* Search Box */}
       <Box
         p={4}
-        bg={cardBg}
+        bg="bg.panel"
         backdropFilter="blur(20px)"
         rounded="xl"
         border="1px solid"
-        borderColor={cardBorderColor}
+        borderColor="border.default"
         shadow="xl"
       >
         <HStack gap={3}>
-          <Box as={Search} w={5} h={5} color={secondaryTextColor} />
+          <Box as={Search} w={5} h={5} color="fg.muted" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜尋群組名稱或備註..."
             bg="transparent"
             border="none"
-            color={textColor}
-            _placeholder={{ color: inputPlaceholderColor }}
+            color="fg.default"
+            _placeholder={{ color: 'fg.muted' }}
             _focus={{ borderColor: 'transparent' }}
           />
         </HStack>

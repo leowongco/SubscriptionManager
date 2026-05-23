@@ -22,14 +22,14 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
 
   return (
     <Box
-      bg="gray.800"
+      bg="bg.panel"
       border="1px solid"
-      borderColor="gray.700"
+      borderColor="border.default"
       borderRadius="xl"
       overflow="hidden"
     >
       {/* Header */}
-      <Box p={6} borderBottom="1px solid" borderColor="gray.700">
+      <Box p={6} borderBottom="1px solid" borderColor="border.default">
         <VStack gap={4} align="stretch">
           <HStack justify="space-between">
             <HStack gap={2}>
@@ -39,10 +39,10 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
               >
                 <Icon
                   as={isProcessing ? Loader2 : TrendingUp}
-                  color={isProcessing ? 'blue.400' : 'green.400'}
+                  color={isProcessing ? 'blue.400' : 'fg.success'}
                 />
               </Box>
-              <Text color="white" fontSize="lg" fontWeight="bold">
+              <Text color="fg.default" fontSize="lg" fontWeight="bold">
                 {isProcessing ? '加值進行中...' : '加值完成'}
               </Text>
             </HStack>
@@ -58,11 +58,11 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
           {/* 進度條 */}
           <Box>
             <Progress.Root value={percentage} size="lg" colorPalette="blue">
-              <Progress.Track bg="gray.700" borderRadius="full">
+              <Progress.Track bg="bg.muted" borderRadius="full">
                 <Progress.Range borderRadius="full" />
               </Progress.Track>
             </Progress.Root>
-            <Text color="gray.300" fontSize="xs" mt={2} textAlign="right">
+            <Text color="fg.muted" fontSize="xs" mt={2} textAlign="right">
               {percentage.toFixed(1)}%
             </Text>
           </Box>
@@ -70,45 +70,45 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
           {/* 統計 */}
           <SimpleGrid columns={3} gap={4}>
             <Box
-              bg="gray.900"
+              bg="bg.subtle"
               borderRadius="lg"
               p={3}
               textAlign="center"
             >
-              <Text color="gray.300" fontSize="xs">
+              <Text color="fg.muted" fontSize="xs">
                 總數
               </Text>
-              <Text color="white" fontSize="xl" fontWeight="bold">
+              <Text color="fg.default" fontSize="xl" fontWeight="bold">
                 {total}
               </Text>
             </Box>
             <Box
-              bg="rgba(72, 187, 120, 0.1)"
+              bg="bg.subtle"
               borderRadius="lg"
               p={3}
               textAlign="center"
               border="1px solid"
               borderColor="green.500"
             >
-              <Text color="green.400" fontSize="xs">
+              <Text color="fg.success" fontSize="xs">
                 成功
               </Text>
-              <Text color="green.400" fontSize="xl" fontWeight="bold">
+              <Text color="fg.success" fontSize="xl" fontWeight="bold">
                 {success}
               </Text>
             </Box>
             <Box
-              bg={failed > 0 ? 'rgba(245, 101, 101, 0.1)' : 'gray.900'}
+              bg={failed > 0 ? 'bg.subtle' : 'bg.subtle'}
               borderRadius="lg"
               p={3}
               textAlign="center"
               border={failed > 0 ? '1px solid' : 'none'}
               borderColor={failed > 0 ? 'red.500' : 'transparent'}
             >
-              <Text color={failed > 0 ? 'red.400' : 'gray.300'} fontSize="xs">
+              <Text color={failed > 0 ? 'fg.error' : 'fg.muted'} fontSize="xs">
                 失敗
               </Text>
-              <Text color={failed > 0 ? 'red.400' : 'gray.300'} fontSize="xl" fontWeight="bold">
+              <Text color={failed > 0 ? 'fg.error' : 'fg.muted'} fontSize="xl" fontWeight="bold">
                 {failed}
               </Text>
             </Box>
@@ -119,7 +119,7 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
       {/* 結果列表 */}
       {results.length > 0 && (
         <Box p={6}>
-          <Text color="gray.300" fontSize="sm" fontWeight="medium" mb={3}>
+          <Text color="fg.muted" fontSize="sm" fontWeight="medium" mb={3}>
             詳細結果
           </Text>
           <Box maxH="300px" overflowY="auto">
@@ -128,7 +128,7 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
                 <List.Item key={result.account_id}>
                   <Box
                     p={3}
-                    bg="gray.900"
+                    bg="bg.subtle"
                     borderRadius="md"
                     border="1px solid"
                     borderColor={result.success ? 'green.700' : 'red.700'}
@@ -137,19 +137,19 @@ export default function RechargeProgress({ progress }: RechargeProgressProps) {
                       <HStack gap={2}>
                         <Icon
                           as={result.success ? CheckCircle2 : XCircle}
-                          color={result.success ? 'green.400' : 'red.400'}
+                          color={result.success ? 'fg.success' : 'fg.error'}
                         />
-                        <Text color="white" fontSize="sm">
+                        <Text color="fg.default" fontSize="sm">
                           {result.apple_id || '未知帳號'}
                         </Text>
                       </HStack>
                       {result.success && result.new_balance !== undefined && (
-                        <Text color="green.400" fontSize="sm" fontWeight="medium">
+                        <Text color="fg.success" fontSize="sm" fontWeight="medium">
                           餘額: ${result.new_balance.toFixed(2)}
                         </Text>
                       )}
                       {!result.success && result.message && (
-                        <Text color="red.400" fontSize="xs">
+                        <Text color="fg.error" fontSize="xs">
                           {result.message}
                         </Text>
                       )}

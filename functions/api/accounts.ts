@@ -46,7 +46,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
         return Response.json(enrichedAccounts);
     } catch (error: any) {
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -69,7 +72,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
         return Response.json({ id, message: 'Account created successfully' }, { status: 201 });
     } catch (error: any) {
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -79,7 +85,12 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         const body = await request.json<any>();
         const id = body.id;
 
-        if (!id) return new Response('Missing Account ID', { status: 400 });
+        if (!id) {
+            return new Response(JSON.stringify({ error: 'Missing Account ID' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
 
         await context.env.DB.prepare(
             'UPDATE accounts SET apple_id = ?1, group_name = ?2, balance = ?3, currency = ?4 WHERE id = ?5'
@@ -93,7 +104,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
         return Response.json({ message: 'Account updated successfully' });
     } catch (error: any) {
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -102,11 +116,19 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
         const url = new URL(context.request.url);
         const id = url.searchParams.get('id');
 
-        if (!id) return new Response('Missing Account ID', { status: 400 });
+        if (!id) {
+            return new Response(JSON.stringify({ error: 'Missing Account ID' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
 
         await context.env.DB.prepare('DELETE FROM accounts WHERE id = ?1').bind(id).run();
         return Response.json({ message: 'Account deleted successfully' });
     } catch (error: any) {
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };

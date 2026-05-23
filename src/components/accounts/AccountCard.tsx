@@ -8,7 +8,6 @@ import {
 } from '@chakra-ui/react';
 import { DollarSign, Edit, Trash2, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
-import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface Subscription {
     id: string;
@@ -45,25 +44,14 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
     // 顯示訂閱服務列表（最多 3 個）
     const displaySubscriptions = account.subscriptions?.slice(0, 3) || [];
     const remainingCount = (account.subscriptions?.length || 0) - 3;
-    
-    // Color mode values
-    const cardBg = useColorModeValue('white', 'gray.800');
-    const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const cardHoverBorderColor = useColorModeValue('gray.300', 'gray.600');
-    const textColor = useColorModeValue('gray.900', 'white');
-    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
-    const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
-    const balanceColor = useColorModeValue('green.600', 'green.400');
-    const expenseBg = useColorModeValue('gray.100', 'gray.700');
-    const expenseColor = useColorModeValue('orange.600', 'orange.400');
 
     return (
         <Box
             p={5}
-            bg={cardBg}
+            bg="bg.panel"
             backdropFilter="blur(20px)"
             border="1px solid"
-            borderColor={cardBorderColor}
+            borderColor="border.default"
             rounded="xl"
             shadow="xl"
             overflow="hidden"
@@ -74,7 +62,7 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                 {/* 頂部：Apple ID 和餘額 */}
                 <HStack justify="space-between" align="start">
                     <VStack align="start" gap={1}>
-                        <Text fontWeight="bold" fontSize="lg" color={textColor}>
+                        <Text fontWeight="bold" fontSize="lg" color="fg.default">
                             {account.apple_id || '未設定 Apple ID'}
                         </Text>
                         {account.group_name && (
@@ -85,13 +73,13 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                     </VStack>
                     <VStack align="end" gap={1}>
                         <HStack gap={1}>
-                            <Box as={DollarSign} w={4} h={4} color={balanceColor} />
-                            <Text fontWeight="bold" fontSize="xl" color={balanceColor}>
+                            <Box as={DollarSign} w={4} h={4} color="fg.success" />
+                            <Text fontWeight="bold" fontSize="xl" color="fg.success">
                                 {formatCurrency(account.balance || 0, account.currency)}
                             </Text>
                         </HStack>
                         <HStack gap={1}>
-                            <Text fontSize="xs" color={mutedTextColor}>
+                            <Text fontSize="xs" color="fg.muted">
                                 當前餘額
                             </Text>
                             {account.currency && account.currency !== 'HKD' && (
@@ -106,21 +94,21 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                 {/* 訂閱服務列表 */}
                 {displaySubscriptions.length > 0 && (
                     <VStack align="stretch" gap={2}>
-                        <Text fontSize="sm" color={secondaryTextColor} fontWeight="medium">
+                        <Text fontSize="sm" color="fg.muted" fontWeight="medium">
                             訂閱服務
                         </Text>
                         {displaySubscriptions.map((sub) => (
                             <HStack key={sub.id} justify="space-between">
-                                <Text fontSize="sm" color={secondaryTextColor}>
+                                <Text fontSize="sm" color="fg.muted">
                                     {sub.service_name}
                                 </Text>
-                                <Text fontSize="sm" color={mutedTextColor}>
+                                <Text fontSize="sm" color="fg.muted">
                                     ${sub.base_price?.toFixed(2)}/{sub.cycle === 'yearly' ? '年' : '月'}
                                 </Text>
                             </HStack>
                         ))}
                         {remainingCount > 0 && (
-                            <Text fontSize="xs" color={mutedTextColor}>
+                            <Text fontSize="xs" color="fg.muted">
                                 +{remainingCount} 更多服務
                             </Text>
                         )}
@@ -128,14 +116,14 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                 )}
 
                 {/* 預估月支出 */}
-                <HStack justify="space-between" p={2} bg={expenseBg} rounded="md">
+                <HStack justify="space-between" p={2} bg="bg.subtle" rounded="md">
                     <HStack gap={2}>
-                        <Box as={TrendingUp} w={4} h={4} color={expenseColor} />
-                        <Text fontSize="sm" color={secondaryTextColor}>
+                        <Box as={TrendingUp} w={4} h={4} color="fg.warning" />
+                        <Text fontSize="sm" color="fg.muted">
                             預估月支出
                         </Text>
                     </HStack>
-                    <Text fontWeight="bold" color={expenseColor}>
+                    <Text fontWeight="bold" color="fg.warning">
                         {formatCurrency(monthlyExpense, account.currency)}
                     </Text>
                 </HStack>

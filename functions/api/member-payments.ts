@@ -60,7 +60,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             `).bind(paymentId).first();
 
             if (!payment) {
-                return new Response('付款記錄不存在', { status: 404 });
+                return new Response(JSON.stringify({ error: '付款記錄不存在' }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
 
             return Response.json(payment);
@@ -114,7 +117,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         return Response.json(results);
     } catch (error: any) {
         console.error('獲取成員付款記錄失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -129,11 +135,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
         // 验证必填字段
         if (!body.billing_cycle_id) {
-            return new Response('缺少必填字段: billing_cycle_id', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少必填字段: billing_cycle_id' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         if (!body.member_id) {
-            return new Response('缺少必填字段: member_id', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少必填字段: member_id' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查帳單週期是否存在
@@ -142,7 +154,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         ).bind(body.billing_cycle_id).first();
 
         if (!cycle) {
-            return new Response('帳單週期不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: '帳單週期不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查成員是否存在
@@ -151,7 +166,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         ).bind(body.member_id).first();
 
         if (!member) {
-            return new Response('成員不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: '成員不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查是否已存在付款記錄
@@ -160,7 +178,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         ).bind(body.billing_cycle_id, body.member_id).first();
 
         if (existingPayment) {
-            return new Response('該成員在此帳單週期已有付款記錄', { status: 400 });
+            return new Response(JSON.stringify({ error: '該成員在此帳單週期已有付款記錄' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         const id = body.id || crypto.randomUUID();
@@ -205,7 +226,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         return Response.json(payment, { status: 201 });
     } catch (error: any) {
         console.error('創建付款記錄失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -219,7 +243,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         const id = url.searchParams.get('id');
 
         if (!id) {
-            return new Response('缺少付款記錄 ID', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少付款記錄 ID' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         const request = context.request;
@@ -231,12 +258,18 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         ).bind(id).first();
 
         if (!existingPayment) {
-            return new Response('付款記錄不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: '付款記錄不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查帳單週期狀態
         if ((existingPayment as any).cycle_status === 'completed') {
-            return new Response('帳單週期已完成，無法修改付款狀態', { status: 400 });
+            return new Response(JSON.stringify({ error: '帳單週期已完成，無法修改付款狀態' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 更新付款記錄
@@ -286,7 +319,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         return Response.json(payment);
     } catch (error: any) {
         console.error('更新付款記錄失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
 
@@ -301,11 +337,17 @@ export const onRequestPostRefund: PagesFunction<Env> = async (context) => {
 
         // 验证必填字段
         if (!body.member_payment_id) {
-            return new Response('缺少必填字段: member_payment_id', { status: 400 });
+            return new Response(JSON.stringify({ error: '缺少必填字段: member_payment_id' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         if (!body.refund_amount || body.refund_amount <= 0) {
-            return new Response('退款金額必須大於 0', { status: 400 });
+            return new Response(JSON.stringify({ error: '退款金額必須大於 0' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查付款記錄是否存在
@@ -317,18 +359,27 @@ export const onRequestPostRefund: PagesFunction<Env> = async (context) => {
         `).bind(body.member_payment_id).first();
 
         if (!existingPayment) {
-            return new Response('付款記錄不存在', { status: 404 });
+            return new Response(JSON.stringify({ error: '付款記錄不存在' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查是否已付款
         if (!(existingPayment as any).paid) {
-            return new Response('該成員尚未付款，無需退款', { status: 400 });
+            return new Response(JSON.stringify({ error: '該成員尚未付款，無需退款' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 檢查退款金額是否合理
         const amountPerMember = (existingPayment as any).amount_per_member;
         if (body.refund_amount > amountPerMember) {
-            return new Response(`退款金額不能超過每人金額 ${amountPerMember}`, { status: 400 });
+            return new Response(JSON.stringify({ error: `退款金額不能超過每人金額 ${amountPerMember}` }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // 更新退款信息
@@ -367,6 +418,9 @@ export const onRequestPostRefund: PagesFunction<Env> = async (context) => {
         return Response.json(payment);
     } catch (error: any) {
         console.error('處理退款失敗:', error);
-        return new Response(error.message, { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };

@@ -1,4 +1,4 @@
-import { Box, Text, VStack } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/color-mode';
 
 interface EmptyStateProps {

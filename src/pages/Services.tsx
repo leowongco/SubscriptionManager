@@ -12,19 +12,19 @@ import {
     Badge,
     Flex,
     Grid,
-    DialogRoot,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogCloseTrigger,
     Field,
     NativeSelectRoot,
     NativeSelectField,
     Table,
     Spinner,
 } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import {
+    DialogRoot,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogCloseTrigger,
+} from '@/components/ui/dialog';
 
 interface Service {
     id: string;
@@ -49,24 +49,6 @@ export default function Services() {
         next_price: null,
         effective_date: null
     });
-    
-    // Color mode values for light/dark mode support
-    const headerBg = useColorModeValue('white', 'bg.subtle');
-    const headerBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const headerTitleColor = useColorModeValue('gray.900', 'white');
-    const headerTextColor = useColorModeValue('gray.600', 'gray.300');
-    
-    const dialogBg = useColorModeValue('white', 'gray.900/90');
-    const dialogColor = useColorModeValue('gray.800', 'gray.50');
-    const dialogBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const inputBg = useColorModeValue('gray.50', 'gray.950/50');
-    const inputBorderColor = useColorModeValue('gray.300', 'gray.800');
-    const labelColor = useColorModeValue('gray.700', 'gray.300');
-    const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
-    const tableHeaderColor = useColorModeValue('gray.700', 'gray.300');
-    const tableBorderColor = useColorModeValue('gray.200', 'gray.700');
-    const tableBg = useColorModeValue('white', 'gray.900/40');
-    const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,9 +88,9 @@ export default function Services() {
                 position="relative"
                 overflow="hidden"
                 rounded={{ base: '2xl', md: '3xl' }}
-                bg={headerBg}
+                bg="bg.panel"
                 border="1px solid"
-                borderColor={headerBorderColor}
+                borderColor="border.default"
                 p={{ base: 5, md: 8 }}
                 shadow="2xl"
                 backdropFilter="blur(20px)"
@@ -116,198 +98,216 @@ export default function Services() {
             >
                 <Flex justify="space-between" alignItems="center">
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color={headerTitleColor} textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.emphasized" textShadow="md">
                             服務與定價維護
                         </Text>
-                        <Text color={headerTextColor} mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
+                        <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
                             管理訂閱服務及未來價格調整計畫，精準掌控成本。
                         </Text>
                     </Box>
 
-                    <DialogRoot open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
-                        <DialogTrigger asChild>
-                            <Button
-                                onClick={openNew}
-                                position="relative"
-                                zIndex={10}
-                                colorPalette="blue"
-                                rounded="xl"
-                                h={12}
-                                px={6}
-                                shadow="lg"
-                                _hover={{ transform: 'scale(1.02)' }}
-                                transition="all"
-                            >
-                                <Box as={Plus} w={5} h={5} mr={2} />
-                                新增服務
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent
-                            maxW="450px"
-                            bg={dialogBg}
-                            backdropFilter="blur(40px)"
-                            color={dialogColor}
-                            borderColor={dialogBorderColor}
-                            rounded="2xl"
-                            shadow="2xl"
-                        >
-                            <DialogHeader>
-                                <DialogTitle fontSize="xl" fontWeight="bold">
-                                    {editing ? '編輯服務' : '新增服務'}
-                                </DialogTitle>
-                            </DialogHeader>
-                            <form onSubmit={handleSubmit}>
-                                <VStack gap={5} pt={4}>
-                                    <Field.Root>
-                                        <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                            服務名稱
-                                        </Field.Label>
-                                        <Input
-                                            value={formData.name || ''}
-                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            required
-                                            bg={inputBg}
-                                            borderColor={inputBorderColor}
+                    <Button
+                        onClick={openNew}
+                        position="relative"
+                        zIndex={10}
+                        colorPalette="blue"
+                        rounded="xl"
+                        h={12}
+                        px={6}
+                        shadow="lg"
+                        _hover={{ transform: 'scale(1.02)' }}
+                        transition="all"
+                    >
+                        <Box as={Plus} w={5} h={5} mr={2} />
+                        新增服務
+                    </Button>
+                </Flex>
+            </Box>
+
+            <DialogRoot open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
+                <DialogContent maxW="480px" variant="glass">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {editing ? '編輯服務' : '新增服務'}
+                        </DialogTitle>
+                        <DialogCloseTrigger />
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit}>
+                        <VStack gap={5}>
+                            <Field.Root>
+                                <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                    服務名稱
+                                </Field.Label>
+                                <Input
+                                    value={formData.name || ''}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                    bg="bg.subtle"
+                                    borderColor="border.emphasized"
+                                    rounded="xl"
+                                    h={12}
+                                    _focus={{
+                                        borderColor: "focus.ring",
+                                        boxShadow: "0 0 0 3px token(focus.ring) / 20",
+                                    }}
+                                    transition="all 0.2s"
+                                />
+                            </Field.Root>
+
+                            <Field.Root>
+                                <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                    基礎價格
+                                </Field.Label>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.base_price || ''}
+                                    onChange={e => setFormData({ ...formData, base_price: parseFloat(e.target.value) })}
+                                    required
+                                    bg="bg.subtle"
+                                    borderColor="border.emphasized"
+                                    rounded="xl"
+                                    h={12}
+                                    _focus={{
+                                        borderColor: "focus.ring",
+                                        boxShadow: "0 0 0 3px token(focus.ring) / 20",
+                                    }}
+                                    fontFamily="mono"
+                                    transition="all 0.2s"
+                                />
+                            </Field.Root>
+
+                            <Grid templateColumns="2" gap={5}>
+                                <Field.Root>
+                                    <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        幣種
+                                    </Field.Label>
+                                    <NativeSelectRoot>
+                                        <NativeSelectField
+                                            value={formData.currency}
+                                            onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                                            bg="bg.subtle"
+                                            borderColor="border.emphasized"
                                             rounded="xl"
                                             h={12}
-                                            _focus={{ borderColor: 'blue.500/50' }}
-                                        />
-                                    </Field.Root>
+                                            _focus={{
+                                                borderColor: "focus.ring",
+                                                boxShadow: "0 0 0 3px token(focus.ring) / 20",
+                                            }}
+                                        >
+                                            {['HKD', 'TWD', 'TRY', 'ARS', 'USD'].map(c => (
+                                                <option key={c} value={c}>{c}</option>
+                                            ))}
+                                        </NativeSelectField>
+                                    </NativeSelectRoot>
+                                </Field.Root>
 
+                                <Field.Root>
+                                    <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        計費週期
+                                    </Field.Label>
+                                    <NativeSelectRoot>
+                                        <NativeSelectField
+                                            value={formData.cycle}
+                                            onChange={(e) => setFormData({ ...formData, cycle: e.target.value as 'monthly' | 'yearly' })}
+                                            bg="bg.subtle"
+                                            borderColor="border.emphasized"
+                                            rounded="xl"
+                                            h={12}
+                                            _focus={{
+                                                borderColor: "focus.ring",
+                                                boxShadow: "0 0 0 3px token(focus.ring) / 20",
+                                            }}
+                                        >
+                                            <option value="monthly">每月 (Monthly)</option>
+                                            <option value="yearly">每年 (Yearly)</option>
+                                        </NativeSelectField>
+                                    </NativeSelectRoot>
+                                </Field.Root>
+                            </Grid>
+
+                            <Box
+                                border="1px solid"
+                                borderColor="border.emphasized"
+                                bg="bg.subtle"
+                                p={5}
+                                rounded="2xl"
+                                w="full"
+                            >
+                                <Text fontSize="sm" fontWeight="bold" color="focus.ring" display="flex" alignItems="center" gap={2} mb={4}>
+                                    <Box as="span" w={1.5} h={1.5} rounded="full" bg="focus.ring" />
+                                    未來價格調整 (選填)
+                                </Text>
+                                <Grid templateColumns="2" gap={4}>
                                     <Field.Root>
-                                        <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                            基礎價格
+                                        <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            新價格
                                         </Field.Label>
                                         <Input
                                             type="number"
                                             step="0.01"
-                                            value={formData.base_price || ''}
-                                            onChange={e => setFormData({ ...formData, base_price: parseFloat(e.target.value) })}
-                                            required
-                                            bg={inputBg}
-                                            borderColor={inputBorderColor}
+                                            value={formData.next_price || ''}
+                                            onChange={e => setFormData({ ...formData, next_price: e.target.value ? parseFloat(e.target.value) : null })}
+                                            bg="bg.subtle"
+                                            borderColor="border.emphasized"
                                             rounded="xl"
-                                            h={12}
-                                            _focus={{ borderColor: 'blue.500/50' }}
+                                            h={11}
+                                            _focus={{
+                                                borderColor: "focus.ring",
+                                                boxShadow: "0 0 0 3px token(focus.ring) / 20",
+                                            }}
                                             fontFamily="mono"
+                                            transition="all 0.2s"
                                         />
                                     </Field.Root>
+                                    <Field.Root>
+                                        <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            生效日期
+                                        </Field.Label>
+                                        <Input
+                                            type="date"
+                                            value={formData.effective_date?.split('T')[0] || ''}
+                                            onChange={e => setFormData({ ...formData, effective_date: e.target.value })}
+                                            bg="bg.subtle"
+                                            borderColor="border.emphasized"
+                                            rounded="xl"
+                                            h={11}
+                                            _focus={{
+                                                borderColor: "focus.ring",
+                                                boxShadow: "0 0 0 3px token(focus.ring) / 20",
+                                            }}
+                                            transition="all 0.2s"
+                                        />
+                                    </Field.Root>
+                                </Grid>
+                            </Box>
 
-                                    <Grid templateColumns="2" gap={5}>
-                                        <Field.Root>
-                                            <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                                幣種
-                                            </Field.Label>
-                                            <NativeSelectRoot>
-                                                <NativeSelectField
-                                                    value={formData.currency}
-                                                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                                                    bg={inputBg}
-                                                    borderColor={inputBorderColor}
-                                                    rounded="xl"
-                                                    h={12}
-                                                >
-                                                    {['HKD', 'TWD', 'TRY', 'ARS', 'USD'].map(c => (
-                                                        <option key={c} value={c}>{c}</option>
-                                                    ))}
-                                                </NativeSelectField>
-                                            </NativeSelectRoot>
-                                        </Field.Root>
-
-                                        <Field.Root>
-                                            <Field.Label fontSize="xs" color={labelColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                                計費週期
-                                            </Field.Label>
-                                            <NativeSelectRoot>
-                                                <NativeSelectField
-                                                    value={formData.cycle}
-                                                    onChange={(e) => setFormData({ ...formData, cycle: e.target.value as 'monthly' | 'yearly' })}
-                                                    bg="gray.950/50"
-                                                    borderColor="gray.800"
-                                                    rounded="xl"
-                                                    h={12}
-                                                >
-                                                    <option value="monthly">每月 (Monthly)</option>
-                                                    <option value="yearly">每年 (Yearly)</option>
-                                                </NativeSelectField>
-                                            </NativeSelectRoot>
-                                        </Field.Root>
-                                    </Grid>
-
-                                    <Box
-                                        border="1px solid"
-                                        borderColor="gray.700"
-                                        bg="gray.950/30"
-                                        p={5}
-                                        rounded="2xl"
-                                        w="full"
-                                    >
-                                        <Text fontSize="sm" fontWeight="bold" color="blue.400" display="flex" alignItems="center" gap={2} mb={4}>
-                                            <Box as="span" w={1.5} h={1.5} rounded="full" bg="blue.400" />
-                                            未來價格調整 (選填)
-                                        </Text>
-                                        <Grid templateColumns="2" gap={4}>
-                                            <Field.Root>
-                                                <Field.Label fontSize="xs" color={mutedTextColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                                    新價格
-                                                </Field.Label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    value={formData.next_price || ''}
-                                                    onChange={e => setFormData({ ...formData, next_price: e.target.value ? parseFloat(e.target.value) : null })}
-                                                    bg="gray.900"
-                                                    borderColor="gray.700"
-                                                    rounded="xl"
-                                                    h={11}
-                                                    _focus={{ borderColor: 'blue.500/50' }}
-                                                    fontFamily="mono"
-                                                />
-                                            </Field.Root>
-                                            <Field.Root>
-                                                <Field.Label fontSize="xs" color={mutedTextColor} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                                    生效日期
-                                                </Field.Label>
-                                                <Input
-                                                    type="date"
-                                                    value={formData.effective_date?.split('T')[0] || ''}
-                                                    onChange={e => setFormData({ ...formData, effective_date: e.target.value })}
-                                                    bg="gray.900"
-                                                    borderColor="gray.700"
-                                                    rounded="xl"
-                                                    h={11}
-                                                    _focus={{ borderColor: 'blue.500/50' }}
-                                                />
-                                            </Field.Root>
-                                        </Grid>
-                                    </Box>
-
-                                    <Button
-                                        type="submit"
-                                        w="full"
-                                        colorPalette="blue"
-                                        rounded="xl"
-                                        h={12}
-                                        fontSize="md"
-                                        fontWeight="bold"
-                                        shadow="lg"
-                                    >
-                                        {editing ? '儲存變更' : '建立服務'}
-                                    </Button>
-                                </VStack>
-                            </form>
-                            <DialogCloseTrigger />
-                        </DialogContent>
-                    </DialogRoot>
-                </Flex>
-            </Box>
+                            <Button
+                                type="submit"
+                                w="full"
+                                colorPalette="blue"
+                                rounded="xl"
+                                h={12}
+                                fontSize="md"
+                                fontWeight="bold"
+                                shadow="lg"
+                                _hover={{ transform: 'scale(1.02)' }}
+                                _active={{ transform: 'scale(0.98)' }}
+                                transition="all 0.2s"
+                            >
+                                {editing ? '儲存變更' : '建立服務'}
+                            </Button>
+                        </VStack>
+                    </form>
+                </DialogContent>
+            </DialogRoot>
 
             {/* Services Table */}
             <Box
                 rounded="3xl"
                 border="1px solid"
-                borderColor={tableBorderColor}
-                bg={tableBg}
+                borderColor="border.default"
+                bg="bg.panel"
                 backdropFilter="blur(20px)"
                 overflow="hidden"
                 shadow="2xl"
@@ -315,21 +315,21 @@ export default function Services() {
                 <Box h={1.5} w="full" bg="blue.500" />
                 <Box overflowX="auto">
                     <Table.Root>
-                        <Table.Header bg={useColorModeValue('gray.50', 'gray.950/60')}>
-                            <Table.Row borderColor={tableBorderColor}>
-                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider" pl={6} py={4}>
+                        <Table.Header bg="bg.subtle">
+                            <Table.Row borderColor="border.default">
+                                <Table.ColumnHeader color="fg.muted" fontWeight="semibold" letterSpacing="wider" pl={6} py={4}>
                                     服務名稱
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider">
+                                <Table.ColumnHeader color="fg.muted" fontWeight="semibold" letterSpacing="wider">
                                     當前價格
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider">
+                                <Table.ColumnHeader color="fg.muted" fontWeight="semibold" letterSpacing="wider">
                                     週期
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider">
+                                <Table.ColumnHeader color="fg.muted" fontWeight="semibold" letterSpacing="wider">
                                     未來調整計畫
                                 </Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right" color={tableHeaderColor} fontWeight="semibold" letterSpacing="wider" pr={6}>
+                                <Table.ColumnHeader textAlign="right" color="fg.muted" fontWeight="semibold" letterSpacing="wider" pr={6}>
                                     操作
                                 </Table.ColumnHeader>
                             </Table.Row>
@@ -337,14 +337,14 @@ export default function Services() {
                         <Table.Body>
                             {services === undefined && (
                                 <Table.Row>
-                                    <Table.Cell colSpan={5} textAlign="center" py={12} color={mutedTextColor}>
+                                    <Table.Cell colSpan={5} textAlign="center" py={12} color="fg.muted">
                                         <Spinner size="sm" /> 讀取服務資料中...
                                     </Table.Cell>
                                 </Table.Row>
                             )}
                             {services?.length === 0 && (
                                 <Table.Row>
-                                    <Table.Cell colSpan={5} textAlign="center" py={12} color={mutedTextColor}>
+                                    <Table.Cell colSpan={5} textAlign="center" py={12} color="fg.muted">
                                         尚未設定任何服務，點擊「新增服務」開始。
                                     </Table.Cell>
                                 </Table.Row>
@@ -352,17 +352,17 @@ export default function Services() {
                             {services?.map((service) => (
                                 <Table.Row
                                     key={service.id}
-                                    borderColor="gray.700"
-                                    _hover={{ bg: 'gray.800/40' }}
+                                    borderColor="border.default"
+                                    _hover={{ bg: 'bg.hover' }}
                                     transition="all"
                                 >
-                                    <Table.Cell fontWeight="bold" color="gray.200" pl={6}>
+                                    <Table.Cell fontWeight="bold" color="fg.default" pl={6}>
                                         {service.name}
                                     </Table.Cell>
                                     <Table.Cell>
                                         <Flex alignItems="baseline" gap={1.5}>
-                                            <Text color={mutedTextColor} fontSize="xs">{service.currency}</Text>
-                                            <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.900', 'gray.100')}>
+                                            <Text color="fg.muted" fontSize="xs">{service.currency}</Text>
+                                            <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color="fg.emphasized">
                                                 {service.base_price.toFixed(2)}
                                             </Text>
                                         </Flex>
@@ -387,20 +387,20 @@ export default function Services() {
                                                 flexDirection="column"
                                                 gap={1}
                                                 p={2}
-                                                bg="gray.950/50"
+                                                bg="bg.muted"
                                                 rounded="lg"
                                                 border="1px solid"
-                                                borderColor="gray.700"
+                                                borderColor="border.default"
                                             >
-                                                <Text color="orange.400" fontWeight="black" fontFamily="mono" fontSize="sm" display="flex" alignItems="center" gap={1}>
+                                                <Text color="fg.warning" fontWeight="black" fontFamily="mono" fontSize="sm" display="flex" alignItems="center" gap={1}>
                                                     <Text as="span" opacity={0.5} fontSize="xs">➔</Text> {service.currency} {service.next_price.toFixed(2)}
                                                 </Text>
-                                                <Text color={mutedTextColor} fontSize="10px" textTransform="uppercase" fontWeight="semibold" letterSpacing="wider">
+                                                <Text color="fg.muted" fontSize="10px" textTransform="uppercase" fontWeight="semibold" letterSpacing="wider">
                                                     生效日: {new Date(service.effective_date).toLocaleDateString()}
                                                 </Text>
                                             </Box>
                                         ) : (
-                                            <Text color="gray.600" pl={4}>-</Text>
+                                            <Text color="fg.muted" pl={4}>-</Text>
                                         )}
                                     </Table.Cell>
                                     <Table.Cell textAlign="right" pr={6}>
@@ -409,8 +409,8 @@ export default function Services() {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => openEdit(service)}
-                                                color={secondaryTextColor}
-                                                _hover={{ color: 'blue.400', bg: 'blue.500/10' }}
+                                                color="fg.muted"
+                                                _hover={{ color: 'focus.ring', bg: 'blue.500/10' }}
                                                 rounded="lg"
                                                 aria-label="編輯服務"
                                             >
@@ -420,8 +420,8 @@ export default function Services() {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => handleDelete(service.id)}
-                                                color={secondaryTextColor}
-                                                _hover={{ color: 'red.400', bg: 'red.500/10' }}
+                                                color="fg.muted"
+                                                _hover={{ color: 'fg.error', bg: 'red.500/10' }}
                                                 rounded="lg"
                                                 aria-label="刪除服務"
                                             >
