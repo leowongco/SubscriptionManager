@@ -2,6 +2,7 @@
 
 import { Box, Flex, Text, Badge, VStack } from '@chakra-ui/react';
 import { AlertTriangle, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 interface WarningCardProps {
   account: {
@@ -79,7 +80,7 @@ export function WarningCard({ account }: WarningCardProps) {
           目前餘額
         </Text>
         <Text fontSize="sm" fontWeight="bold" color="fg.default" fontFamily="mono">
-          {account.currency} {account.balance.toFixed(2)}
+          {formatCurrency(account.balance, account.currency)}
         </Text>
       </Flex>
 
@@ -90,7 +91,7 @@ export function WarningCard({ account }: WarningCardProps) {
             月消耗
           </Text>
           <Text fontSize="sm" fontWeight="bold" color="fg.error" fontFamily="mono">
-            -{account.currency} {account._monthlyBurn.toFixed(2)}
+            -{formatCurrency(account._monthlyBurn, account.currency)}
           </Text>
         </Flex>
       )}

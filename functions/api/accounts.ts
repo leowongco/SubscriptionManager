@@ -1,6 +1,9 @@
 /// <reference types="@cloudflare/workers-types" />
 import { Env } from '../env';
 
+// 支援的有效貨幣代碼
+const VALID_CURRENCIES = ['HKD', 'TRY', 'USD', 'TWD', 'ARS'];
+
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
         // Return accounts along with their associated subscriptions
@@ -59,6 +62,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const body = await request.json<any>();
         const id = body.id || crypto.randomUUID();
 
+        // 驗證貨幣代碼
+        if (body.currency && !VALID_CURRENCIES.includes(body.currency)) {
+            return new Response(JSON.stringify({ error: 'Invalid currency code' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         await context.env.DB.prepare(
             'INSERT INTO accounts (id, apple_id, group_name, balance, currency, last_sync_date) VALUES (?1, ?2, ?3, ?4, ?5, ?6)'
         ).bind(
@@ -87,6 +98,14 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
         if (!id) {
             return new Response(JSON.stringify({ error: 'Missing Account ID' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // 驗證貨幣代碼
+        if (body.currency && !VALID_CURRENCIES.includes(body.currency)) {
+            return new Response(JSON.stringify({ error: 'Invalid currency code' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });

@@ -3,6 +3,13 @@
  * 用於格式化和顯示不同貨幣
  */
 
+/**
+ * 匯率說明：
+ * - 這些是固定匯率，以 HKD 為基準
+ * - 匯率值需要定期手動更新以反映市場匯率
+ * - 未來可考慮整合外部匯率 API（如 Open Exchange Rates）
+ */
+
 // 支援的貨幣類型
 export type Currency = 'HKD' | 'TRY' | 'USD' | 'TWD' | 'ARS' | string;
 
@@ -48,23 +55,41 @@ export function getCurrencyName(currency: Currency): string {
 }
 
 /**
- * 格式化金額顯示
+ * 格式化金額顯示（使用 Intl.NumberFormat）
  * @param amount 金額
  * @param currency 貨幣類型
- * @param decimals 小數位數
+ * @param locale 地區設定（默認 zh-TW）
  */
-export function formatCurrency(amount: number, currency: Currency = 'HKD', decimals: number = 2): string {
-    const symbol = getCurrencySymbol(currency);
-    const formattedAmount = Math.abs(amount).toFixed(decimals);
-    const sign = amount < 0 ? '-' : '';
-    return `${sign}${symbol}${formattedAmount}`;
+export function formatCurrency(
+    amount: number,
+    currency: Currency = 'HKD',
+    locale: string = 'zh-TW'
+): string {
+    return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount);
 }
 
 /**
  * 格式化金額顯示（帶貨幣代碼）
+ * @param amount 金額
+ * @param currency 貨幣類型
+ * @param locale 地區設定（默認 zh-TW）
  */
-export function formatCurrencyWithCode(amount: number, currency: Currency = 'HKD', decimals: number = 2): string {
-    const formatted = formatCurrency(amount, currency, decimals);
+export function formatCurrencyWithCode(
+    amount: number,
+    currency: Currency = 'HKD',
+    locale: string = 'zh-TW'
+): string {
+    const formatted = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount);
     return `${formatted} ${currency}`;
 }
 

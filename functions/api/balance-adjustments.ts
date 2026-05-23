@@ -1,6 +1,9 @@
 /// <reference types="@cloudflare/workers-types" />
 import { Env } from '../env';
 
+// 支援的有效貨幣代碼
+const VALID_CURRENCIES = ['HKD', 'TRY', 'USD', 'TWD', 'ARS'];
+
 // Helper function to get client IP
 function getClientIP(request: Request): string {
     const forwarded = request.headers.get('x-forwarded-for');

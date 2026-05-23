@@ -103,7 +103,7 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                                     {sub.service_name}
                                 </Text>
                                 <Text fontSize="sm" color="fg.muted">
-                                    ${sub.base_price?.toFixed(2)}/{sub.cycle === 'yearly' ? '年' : '月'}
+                                    {formatCurrency(sub.base_price || 0, sub.currency)}/{sub.cycle === 'yearly' ? '年' : '月'}
                                 </Text>
                             </HStack>
                         ))}
