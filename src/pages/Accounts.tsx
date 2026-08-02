@@ -12,6 +12,8 @@ import {
     Icon,
     Flex,
     Field,
+    NativeSelectRoot,
+    NativeSelectField,
 } from '@chakra-ui/react';
 import {
     DialogRoot,
@@ -25,7 +27,8 @@ import { api } from '@/lib/api';
 import { AccountCard } from '@/components/accounts/AccountCard';
 import { BalanceAdjustDialog } from '@/components/accounts/BalanceAdjustDialog';
 import { toaster } from '@/components/ui/toaster';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, REGION_NAMES } from '@/lib/currency';
+import { ACCOUNT_TYPES, getAccountTypeMeta, type AccountType } from '@/lib/accountType';
 
 interface Subscription {
     id: string;
@@ -39,6 +42,7 @@ interface Subscription {
 interface Account {
     id: string;
     apple_id: string;
+    account_type?: AccountType;
     balance: number;
     currency?: string;
     group_name?: string;
@@ -56,8 +60,10 @@ export default function Accounts() {
     const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
-    const [newAccountForm, setNewAccountForm] = useState<Partial<Account>>({ balance: 0 });
-    
+    const [newAccountForm, setNewAccountForm] = useState<Partial<Account>>({ balance: 0, account_type: 'apple' });
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editAccountForm, setEditAccountForm] = useState<Partial<Account>>({});
+
 
     // 載入數據
     const loadAccounts = async () => {
@@ -139,13 +145,37 @@ export default function Accounts() {
 
     // 處理編輯
     const handleEdit = (account: Account) => {
-        // TODO: 打開編輯對話框
-        console.log('Edit:', account);
+        setEditAccountForm({ ...account });
+        setEditDialogOpen(true);
+    };
+
+    // 處理更新帳號
+    const handleUpdateAccount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.updateAccount(editAccountForm);
+            toaster.create({
+                title: '更新成功',
+                description: `「${editAccountForm.apple_id}」已更新`,
+                type: 'success',
+            });
+            setEditDialogOpen(false);
+            setEditAccountForm({});
+            await loadAccounts();
+        } catch (error) {
+            console.error('Failed to update account:', error);
+            toaster.create({
+                title: '更新失敗',
+                description: '無法更新帳號，請稍後再試',
+                type: 'error',
+            });
+        }
     };
 
     // 處理刪除
     const handleDelete = async (account: Account) => {
-        if (!confirm(`確定要刪除 Apple ID "${account.apple_id}" 嗎？此操作無法復原。`)) {
+        const typeLabel = getAccountTypeMeta(account.account_type).label;
+        if (!confirm(`確定要刪除${typeLabel} "${account.apple_id}" 嗎？此操作無法復原。`)) {
             return;
         }
 
@@ -153,7 +183,7 @@ export default function Accounts() {
             await api.deleteAccount(account.id);
             toaster.create({
                 title: '刪除成功',
-                description: `Apple ID "${account.apple_id}" 已刪除`,
+                description: `${typeLabel} "${account.apple_id}" 已刪除`,
                 type: 'success',
             });
             await loadAccounts();
@@ -161,7 +191,7 @@ export default function Accounts() {
             console.error('Failed to delete account:', error);
             toaster.create({
                 title: '刪除失敗',
-                description: '無法刪除 Apple ID，請稍後再試',
+                description: '無法刪除帳號，請稍後再試',
                 type: 'error',
             });
         }
@@ -174,17 +204,17 @@ export default function Accounts() {
             await api.createAccount(newAccountForm);
             toaster.create({
                 title: '新增成功',
-                description: `Apple ID "${newAccountForm.apple_id}" 已新增`,
+                description: `「${newAccountForm.apple_id}」已新增`,
                 type: 'success',
             });
             setCreateDialogOpen(false);
-            setNewAccountForm({ balance: 0 });
+            setNewAccountForm({ balance: 0, account_type: 'apple', currency: 'HKD' });
             await loadAccounts();
         } catch (error) {
             console.error('Failed to create account:', error);
             toaster.create({
                 title: '新增失敗',
-                description: '無法新增 Apple ID，請稍後再試',
+                description: '無法新增帳號，請稍後再試',
                 type: 'error',
             });
         }
@@ -223,7 +253,7 @@ export default function Accounts() {
                         {/* 新增 Apple ID Dialog */}
                         <Button
                             onClick={() => {
-                                setNewAccountForm({ balance: 0 });
+                                setNewAccountForm({ balance: 0, account_type: 'apple', currency: 'HKD' });
                                 setCreateDialogOpen(true);
                             }}
                             colorPalette="blue"
@@ -246,13 +276,38 @@ export default function Accounts() {
                                 </DialogHeader>
                                 <form onSubmit={handleCreateAccount}>
                                     <VStack gap={5}>
+                                        <Field.Root required>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                帳號類型
+                                            </Field.Label>
+                                            <HStack gap={2} w="full">
+                                                {ACCOUNT_TYPES.map(t => (
+                                                    <Button
+                                                        key={t.value}
+                                                        type="button"
+                                                        flex={1}
+                                                        size="sm"
+                                                        h={11}
+                                                        rounded="xl"
+                                                        variant={newAccountForm.account_type === t.value ? 'solid' : 'outline'}
+                                                        colorPalette={newAccountForm.account_type === t.value ? t.colorPalette : 'gray'}
+                                                        onClick={() => setNewAccountForm({ ...newAccountForm, account_type: t.value })}
+                                                    >
+                                                        <Icon as={t.icon} />
+                                                        {t.label}
+                                                    </Button>
+                                                ))}
+                                            </HStack>
+                                        </Field.Root>
+
                                         <Field.Root>
                                             <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                                Apple ID (付款帳號)
+                                                {getAccountTypeMeta(newAccountForm.account_type).fieldLabel}
                                             </Field.Label>
                                             <Input
                                                 value={newAccountForm.apple_id || ''}
                                                 onChange={e => setNewAccountForm({ ...newAccountForm, apple_id: e.target.value })}
+                                                placeholder={getAccountTypeMeta(newAccountForm.account_type).placeholder}
                                                 required
                                                 bg="bg.subtle"
                                                 borderColor="border.default"
@@ -265,6 +320,26 @@ export default function Accounts() {
                                                 fontFamily="mono"
                                                 transition="all 0.2s"
                                             />
+                                        </Field.Root>
+
+                                        <Field.Root required>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                帳號地區(決定往後加值/扣款貨幣)
+                                            </Field.Label>
+                                            <NativeSelectRoot>
+                                                <NativeSelectField
+                                                    value={newAccountForm.currency || 'HKD'}
+                                                    onChange={e => setNewAccountForm({ ...newAccountForm, currency: e.target.value })}
+                                                    bg="bg.subtle"
+                                                    borderColor="border.default"
+                                                    rounded="xl"
+                                                    h={12}
+                                                >
+                                                    {Object.entries(REGION_NAMES).map(([code, name]) => (
+                                                        <option key={code} value={code}>{name}（{code}）</option>
+                                                    ))}
+                                                </NativeSelectField>
+                                            </NativeSelectRoot>
                                         </Field.Root>
 
                                         <Field.Root>
@@ -303,6 +378,121 @@ export default function Accounts() {
                                             transition="all 0.2s"
                                         >
                                             儲存帳號
+                                        </Button>
+                                    </VStack>
+                                </form>
+                            </DialogContent>
+                        </DialogRoot>
+
+                        {/* 編輯帳號 Dialog */}
+                        <DialogRoot open={editDialogOpen} onOpenChange={(e) => setEditDialogOpen(e.open)}>
+                            <DialogContent maxW="480px" variant="glass">
+                                <DialogHeader>
+                                    <DialogTitle>編輯帳號</DialogTitle>
+                                    <DialogCloseTrigger />
+                                </DialogHeader>
+                                <form onSubmit={handleUpdateAccount}>
+                                    <VStack gap={5}>
+                                        <Field.Root required>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                帳號類型
+                                            </Field.Label>
+                                            <HStack gap={2} w="full">
+                                                {ACCOUNT_TYPES.map(t => (
+                                                    <Button
+                                                        key={t.value}
+                                                        type="button"
+                                                        flex={1}
+                                                        size="sm"
+                                                        h={11}
+                                                        rounded="xl"
+                                                        variant={editAccountForm.account_type === t.value ? 'solid' : 'outline'}
+                                                        colorPalette={editAccountForm.account_type === t.value ? t.colorPalette : 'gray'}
+                                                        onClick={() => setEditAccountForm({ ...editAccountForm, account_type: t.value })}
+                                                    >
+                                                        <Icon as={t.icon} />
+                                                        {t.label}
+                                                    </Button>
+                                                ))}
+                                            </HStack>
+                                        </Field.Root>
+
+                                        <Field.Root>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                {getAccountTypeMeta(editAccountForm.account_type).fieldLabel}
+                                            </Field.Label>
+                                            <Input
+                                                value={editAccountForm.apple_id || ''}
+                                                onChange={e => setEditAccountForm({ ...editAccountForm, apple_id: e.target.value })}
+                                                placeholder={getAccountTypeMeta(editAccountForm.account_type).placeholder}
+                                                required
+                                                bg="bg.subtle"
+                                                borderColor="border.default"
+                                                rounded="xl"
+                                                h={12}
+                                                fontFamily="mono"
+                                                transition="all 0.2s"
+                                            />
+                                        </Field.Root>
+
+                                        <Field.Root required>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                帳號地區(決定往後加值/扣款貨幣)
+                                            </Field.Label>
+                                            <NativeSelectRoot>
+                                                <NativeSelectField
+                                                    value={editAccountForm.currency || 'HKD'}
+                                                    onChange={e => setEditAccountForm({ ...editAccountForm, currency: e.target.value })}
+                                                    bg="bg.subtle"
+                                                    borderColor="border.default"
+                                                    rounded="xl"
+                                                    h={12}
+                                                >
+                                                    {Object.entries(REGION_NAMES).map(([code, name]) => (
+                                                        <option key={code} value={code}>{name}（{code}）</option>
+                                                    ))}
+                                                </NativeSelectField>
+                                            </NativeSelectRoot>
+                                            {(editAccountForm.subscriptions?.length || 0) > 0 &&
+                                                editAccountForm.currency !== accounts.find(a => a.id === editAccountForm.id)?.currency && (
+                                                <Text fontSize="xs" color="fg.warning" mt={1.5}>
+                                                    ⚠ 此帳號已有訂閱服務，變更地區不會自動換算現有訂閱的貨幣，請確認底下訂閱項目的計價貨幣一致。
+                                                </Text>
+                                            )}
+                                        </Field.Root>
+
+                                        <Field.Root>
+                                            <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                餘額
+                                            </Field.Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                value={editAccountForm.balance ?? ''}
+                                                onChange={e => setEditAccountForm({ ...editAccountForm, balance: parseFloat(e.target.value) })}
+                                                bg="bg.subtle"
+                                                borderColor="border.default"
+                                                rounded="xl"
+                                                h={12}
+                                                fontFamily="mono"
+                                                transition="all 0.2s"
+                                            />
+                                        </Field.Root>
+
+                                        <Button
+                                            type="submit"
+                                            w="full"
+                                            colorPalette="blue"
+                                            rounded="xl"
+                                            h={12}
+                                            fontSize="md"
+                                            fontWeight="bold"
+                                            shadow="lg"
+                                            _hover={{ transform: 'scale(1.02)' }}
+                                            _active={{ transform: 'scale(0.98)' }}
+                                            transition="all 0.2s"
+                                        >
+                                            儲存變更
                                         </Button>
                                     </VStack>
                                 </form>

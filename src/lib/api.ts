@@ -114,6 +114,11 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     }, '添加訂閱失敗'),
+    updateSubscription: (id: string, data: any) => fetchWithErrorHandling(`${API_BASE}/subscriptions?id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }, '更新訂閱失敗'),
     removeSubscription: (id: string) => fetchWithErrorHandling(`${API_BASE}/subscriptions?id=${id}`, {
         method: 'DELETE'
     }, '移除訂閱失敗'),

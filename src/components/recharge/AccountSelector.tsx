@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { Search, Users, Wallet, CheckSquare, Square } from 'lucide-react';
 import type { RechargeAccount } from '../../types/recharge';
+import { getAccountTypeMeta } from '@/lib/accountType';
 
 interface AccountSelectorProps {
   accounts: RechargeAccount[];
@@ -33,24 +34,31 @@ export default function AccountSelector({
     return accounts.filter((account) => {
       const searchLower = searchQuery.toLowerCase();
       const appleId = account.apple_id?.toLowerCase() || '';
-      const googleAccount = account.google_account?.toLowerCase() || '';
       const groupName = account.telegram_group_name?.toLowerCase() || '';
-      
+
       return (
         !searchQuery ||
         appleId.includes(searchLower) ||
-        googleAccount.includes(searchLower) ||
         groupName.includes(searchLower)
       );
     });
   }, [accounts, searchQuery]);
 
-  // 全選/取消全選
+  // 計算統計
+  const selectedAccounts = accounts.filter((a) => selectedIds.includes(a.id));
+  const totalBalance = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
+  // 已選帳號鎖定的地區（貨幣）——一旦選了第一個帳號，其他地區的帳號就不能再選，避免同一筆金額套用到不同貨幣
+  const lockedCurrency = selectedAccounts[0]?.currency || null;
+  const selectableAccounts = lockedCurrency
+    ? filteredAccounts.filter((a) => (a.currency || 'HKD') === lockedCurrency)
+    : filteredAccounts;
+
+  // 全選/取消全選（只全選跟目前鎖定地區相同的帳號）
   const handleSelectAll = () => {
-    if (selectedIds.length === filteredAccounts.length) {
+    if (selectedIds.length === selectableAccounts.length) {
       onSelectionChange([]);
     } else {
-      onSelectionChange(filteredAccounts.map((a) => a.id));
+      onSelectionChange(selectableAccounts.map((a) => a.id));
     }
   };
 
@@ -58,14 +66,14 @@ export default function AccountSelector({
   const handleToggle = (accountId: string) => {
     if (selectedIds.includes(accountId)) {
       onSelectionChange(selectedIds.filter((id) => id !== accountId));
-    } else {
-      onSelectionChange([...selectedIds, accountId]);
+      return;
     }
+    const account = accounts.find((a) => a.id === accountId);
+    if (lockedCurrency && account && (account.currency || 'HKD') !== lockedCurrency) {
+      return; // 地區不同，不允許加入這次批次選取
+    }
+    onSelectionChange([...selectedIds, accountId]);
   };
-
-  // 計算統計
-  const selectedAccounts = accounts.filter((a) => selectedIds.includes(a.id));
-  const totalBalance = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
 
   if (loading) {
     return (
@@ -109,9 +117,14 @@ export default function AccountSelector({
               </Text>
             </HStack>
             <Badge colorPalette="blue" variant="solid" fontSize="sm">
-              已選擇 {selectedIds.length} / {filteredAccounts.length}
+              已選擇 {selectedIds.length} / {selectableAccounts.length}
             </Badge>
           </HStack>
+          {lockedCurrency && (
+            <Text fontSize="xs" color="fg.muted">
+              已鎖定加值地區：{lockedCurrency}，只能繼續選擇同地區的帳號
+            </Text>
+          )}
 
           {/* 搜尋框 */}
           <Box position="relative">
@@ -124,7 +137,7 @@ export default function AccountSelector({
               color="fg.muted"
             />
             <Input
-              placeholder="搜尋 Apple ID、Google Account 或群組名稱..."
+              placeholder="搜尋帳號或群組名稱..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               pl={10}
@@ -146,11 +159,11 @@ export default function AccountSelector({
               _hover={{ opacity: 0.8 }}
             >
               <Icon
-                as={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? CheckSquare : Square}
-                color={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0 ? 'blue.400' : 'fg.muted'}
+                as={selectedIds.length === selectableAccounts.length && selectableAccounts.length > 0 ? CheckSquare : Square}
+                color={selectedIds.length === selectableAccounts.length && selectableAccounts.length > 0 ? 'blue.400' : 'fg.muted'}
               />
               <Text color="fg.muted" fontSize="sm">
-                {selectedIds.length === filteredAccounts.length ? '取消全選' : '全選'}
+                {selectedIds.length === selectableAccounts.length ? '取消全選' : '全選'}
               </Text>
             </HStack>
             
@@ -171,7 +184,10 @@ export default function AccountSelector({
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={3}>
           {filteredAccounts.map((account) => {
             const isSelected = selectedIds.includes(account.id);
-            
+            const typeMeta = getAccountTypeMeta(account.account_type);
+            const accountCurrency = account.currency || 'HKD';
+            const isCurrencyBlocked = !!lockedCurrency && !isSelected && accountCurrency !== lockedCurrency;
+
             return (
               <Box
                 key={account.id}
@@ -180,10 +196,13 @@ export default function AccountSelector({
                 borderRadius="lg"
                 border="1px solid"
                 borderColor={isSelected ? 'blue.500' : 'border.default'}
-                cursor="pointer"
-                onClick={() => handleToggle(account.id)}
+                borderLeftWidth="3px"
+                borderLeftColor={`${typeMeta.colorPalette}.solid`}
+                cursor={isCurrencyBlocked ? 'not-allowed' : 'pointer'}
+                opacity={isCurrencyBlocked ? 0.4 : 1}
+                onClick={() => !isCurrencyBlocked && handleToggle(account.id)}
                 transition="all 0.2s"
-                _hover={{
+                _hover={isCurrencyBlocked ? undefined : {
                   borderColor: isSelected ? 'blue.400' : 'border.emphasized',
                   bg: isSelected ? 'bg.hover' : 'bg.muted',
                 }}
@@ -195,12 +214,24 @@ export default function AccountSelector({
                       color={isSelected ? 'blue.400' : 'fg.muted'}
                     />
                     <Text color="fg.default" fontSize="sm" fontWeight="medium">
-                      {account.apple_id || account.google_account || '未知帳號'}
+                      {account.apple_id || '未知帳號'}
                     </Text>
                   </HStack>
+                  {isCurrencyBlocked && (
+                    <Badge colorPalette="gray" fontSize="10px">地區不同</Badge>
+                  )}
                 </HStack>
 
                 <VStack gap={1} align="stretch">
+                  <HStack gap={1}>
+                    <Badge colorPalette={typeMeta.colorPalette} variant="subtle" fontSize="xs" width="fit-content">
+                      <Icon as={typeMeta.icon} boxSize={2.5} mr={1} />
+                      {typeMeta.label}
+                    </Badge>
+                    <Badge colorPalette="orange" variant="subtle" fontSize="xs" width="fit-content">
+                      {accountCurrency}
+                    </Badge>
+                  </HStack>
                   {account.telegram_group_name && (
                     <Badge colorPalette="blue" variant="subtle" fontSize="xs" width="fit-content">
                       {account.telegram_group_name}

@@ -19,6 +19,7 @@ export interface BillingCycle {
   amount_per_member: number;
   status: 'active' | 'completed' | 'refunded';
   created_at: string;
+  member_payments?: MemberPayment[];
 }
 
 export interface MemberPayment {

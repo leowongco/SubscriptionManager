@@ -16,7 +16,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus } from 'lucide-react';
+import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp } from 'lucide-react';
 import {
     Box,
     VStack,
@@ -40,6 +40,8 @@ import {
     DialogCloseTrigger,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ACCOUNT_TYPES, getAccountTypeMeta, type AccountType } from '@/lib/accountType';
+import { REGION_NAMES, getRegionLabel } from '@/lib/currency';
 
 // ============================================================================
 // Type Definitions
@@ -51,8 +53,11 @@ interface Subscription {
     service_id: string;
     service_name: string;
     group_name: string;
+    service_account?: string;
     start_date: string;
     base_price: number;
+    next_price?: number | null;
+    effective_date?: string | null;
     currency: string;
     cycle: string;
     members?: Member[];
@@ -61,7 +66,9 @@ interface Subscription {
 interface Account {
     id: string;
     apple_id: string;
+    account_type?: AccountType;
     balance: number;
+    currency?: string;
     last_sync_date: string;
     subscriptions?: Subscription[];
 }
@@ -130,18 +137,31 @@ export default function Mapping() {
     const handleSubscriptionSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.addSubscription({
-                account_id: selectedSubAccountId,
-                service_id: subscriptionForm.service_id,
-                start_date: subscriptionForm.start_date,
-                group_name: subscriptionForm.group_name
-            } as any);
+            if (subscriptionForm.id) {
+                await api.updateSubscription(subscriptionForm.id, {
+                    start_date: subscriptionForm.start_date,
+                    group_name: subscriptionForm.group_name,
+                    service_account: subscriptionForm.service_account || null,
+                    next_price: subscriptionForm.next_price || null,
+                    effective_date: subscriptionForm.effective_date || null
+                });
+            } else {
+                await api.addSubscription({
+                    account_id: selectedSubAccountId,
+                    service_id: subscriptionForm.service_id,
+                    start_date: subscriptionForm.start_date,
+                    group_name: subscriptionForm.group_name,
+                    service_account: subscriptionForm.service_account || null,
+                    next_price: subscriptionForm.next_price || null,
+                    effective_date: subscriptionForm.effective_date || null
+                } as any);
+            }
             setSubscriptionForm({});
             setIsSubscriptionOpen(false);
             mutateAccounts();
         } catch (error) {
-            console.error('Failed to add subscription:', error);
-            alert('新增失敗');
+            console.error('Failed to save subscription:', error);
+            alert('儲存失敗');
         }
     };
 
@@ -218,7 +238,7 @@ export default function Mapping() {
                     {/* ──────────────────────────────────────────────────────────────── */}
                     <Button
                         onClick={() => {
-                            setAccountForm({ balance: 0 });
+                            setAccountForm({ balance: 0, account_type: 'apple', currency: 'HKD' });
                             setIsAccountOpen(true);
                         }}
                         w={{ base: 'full', md: 'auto' }}
@@ -246,13 +266,38 @@ export default function Mapping() {
                             </DialogHeader>
                             <form onSubmit={handleAccountSubmit}>
                                 <VStack gap={{ base: 4, md: 5 }}>
+                                    <Field.Root required>
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            帳號類型
+                                        </Field.Label>
+                                        <HStack gap={2} w="full">
+                                            {ACCOUNT_TYPES.map(t => (
+                                                <Button
+                                                    key={t.value}
+                                                    type="button"
+                                                    flex={1}
+                                                    size="sm"
+                                                    h={{ base: 10, md: 11 }}
+                                                    rounded="xl"
+                                                    variant={accountForm.account_type === t.value ? 'solid' : 'outline'}
+                                                    colorPalette={accountForm.account_type === t.value ? t.colorPalette : 'gray'}
+                                                    onClick={() => setAccountForm({ ...accountForm, account_type: t.value })}
+                                                >
+                                                    <Box as={t.icon} w={3.5} h={3.5} />
+                                                    {t.label}
+                                                </Button>
+                                            ))}
+                                        </HStack>
+                                    </Field.Root>
+
                                     <Field.Root>
                                         <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                            Apple ID (付款帳號)
+                                            {getAccountTypeMeta(accountForm.account_type).fieldLabel}
                                         </Field.Label>
                                         <Input
                                             value={accountForm.apple_id || ''}
                                             onChange={e => setAccountForm({ ...accountForm, apple_id: e.target.value })}
+                                            placeholder={getAccountTypeMeta(accountForm.account_type).placeholder}
                                             required
                                             bg="bg.subtle"
                                             borderColor="border.emphasized"
@@ -266,6 +311,27 @@ export default function Mapping() {
                                             fontSize={{ base: 'xs', md: 'sm' }}
                                             transition="all 0.2s"
                                         />
+                                    </Field.Root>
+
+                                    <Field.Root required>
+                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                            帳號地區(決定往後加值/扣款貨幣)
+                                        </Field.Label>
+                                        <NativeSelectRoot>
+                                            <NativeSelectField
+                                                value={accountForm.currency || 'HKD'}
+                                                onChange={e => setAccountForm({ ...accountForm, currency: e.target.value })}
+                                                bg="bg.subtle"
+                                                borderColor="border.emphasized"
+                                                rounded="xl"
+                                                h={{ base: 11, md: 12 }}
+                                                fontSize={{ base: 'xs', md: 'sm' }}
+                                            >
+                                                {Object.entries(REGION_NAMES).map(([code, name]) => (
+                                                    <option key={code} value={code}>{name}（{code}）</option>
+                                                ))}
+                                            </NativeSelectField>
+                                        </NativeSelectRoot>
                                     </Field.Root>
 
                                     <Field.Root>
@@ -363,6 +429,10 @@ export default function Mapping() {
                         >
                             <Flex justify="space-between" alignItems="start">
                                 <Box minW={0} pr={2}>
+                                    <Badge colorPalette={getAccountTypeMeta(account.account_type).colorPalette} fontSize="xs" fontWeight="bold" px={2} py={0.5} rounded="md" mb={1.5}>
+                                        <Box as={getAccountTypeMeta(account.account_type).icon} w={3} h={3} mr={1} display="inline-block" verticalAlign="middle" />
+                                        {getAccountTypeMeta(account.account_type).label}
+                                    </Badge>
                                     <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" color="fg.default" display="flex" alignItems="center" gap={2} textShadow="md" truncate>
                                         {account.apple_id}
                                     </Text>
@@ -438,8 +508,8 @@ export default function Mapping() {
                                 
                                 <DialogRoot
                                     open={isSubscriptionOpen && selectedSubAccountId === account.id}
-                                    onOpenChange={(open) => {
-                                        if (!open) setIsSubscriptionOpen(false);
+                                    onOpenChange={(e) => {
+                                        if (!e.open) setIsSubscriptionOpen(false);
                                     }}
                                 >
                                     <DialogContent maxW="480px" variant="glass">
@@ -487,17 +557,41 @@ export default function Mapping() {
                                                                         每月 {new Date(sub.start_date).getDate()} 日扣
                                                                     </Badge>
                                                                 </Text>
+                                                                {sub.service_account && (
+                                                                    <Badge mt={1} colorPalette="orange" fontSize="10px" fontFamily="mono">
+                                                                        <Box as={KeyRound} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
+                                                                        登入用：{sub.service_account}
+                                                                    </Badge>
+                                                                )}
+                                                                {sub.next_price && sub.effective_date && (
+                                                                    <Badge mt={1} ml={1} colorPalette="yellow" fontSize="10px" fontFamily="mono">
+                                                                        <Box as={TrendingUp} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
+                                                                        {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
+                                                                    </Badge>
+                                                                )}
                                                             </Box>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                color="fg.muted"
-                                                                _hover={{ color: 'red.400', bg: 'red.500/10' }}
-                                                                onClick={() => removeSubscription(sub.id)}
-                                                                aria-label="移除訂閱"
-                                                            >
-                                                                <Box as={Trash2} w={4} h={4} />
-                                                            </Button>
+                                                            <HStack gap={0}>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    color="fg.muted"
+                                                                    _hover={{ color: 'emerald.400', bg: 'emerald.500/10' }}
+                                                                    onClick={() => setSubscriptionForm({ ...sub })}
+                                                                    aria-label="編輯訂閱"
+                                                                >
+                                                                    <Box as={Pencil} w={4} h={4} />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    color="fg.muted"
+                                                                    _hover={{ color: 'red.400', bg: 'red.500/10' }}
+                                                                    onClick={() => removeSubscription(sub.id)}
+                                                                    aria-label="移除訂閱"
+                                                                >
+                                                                    <Box as={Trash2} w={4} h={4} />
+                                                                </Button>
+                                                            </HStack>
                                                         </Flex>
                                                     ))
                                                 ) : (
@@ -510,14 +604,23 @@ export default function Mapping() {
                                             <Box as="form" onSubmit={handleSubscriptionSubmit} w="full">
                                                 <VStack gap={4} pt={2} borderTop="1px solid" borderColor="border.default">
                                                     <Grid templateColumns="2" gap={4}>
-                                                        <Field.Root>
+                                                        <Field.Root disabled={!!subscriptionForm.id}>
                                                             <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-                                                                新增服務
+                                                                {subscriptionForm.id ? '服務(不可變更)' : '新增服務'}
                                                             </Field.Label>
-                                                            <NativeSelectRoot>
+                                                            <NativeSelectRoot disabled={!!subscriptionForm.id}>
                                                                 <NativeSelectField
                                                                     value={subscriptionForm.service_id}
-                                                                    onChange={v => setSubscriptionForm({ ...subscriptionForm, service_id: v.target.value })}
+                                                                    onChange={v => {
+                                                                        const selected = services?.find(s => s.id === v.target.value);
+                                                                        setSubscriptionForm({
+                                                                            ...subscriptionForm,
+                                                                            service_id: v.target.value,
+                                                                            // 新增訂閱時，預設繼承服務目前登記的調價計畫，之後可在下方獨立覆寫
+                                                                            next_price: selected?.next_price ?? null,
+                                                                            effective_date: selected?.effective_date ?? null,
+                                                                        });
+                                                                    }}
                                                                     bg="bg.subtle"
                                                                     borderColor="border.emphasized"
                                                                     rounded="xl"
@@ -525,11 +628,21 @@ export default function Mapping() {
                                                                     fontSize="xs"
                                                                 >
                                                                     <option value="">選擇服務</option>
-                                                                    {services?.map(s => (
-                                                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                                                    ))}
+                                                                    {services
+                                                                        ?.filter(s => s.currency === (account.currency || 'HKD'))
+                                                                        .map(s => (
+                                                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                                                        ))}
                                                                 </NativeSelectField>
                                                             </NativeSelectRoot>
+                                                            <Text fontSize="10px" color="fg.muted" mt={1}>
+                                                                僅顯示 {getRegionLabel(account.currency)} 計價的服務，此帳號地區決定扣款貨幣
+                                                            </Text>
+                                                            {services && services.filter(s => s.currency === (account.currency || 'HKD')).length === 0 && (
+                                                                <Text fontSize="10px" color="fg.warning" mt={0.5}>
+                                                                    ⚠ 目前沒有 {getRegionLabel(account.currency)} 計價的服務，請先到「服務與定價管理」新增
+                                                                </Text>
+                                                            )}
                                                         </Field.Root>
 
                                                         <Field.Root>
@@ -551,6 +664,23 @@ export default function Mapping() {
 
                                                         <Field.Root>
                                                             <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                服務登入帳號(選填)
+                                                            </Field.Label>
+                                                            <Input
+                                                                value={subscriptionForm.service_account || ''}
+                                                                onChange={e => setSubscriptionForm({ ...subscriptionForm, service_account: e.target.value })}
+                                                                placeholder="與 Apple ID 不同時填寫，如 Google 帳號"
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
+                                                                rounded="xl"
+                                                                h={10}
+                                                                fontSize="xs"
+                                                                fontFamily="mono"
+                                                            />
+                                                        </Field.Root>
+
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 扣款起始日
                                                             </Field.Label>
                                                             <Input
@@ -565,23 +695,76 @@ export default function Mapping() {
                                                                 fontSize="xs"
                                                             />
                                                         </Field.Root>
-                                                    </Grid>
 
-                                                    <Button
-                                                        type="submit"
-                                                        w="full"
-                                                        bg="emerald.600/20"
-                                                        color="emerald.400"
-                                                        border="1px solid"
-                                                        borderColor="emerald.500/30"
-                                                        _hover={{ bg: 'emerald.500', color: 'white' }}
-                                                        rounded="xl"
-                                                        h={10}
-                                                        fontSize="sm"
-                                                        fontWeight="bold"
-                                                    >
-                                                        加入訂閱
-                                                    </Button>
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                調漲後價格(選填)
+                                                            </Field.Label>
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                value={subscriptionForm.next_price ?? ''}
+                                                                onChange={e => setSubscriptionForm({ ...subscriptionForm, next_price: e.target.value ? parseFloat(e.target.value) : null })}
+                                                                placeholder="此帳號調漲後的價格"
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
+                                                                rounded="xl"
+                                                                h={10}
+                                                                fontSize="xs"
+                                                                fontFamily="mono"
+                                                            />
+                                                        </Field.Root>
+
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                調漲生效日(選填)
+                                                            </Field.Label>
+                                                            <Input
+                                                                type="date"
+                                                                value={subscriptionForm.effective_date?.split('T')[0] || ''}
+                                                                onChange={e => setSubscriptionForm({ ...subscriptionForm, effective_date: e.target.value || null })}
+                                                                bg="bg.subtle"
+                                                                borderColor="border.emphasized"
+                                                                rounded="xl"
+                                                                h={10}
+                                                                fontSize="xs"
+                                                            />
+                                                        </Field.Root>
+                                                    </Grid>
+                                                    <Text fontSize="10px" color="fg.muted" alignSelf="start">
+                                                        不同帳號訂閱同一服務的調漲時間可能不同，這裡設定的是「這個帳號」自己的調價計畫，跟「服務與定價管理」裡的預設值互相獨立。
+                                                    </Text>
+
+                                                    <HStack w="full" gap={2}>
+                                                        {subscriptionForm.id && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                colorPalette="gray"
+                                                                rounded="xl"
+                                                                h={10}
+                                                                fontSize="sm"
+                                                                onClick={() => setSubscriptionForm({ start_date: getTodayString() })}
+                                                            >
+                                                                取消編輯
+                                                            </Button>
+                                                        )}
+                                                        <Button
+                                                            type="submit"
+                                                            flex={1}
+                                                            bg="emerald.600/20"
+                                                            color="emerald.400"
+                                                            border="1px solid"
+                                                            borderColor="emerald.500/30"
+                                                            _hover={{ bg: 'emerald.500', color: 'white' }}
+                                                            rounded="xl"
+                                                            h={10}
+                                                            fontSize="sm"
+                                                            fontWeight="bold"
+                                                        >
+                                                            {subscriptionForm.id ? '儲存變更' : '加入訂閱'}
+                                                        </Button>
+                                                    </HStack>
                                                 </VStack>
                                             </Box>
                                         </VStack>
@@ -608,13 +791,25 @@ export default function Mapping() {
                             {account.subscriptions?.map(sub => (
                                 <Box key={sub.id} mb={6} _last={{ mb: 0 }}>
                                     <Flex justify="space-between" alignItems="center" borderBottom="1px solid" borderColor="border.default" pb={2} mb={3}>
-                                        <VStack align="start" gap={0}>
+                                        <VStack align="start" gap={0.5}>
                                             <Text fontSize="sm" fontWeight="bold" color="fg.default" letterSpacing="wide">
                                                 {sub.service_name}
                                             </Text>
                                             <Text fontSize="10px" color="emerald.400" fontFamily="mono">
                                                 {sub.group_name}
                                             </Text>
+                                            {sub.service_account && (
+                                                <Badge colorPalette="orange" fontSize="10px" fontFamily="mono" px={1.5}>
+                                                    <Box as={KeyRound} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
+                                                    登入用：{sub.service_account}
+                                                </Badge>
+                                            )}
+                                            {sub.next_price && sub.effective_date && (
+                                                <Badge colorPalette="yellow" fontSize="10px" fontFamily="mono" px={1.5}>
+                                                    <Box as={TrendingUp} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
+                                                    {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
+                                                </Badge>
+                                            )}
                                         </VStack>
                                         {/* ──────────────────────────────────────────────────────────────── */}
                                         {/* Member Dialog - 新增成員 */}
@@ -638,8 +833,8 @@ export default function Mapping() {
                                         
                                         <DialogRoot
                                             open={isMemberOpen && selectedSubscriptionId === sub.id}
-                                            onOpenChange={(open) => {
-                                                if (!open) setIsMemberOpen(false);
+                                            onOpenChange={(e) => {
+                                                if (!e.open) setIsMemberOpen(false);
                                             }}
                                         >
                                             <DialogContent maxW="420px" variant="glass">

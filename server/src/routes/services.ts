@@ -1,0 +1,40 @@
+import { Router } from 'express';
+import { db, newId } from '../db';
+
+export const servicesRouter = Router();
+
+servicesRouter.get('/', (_req, res) => {
+  const results = db.prepare('SELECT * FROM services').all();
+  res.json(results);
+});
+
+servicesRouter.post('/', (req, res) => {
+  const body = req.body || {};
+  const id = body.id || newId();
+
+  db.prepare(
+    'INSERT INTO services (id, name, base_price, currency, cycle, next_price, effective_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, body.name, body.base_price, body.currency, body.cycle, body.next_price || null, body.effective_date || null);
+
+  res.status(201).json({ id, message: 'Service created successfully' });
+});
+
+servicesRouter.put('/', (req, res) => {
+  const body = req.body || {};
+  const id = body.id;
+  if (!id) return res.status(400).send('Missing Service ID');
+
+  db.prepare(
+    'UPDATE services SET name = ?, base_price = ?, currency = ?, cycle = ?, next_price = ?, effective_date = ? WHERE id = ?'
+  ).run(body.name, body.base_price, body.currency, body.cycle, body.next_price || null, body.effective_date || null, id);
+
+  res.json({ message: 'Service updated successfully' });
+});
+
+servicesRouter.delete('/', (req, res) => {
+  const id = req.query.id as string | undefined;
+  if (!id) return res.status(400).send('Missing Service ID');
+
+  db.prepare('DELETE FROM services WHERE id = ?').run(id);
+  res.json({ message: 'Service deleted successfully' });
+});

@@ -182,6 +182,7 @@ export default function Layout() {
                         <Drawer.Backdrop bg="rgba(0, 0, 0, 0.6)" backdropFilter="blur(4px)" />
                     </Portal>
                     <Portal>
+                      <Drawer.Positioner>
                         <DrawerContent bg={drawerBg} borderColor={sidebarBorder} borderLeft="1px">
                             <DrawerHeader borderBottom="1px" borderColor={sidebarBorder}>
                                 <HStack justify="space-between">
@@ -241,6 +242,7 @@ export default function Layout() {
                                 </Text>
                             </DrawerFooter>
                         </DrawerContent>
+                      </Drawer.Positioner>
                     </Portal>
                 </Drawer.Root>
 

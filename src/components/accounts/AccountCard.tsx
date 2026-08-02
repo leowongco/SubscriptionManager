@@ -5,9 +5,11 @@ import {
     HStack,
     Button,
     Badge,
+    Icon,
 } from '@chakra-ui/react';
 import { DollarSign, Edit, Trash2, TrendingUp } from 'lucide-react';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, getRegionLabel } from '@/lib/currency';
+import { getAccountTypeMeta, type AccountType } from '@/lib/accountType';
 
 interface Subscription {
     id: string;
@@ -22,6 +24,7 @@ interface AccountCardProps {
     account: {
         id: string;
         apple_id: string;
+        account_type?: AccountType;
         balance: number;
         currency?: string;
         group_name?: string;
@@ -34,6 +37,8 @@ interface AccountCardProps {
 }
 
 export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, onDelete }: AccountCardProps) {
+    const typeMeta = getAccountTypeMeta(account.account_type);
+
     // 計算預估月支出
     const monthlyExpense = account.subscriptions?.reduce((total, sub) => {
         const price = sub.base_price || 0;
@@ -52,6 +57,8 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
             backdropFilter="blur(20px)"
             border="1px solid"
             borderColor="border.default"
+            borderLeftWidth="4px"
+            borderLeftColor={`${typeMeta.colorPalette}.solid`}
             rounded="xl"
             shadow="xl"
             overflow="hidden"
@@ -59,11 +66,15 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
             _hover={{ shadow: '2xl', transform: 'translateY(-2px)' }}
         >
             <VStack align="stretch" gap={4}>
-                {/* 頂部：Apple ID 和餘額 */}
+                {/* 頂部：帳號類型徽章 + 識別碼 + 餘額 */}
                 <HStack justify="space-between" align="start">
-                    <VStack align="start" gap={1}>
+                    <VStack align="start" gap={1.5}>
+                        <Badge colorPalette={typeMeta.colorPalette} fontSize="xs" fontWeight="bold" px={2} py={0.5} rounded="md">
+                            <Icon as={typeMeta.icon} boxSize={3} mr={1} />
+                            {typeMeta.label}
+                        </Badge>
                         <Text fontWeight="bold" fontSize="lg" color="fg.default">
-                            {account.apple_id || '未設定 Apple ID'}
+                            {account.apple_id || '未設定帳號'}
                         </Text>
                         {account.group_name && (
                             <Badge colorPalette="purple" fontSize="xs">
@@ -82,11 +93,9 @@ export function AccountCard({ account, onAdjustBalance, onViewDetails, onEdit, o
                             <Text fontSize="xs" color="fg.muted">
                                 當前餘額
                             </Text>
-                            {account.currency && account.currency !== 'HKD' && (
-                                <Badge colorPalette="cyan" fontSize="xs">
-                                    {account.currency}
-                                </Badge>
-                            )}
+                            <Badge colorPalette="cyan" fontSize="xs">
+                                {getRegionLabel(account.currency)}
+                            </Badge>
                         </HStack>
                     </VStack>
                 </HStack>

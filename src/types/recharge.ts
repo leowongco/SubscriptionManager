@@ -1,9 +1,11 @@
 // 批次加值相關類型定義
 
+import type { AccountType } from '@/lib/accountType';
+
 export interface RechargeAccount {
   id: string;
   apple_id: string | null;
-  google_account: string | null;
+  account_type?: AccountType;
   balance: number;
   currency?: string;
   telegram_group_id?: string | null;

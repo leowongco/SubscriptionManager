@@ -338,6 +338,7 @@ export default function TelegramGroupDetail() {
                   <Table.Row bg="bg.subtle">
                     <Table.ColumnHeader color="fg.muted">Apple ID</Table.ColumnHeader>
                     <Table.ColumnHeader color="fg.muted">服務</Table.ColumnHeader>
+                    <Table.ColumnHeader color="fg.muted">服務登入帳號</Table.ColumnHeader>
                     <Table.ColumnHeader color="fg.muted">成員數</Table.ColumnHeader>
                     <Table.ColumnHeader color="fg.muted">餘額</Table.ColumnHeader>
                   </Table.Row>
@@ -347,6 +348,15 @@ export default function TelegramGroupDetail() {
                     <Table.Row key={sub.id} _hover={{ bg: 'bg.hover' }}>
                       <Table.Cell color="fg.default">{sub.apple_id || '-'}</Table.Cell>
                       <Table.Cell color="fg.default">{sub.service_name}</Table.Cell>
+                      <Table.Cell color="fg.default">
+                        {sub.service_account ? (
+                          <Badge colorPalette="orange" fontFamily="mono" fontSize="xs">
+                            {sub.service_account}
+                          </Badge>
+                        ) : (
+                          <Text color="fg.muted" fontSize="xs">與 Apple ID 相同</Text>
+                        )}
+                      </Table.Cell>
                       <Table.Cell color="fg.default">{sub.members?.length || 0}</Table.Cell>
                       <Table.Cell color="fg.default">${sub.account_balance?.toFixed(2) || '0.00'}</Table.Cell>
                     </Table.Row>
@@ -424,7 +434,7 @@ export default function TelegramGroupDetail() {
             </Text>
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
               {group.billing_cycles.map((cycle) => (
-                <BillingCycleCard key={cycle.id} cycle={cycle} />
+                <BillingCycleCard key={cycle.id} cycle={cycle} memberPayments={cycle.member_payments} />
               ))}
             </SimpleGrid>
           </VStack>

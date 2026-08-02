@@ -1,0 +1,16 @@
+node_modules
+server/node_modules
+server/dist
+server/data
+dist
+.wrangler
+.git
+docs
+deploy
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+.env.*
+.dev.vars

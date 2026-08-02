@@ -1,0 +1,23 @@
+# 使用 GitHub Actions 建置好的 image，VPS 上不需要自己 build。
+# 用法：docker compose -f docker-compose.prod.yml up -d
+# 更新：docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
+services:
+  subscription-manager:
+    image: ghcr.io/leowongco/subscriptionmanager:latest
+    container_name: subscription-manager
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      APP_USERNAME: "${APP_USERNAME:-admin}"
+      APP_PASSWORD: "${APP_PASSWORD:-}"
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
+      TELEGRAM_CHAT_ID: "${TELEGRAM_CHAT_ID:-}"
+      SYNC_SECRET: "${SYNC_SECRET:-}"
+      SYNC_CRON_SCHEDULE: "${SYNC_CRON_SCHEDULE:-10 0 * * *}"
+    volumes:
+      - subscription-manager-data:/app/data
+
+volumes:
+  subscription-manager-data:

@@ -12,6 +12,20 @@ dist
 dist-ssr
 *.local
 
+# Self-hosted server
+server/data
+server/public
+.env
+*.db
+*.db-shm
+*.db-wal
+
+# Legacy Cloudflare Pages/Wrangler artifacts (project fully migrated to server/ self-hosted stack)
+.wrangler
+
+# Claude Code local settings
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

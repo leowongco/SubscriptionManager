@@ -1,1 +1,0 @@
-ALTER TABLE history ADD COLUMN memo TEXT;

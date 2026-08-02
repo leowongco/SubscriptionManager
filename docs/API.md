@@ -5,8 +5,12 @@
 ## 基礎 URL
 
 ```
-https://your-pages-domain.pages.dev/api
+http://<你的VPS>:3000/api
 ```
+
+## 認證
+
+所有 `/api/*` 端點都受 HTTP Basic Auth 保護（帳密為 `.env` 裡的 `APP_USERNAME` / `APP_PASSWORD`）。未設定 `APP_PASSWORD` 時（僅限本機開發）不要求認證。
 
 ---
 

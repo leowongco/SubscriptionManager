@@ -84,7 +84,7 @@ export default function Recharge() {
       return {
         id: acc.id,
         apple_id: acc.apple_id,
-        google_account: acc.google_account,
+        account_type: acc.account_type,
         balance: acc.balance || 0,
         currency: acc.subscriptions?.[0]?.currency || 'HKD',
         telegram_group_id: telegramGroupId,
@@ -105,8 +105,7 @@ export default function Recharge() {
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
         const appleId = account.apple_id?.toLowerCase() || '';
-        const googleAccount = account.google_account?.toLowerCase() || '';
-        if (!appleId.includes(searchLower) && !googleAccount.includes(searchLower)) {
+        if (!appleId.includes(searchLower)) {
           return false;
         }
       }
@@ -168,7 +167,20 @@ export default function Recharge() {
       });
       return;
     }
-    
+
+    const selectedCurrencies = new Set(
+      processedAccounts.filter(a => selectedAccountIds.includes(a.id)).map(a => a.currency || 'HKD')
+    );
+    if (selectedCurrencies.size > 1) {
+      toaster.create({
+        title: '錯誤',
+        description: `所選帳號地區不一致（${[...selectedCurrencies].join('、')}），同一筆金額無法套用到不同貨幣的帳號，請用上方「地區」篩選分開加值`,
+        type: 'error',
+        duration: 6000,
+      });
+      return;
+    }
+
     if (!reason.trim()) {
       toaster.create({
         title: '錯誤',

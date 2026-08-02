@@ -31,6 +31,21 @@ export const CURRENCY_NAMES: Record<string, string> = {
     ARS: '阿根廷披索',
 };
 
+// Apple ID / App Store 地區映射（用於帳號地區選擇）
+// 一個帳號的地區一旦設定，就決定了這個帳號往後買禮品卡、被扣訂閱費時使用的貨幣。
+export const REGION_NAMES: Record<string, string> = {
+    HKD: '香港',
+    TRY: '土耳其',
+    USD: '美國',
+    TWD: '台灣',
+    ARS: '阿根廷',
+};
+
+export function getRegionLabel(currency?: string | null): string {
+    if (!currency) return '未設定地區';
+    return REGION_NAMES[currency] ? `${REGION_NAMES[currency]}（${currency}）` : currency;
+}
+
 // 匯率轉換（以 HKD 為基準）
 export const EXCHANGE_RATES: Record<string, number> = {
     HKD: 1,

@@ -9,8 +9,7 @@ import { EXCHANGE_RATES } from '@/lib/currency';
 
 export default function Dashboard() {
     const { data: accounts } = useSWR<any[]>('accounts', api.getAccounts);
-    const { data: services } = useSWR<any[]>('services', api.getServices);
-    
+
     // ========================================
     // Data Calculations
     // ========================================
@@ -71,13 +70,15 @@ export default function Dashboard() {
     }) || [];
 
     /**
-     * Services with upcoming price increases (effective date in the future)
+     * Subscriptions with upcoming price increases (effective date in the future).
+     * 調價時間是每個帳號的訂閱各自獨立的（不同帳號可能有不同的調價生效日），
+     * 所以要逐一檢查每個帳號底下每筆訂閱自己的 next_price/effective_date，而不是看 services 的全域設定。
      */
-    const upcomingPriceIncreases = services?.filter(s => {
-        if (!s.next_price || !s.effective_date) return false;
-        const effective = new Date(s.effective_date);
-        return effective > new Date(); // still in the future
-    }) || [];
+    const upcomingPriceIncreases = (accounts || []).flatMap(acc =>
+        (acc.subscriptions || [])
+            .filter((sub: any) => sub.next_price && sub.effective_date && new Date(sub.effective_date) > new Date())
+            .map((sub: any) => ({ ...sub, apple_id: acc.apple_id }))
+    );
 
     // ========================================
     // Chart Data
@@ -283,7 +284,10 @@ export default function Dashboard() {
                                     transition="all"
                                 >
                                     <Flex justify="space-between" alignItems="start">
-                                        <Text fontWeight="bold" color="orange.emphasized" fontSize={{ base: 'sm', md: 'md' }}>{s.name}</Text>
+                                        <VStack align="start" gap={0}>
+                                            <Text fontWeight="bold" color="orange.emphasized" fontSize={{ base: 'sm', md: 'md' }}>{s.service_name}</Text>
+                                            <Text fontSize="10px" color="fg.muted" fontFamily="mono">{s.apple_id}</Text>
+                                        </VStack>
                                         <Text
                                             fontSize="10px"
                                             fontWeight="bold"
