@@ -16,7 +16,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp } from 'lucide-react';
+import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp, MessageCircle } from 'lucide-react';
 import {
     Box,
     VStack,
@@ -54,6 +54,7 @@ interface Subscription {
     service_name: string;
     group_name: string;
     service_account?: string;
+    telegram_group_id?: string | null;
     start_date: string;
     base_price: number;
     next_price?: number | null;
@@ -91,6 +92,7 @@ export default function Mapping() {
     // ========================================================================
     const { data: accounts, mutate: mutateAccounts } = useSWR<Account[]>('accounts', api.getAccounts);
     const { data: services } = useSWR<any[]>('services', api.getServices);
+    const { data: telegramGroups } = useSWR<any[]>('telegram-groups', api.getTelegramGroups);
 
     // ========================================================================
     // Dialog States
@@ -141,6 +143,7 @@ export default function Mapping() {
                 await api.updateSubscription(subscriptionForm.id, {
                     start_date: subscriptionForm.start_date,
                     group_name: subscriptionForm.group_name,
+                    telegram_group_id: subscriptionForm.telegram_group_id || null,
                     service_account: subscriptionForm.service_account || null,
                     next_price: subscriptionForm.next_price || null,
                     effective_date: subscriptionForm.effective_date || null
@@ -151,6 +154,7 @@ export default function Mapping() {
                     service_id: subscriptionForm.service_id,
                     start_date: subscriptionForm.start_date,
                     group_name: subscriptionForm.group_name,
+                    telegram_group_id: subscriptionForm.telegram_group_id || null,
                     service_account: subscriptionForm.service_account || null,
                     next_price: subscriptionForm.next_price || null,
                     effective_date: subscriptionForm.effective_date || null
@@ -569,6 +573,12 @@ export default function Mapping() {
                                                                         {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
                                                                     </Badge>
                                                                 )}
+                                                                {(sub as any).telegram_group_name && (
+                                                                    <Badge mt={1} ml={1} colorPalette="blue" fontSize="10px" fontFamily="mono">
+                                                                        <Box as={MessageCircle} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
+                                                                        {(sub as any).telegram_group_name}
+                                                                    </Badge>
+                                                                )}
                                                             </Box>
                                                             <HStack gap={0}>
                                                                 <Button
@@ -660,6 +670,31 @@ export default function Mapping() {
                                                                 h={10}
                                                                 fontSize="xs"
                                                             />
+                                                        </Field.Root>
+
+                                                        <Field.Root>
+                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                                Telegram 收款群組(選填)
+                                                            </Field.Label>
+                                                            <NativeSelectRoot>
+                                                                <NativeSelectField
+                                                                    value={subscriptionForm.telegram_group_id || ''}
+                                                                    onChange={e => setSubscriptionForm({ ...subscriptionForm, telegram_group_id: e.target.value || null })}
+                                                                    bg="bg.subtle"
+                                                                    borderColor="border.emphasized"
+                                                                    rounded="xl"
+                                                                    h={10}
+                                                                    fontSize="xs"
+                                                                >
+                                                                    <option value="">不關聯任何群組</option>
+                                                                    {telegramGroups?.map(g => (
+                                                                        <option key={g.id} value={g.id}>{g.name}</option>
+                                                                    ))}
+                                                                </NativeSelectField>
+                                                            </NativeSelectRoot>
+                                                            <Text fontSize="10px" color="fg.muted" mt={1}>
+                                                                關聯後，這筆訂閱的成員才會出現在「Telegram 群組管理」的收款週期裡
+                                                            </Text>
                                                         </Field.Root>
 
                                                         <Field.Root>
@@ -810,6 +845,12 @@ export default function Mapping() {
                                                 <Badge colorPalette="yellow" fontSize="10px" fontFamily="mono" px={1.5}>
                                                     <Box as={TrendingUp} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
                                                     {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
+                                                </Badge>
+                                            )}
+                                            {(sub as any).telegram_group_name && (
+                                                <Badge colorPalette="blue" fontSize="10px" fontFamily="mono" px={1.5}>
+                                                    <Box as={MessageCircle} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
+                                                    {(sub as any).telegram_group_name}
                                                 </Badge>
                                             )}
                                         </VStack>

@@ -10,9 +10,11 @@ accountsRouter.get('/', (_req, res) => {
   const accounts = db.prepare('SELECT * FROM accounts').all() as any[];
 
   const subscriptions = db.prepare(`
-    SELECT sub.*, s.name as service_name, s.base_price, s.currency, s.cycle
+    SELECT sub.*, s.name as service_name, s.base_price, s.currency, s.cycle,
+           tg.name as telegram_group_name
     FROM subscriptions sub
     JOIN services s ON sub.service_id = s.id
+    LEFT JOIN telegram_groups tg ON sub.telegram_group_id = tg.id
   `).all() as any[];
 
   const members = db.prepare('SELECT * FROM members').all() as any[];
