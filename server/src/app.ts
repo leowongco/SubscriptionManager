@@ -1,5 +1,6 @@
 import express from 'express';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 
@@ -21,7 +22,11 @@ import { syncRouter } from './routes/sync';
 export function createApp() {
   const app = express();
 
-  app.set('trust proxy', true);
+  // trust proxy 設 true 等於信任「任何」用戶端自己填的 X-Forwarded-For，
+  // 等於讓人可以直接偽造來源 IP 繞過下面的登入失敗限流。這裡只信任最近一層
+  // （VPS 上常見的反向代理，如 1Panel 的 Nginx），沒有反代直接連時則以實際
+  // TCP 連線位址為準，不會被用戶端自己塞的標頭騙過。
+  app.set('trust proxy', 1);
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json());
 
@@ -32,6 +37,17 @@ export function createApp() {
   if (!process.env.APP_PASSWORD) {
     console.warn('[WARN] APP_PASSWORD 未設定，API 與前端目前對任何連得到這台主機的人開放，沒有密碼保護。正式環境請務必在 .env 設定 APP_PASSWORD。');
   }
+  // 只針對登入失敗（401）的請求計數，成功登入後的正常操作不受影響，
+  // 避免同一個 IP 短時間內一直猜密碼。
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    message: { error: '登入失敗次數過多，請稍後再試。' },
+  });
+  app.use(loginLimiter);
   app.use(basicAuth);
 
   app.use('/api/accounts', accountBalanceRouter); // /:id/balance — must come before the plain accounts router

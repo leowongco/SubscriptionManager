@@ -90,6 +90,42 @@ docker compose up -d --build
 docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
 ```
 
+### 6. 備份與還原
+
+所有資料（帳號、訂閱、餘額、Telegram 群組⋯）都只存在 named volume `subscription-manager-data` 裡的一個 SQLite 檔案。VPS 本身出問題、被誤刪容器都會直接丟資料，**務必定期備份**。
+
+**備份**（先短暫停機幾秒，確保沒有寫入到一半的資料被備份進去）：
+
+```bash
+docker compose stop
+docker run --rm \
+  -v subscriptionmanager_subscription-manager-data:/data \
+  -v "$(pwd)/backups":/backup \
+  alpine tar czf /backup/sm-backup-$(date +%Y%m%d-%H%M%S).tar.gz -C /data .
+docker compose start
+```
+
+（volume 實際名稱可能因 compose 專案資料夾名稱而不同，用 `docker volume ls` 確認正確名稱。）
+
+建議寫成 cron job 排程，例如每天凌晨備份一次：
+
+```bash
+crontab -e
+# 加入：
+0 3 * * * cd /path/to/SubscriptionManager && docker compose stop && docker run --rm -v subscriptionmanager_subscription-manager-data:/data -v /path/to/backups:/backup alpine tar czf /backup/sm-backup-$(date +\%Y\%m\%d).tar.gz -C /data . && docker compose start
+```
+
+**還原**：
+
+```bash
+docker compose stop
+docker run --rm \
+  -v subscriptionmanager_subscription-manager-data:/data \
+  -v "$(pwd)/backups":/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/sm-backup-YYYYMMDD-HHMMSS.tar.gz -C /data"
+docker compose start
+```
+
 ---
 
 ## 🖥️ 本機開發
@@ -111,11 +147,21 @@ npm run dev
 
 後端預設監聽 `3000` port，開發模式下未設定 `APP_PASSWORD` 則不要求登入。
 
+### 測試
+
+```bash
+npm test          # 前端：vitest，測 src/lib 底下的工具函數
+cd server && npm test   # 後端：node:test + supertest，測認證、刪除防呆、貨幣驗證等 API 行為
+```
+
+`.github/workflows/test.yml` 會在每次 push/PR 時自動跑這兩組測試 + build。
+
 ---
 
 ## 🔄 CI/CD
 
-`.github/workflows/docker-publish.yml` 會在 push `v*` tag 時自動 build 這個 repo 的 Dockerfile，並推到 GitHub Container Registry（`ghcr.io/leowongco/subscriptionmanager`），不需要額外設定任何 secret。若想同時推到 Docker Hub，在 repo 的 Settings → Secrets 裡加上 `DOCKERHUB_USERNAME` 與 `DOCKERHUB_TOKEN` 即可自動一併推送，詳見 workflow 檔案內註解。
+- `.github/workflows/test.yml`：每次 push/PR 自動跑前後端測試與 build，確保沒有明顯壞掉。
+- `.github/workflows/docker-publish.yml`：push `v*` tag 時自動 build 這個 repo 的 Dockerfile，並推到 GitHub Container Registry（`ghcr.io/leowongco/subscriptionmanager`），不需要額外設定任何 secret。若想同時推到 Docker Hub，在 repo 的 Settings → Secrets 裡加上 `DOCKERHUB_USERNAME` 與 `DOCKERHUB_TOKEN` 即可自動一併推送，詳見 workflow 檔案內註解。
 
 ---
 

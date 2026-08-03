@@ -89,9 +89,15 @@ memberPaymentsRouter.post('/', (req, res) => {
   const paidAt = paid ? new Date().toISOString() : null;
   const amount = cycle.amount_per_member || 0;
 
-  db.prepare(
-    'INSERT INTO member_payments (id, billing_cycle_id, member_id, account_id, amount, paid, paid_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(id, body.billing_cycle_id, body.member_id, subscription.account_id, amount, paid ? 1 : 0, paidAt, new Date().toISOString());
+  const tx = db.transaction(() => {
+    db.prepare(
+      'INSERT INTO member_payments (id, billing_cycle_id, member_id, account_id, amount, paid, paid_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, body.billing_cycle_id, body.member_id, subscription.account_id, amount, paid ? 1 : 0, paidAt, new Date().toISOString());
+    // members.payment_status 是「這個成員目前繳費狀態」的通用顯示欄位（在「訂閱關係對應」頁面看到的那個），
+    // 這裡以 member_payments（每個收款週期各自的正式紀錄）為準，寫入時一併同步，避免兩邊顯示不一致。
+    db.prepare('UPDATE members SET payment_status = ? WHERE id = ?').run(paid ? 1 : 0, body.member_id);
+  });
+  tx();
 
   logAudit({
     actionType: 'CREATE',
@@ -135,7 +141,11 @@ memberPaymentsRouter.put('/', (req, res) => {
     paidAt = null;
   }
 
-  db.prepare('UPDATE member_payments SET paid = ?, paid_at = ? WHERE id = ?').run(paid ? 1 : 0, paidAt, id);
+  const tx = db.transaction(() => {
+    db.prepare('UPDATE member_payments SET paid = ?, paid_at = ? WHERE id = ?').run(paid ? 1 : 0, paidAt, id);
+    db.prepare('UPDATE members SET payment_status = ? WHERE id = ?').run(paid ? 1 : 0, existingPayment.member_id);
+  });
+  tx();
 
   logAudit({
     actionType: 'UPDATE',
