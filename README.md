@@ -77,7 +77,7 @@ docker compose up -d --build
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-啟動後打開 `http://<你的VPS>:3000`，用 `.env` 裡設定的帳密登入。
+啟動後打開 `http://<你的VPS>:<PANEL_APP_PORT_HTTP，預設 28174>`，用 `.env` 裡設定的帳密登入。
 
 資料庫存在 named volume `subscription-manager-data`，容器重建、image 更新都不會遺失資料。
 
