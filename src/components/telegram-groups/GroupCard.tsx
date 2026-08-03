@@ -80,7 +80,7 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
           <HStack gap={2}>
             <Box as={Calendar} w={4} h={4} color="fg.muted" />
             <Text fontSize="sm" color="fg.muted">
-              每月 {group.billing_day} 日扣費
+              {new Date(group.start_date).toLocaleDateString()} 起收款
             </Text>
           </HStack>
           <Text fontSize="sm" color="fg.muted">

@@ -4,7 +4,7 @@ export interface TelegramGroup {
   id: string;
   name: string;
   telegram_link: string | null;
-  billing_day: number; // 1-31
+  start_date: string; // 開始收款日期（錨點），跟 billing_cycle_type 一起決定往後的收款週期
   billing_cycle_type: 'monthly' | 'biannually' | 'yearly';
   notes: string | null;
   created_at: string;
@@ -72,7 +72,7 @@ export interface Member {
 export interface CreateGroupRequest {
   name: string;
   telegram_link?: string;
-  billing_day: number;
+  start_date: string;
   billing_cycle_type: 'monthly' | 'biannually' | 'yearly';
   notes?: string;
 }
@@ -80,7 +80,7 @@ export interface CreateGroupRequest {
 export interface UpdateGroupRequest {
   name?: string;
   telegram_link?: string;
-  billing_day?: number;
+  start_date?: string;
   billing_cycle_type?: 'monthly' | 'biannually' | 'yearly';
   notes?: string;
 }

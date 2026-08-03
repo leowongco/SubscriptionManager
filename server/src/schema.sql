@@ -69,14 +69,14 @@ CREATE TABLE IF NOT EXISTS telegram_groups (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   telegram_link TEXT,
-  billing_day INTEGER DEFAULT 6,
+  -- 開始收款日期（錨點）。跟 billing_cycle_type 一起決定往後的收款週期，
+  -- 取代舊的「每月第 X 號」欄位——那個概念只適用月費，套用到半年/年費上會矛盾。
+  start_date TEXT,
   billing_cycle_type TEXT DEFAULT 'biannual',
   notes TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX IF NOT EXISTS idx_telegram_groups_billing_day ON telegram_groups(billing_day);
 
 CREATE TABLE IF NOT EXISTS billing_cycles (
   id TEXT PRIMARY KEY,

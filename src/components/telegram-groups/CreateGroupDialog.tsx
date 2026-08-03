@@ -27,10 +27,14 @@ interface CreateGroupDialogProps {
     id: string;
     name: string;
     telegram_link: string | null;
-    billing_day: number;
+    start_date: string;
     billing_cycle_type: 'monthly' | 'biannually' | 'yearly';
     notes: string | null;
   } | null;
+}
+
+function getTodayString() {
+  return new Date().toISOString().split('T')[0];
 }
 
 export default function CreateGroupDialog({
@@ -41,7 +45,7 @@ export default function CreateGroupDialog({
 }: CreateGroupDialogProps) {
   const [name, setName] = useState(editingGroup?.name || '');
   const [telegramLink, setTelegramLink] = useState(editingGroup?.telegram_link || '');
-  const [billingDay, setBillingDay] = useState(editingGroup?.billing_day?.toString() || '1');
+  const [startDate, setStartDate] = useState(editingGroup?.start_date?.split('T')[0] || getTodayString());
   const [billingCycleType, setBillingCycleType] = useState<'monthly' | 'biannually' | 'yearly'>(
     editingGroup?.billing_cycle_type || 'monthly'
   );
@@ -49,7 +53,7 @@ export default function CreateGroupDialog({
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
+    if (!name.trim() || !startDate) {
       return;
     }
 
@@ -58,7 +62,7 @@ export default function CreateGroupDialog({
       await onSubmit({
         name: name.trim(),
         telegram_link: telegramLink.trim() || undefined,
-        billing_day: parseInt(billingDay),
+        start_date: startDate,
         billing_cycle_type: billingCycleType,
         notes: notes.trim() || undefined,
       });
@@ -140,9 +144,9 @@ export default function CreateGroupDialog({
               />
             </VStack>
 
-            {/* 扣費日和計費週期 - 使用 Grid */}
+            {/* 開始收款日期和計費週期 - 使用 Grid */}
             <HStack gap={4}>
-              {/* 扣費日 */}
+              {/* 開始收款日期 */}
               <VStack align="start" gap={2} flex={1}>
                 <Text
                   fontSize="xs"
@@ -151,28 +155,22 @@ export default function CreateGroupDialog({
                   letterSpacing="wider"
                   color="fg.muted"
                 >
-                  扣費日 <Text as="span" color="fg.error">*</Text>
+                  開始收款日期 <Text as="span" color="fg.error">*</Text>
                 </Text>
-                <NativeSelectRoot>
-                  <NativeSelectField
-                    value={billingDay}
-                    onChange={(e) => setBillingDay(e.target.value)}
-                    bg="bg.subtle"
-                    borderColor="border.default"
-                    rounded="xl"
-                    h={12}
-                    _focus={{
-                      borderColor: 'blue.400',
-                      boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
-                    }}
-                  >
-                    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                      <option key={day} value={day}>
-                        每月 {day} 號
-                      </option>
-                    ))}
-                  </NativeSelectField>
-                </NativeSelectRoot>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  bg="bg.subtle"
+                  border="1px"
+                  borderColor="border.default"
+                  rounded="xl"
+                  h={12}
+                  _focus={{
+                    borderColor: 'blue.400',
+                    boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                  }}
+                />
               </VStack>
 
               {/* 計費週期 */}
@@ -206,6 +204,9 @@ export default function CreateGroupDialog({
                 </NativeSelectRoot>
               </VStack>
             </HStack>
+            <Text fontSize="10px" color="fg.muted">
+              「開始收款日期」是第一次收款的錨點日期，之後每次收款週期都從這天往後推算（例如每半年就是這天、+6個月、+12個月⋯），不是「每月固定幾號」。
+            </Text>
 
             {/* 備註 */}
             <VStack align="start" gap={2}>

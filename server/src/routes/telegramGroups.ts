@@ -5,7 +5,6 @@ import { logAudit } from '../lib/audit';
 export const telegramGroupsRouter = Router();
 
 telegramGroupsRouter.get('/', (req, res) => {
-  const billingDay = req.query.billing_day as string | undefined;
   const billingCycleType = req.query.billing_cycle_type as string | undefined;
   const groupId = req.query.id as string | undefined;
 
@@ -52,10 +51,6 @@ telegramGroupsRouter.get('/', (req, res) => {
   const conditions: string[] = [];
   const params: any[] = [];
 
-  if (billingDay) {
-    conditions.push('tg.billing_day = ?');
-    params.push(parseInt(billingDay));
-  }
   if (billingCycleType) {
     conditions.push('tg.billing_cycle_type = ?');
     params.push(billingCycleType);
@@ -75,8 +70,8 @@ telegramGroupsRouter.post('/', (req, res) => {
   if (!body.name) {
     return res.status(400).json({ error: '缺少必填字段: name' });
   }
-  if (!body.billing_day || body.billing_day < 1 || body.billing_day > 31) {
-    return res.status(400).json({ error: '扣費日必須在 1-31 之間' });
+  if (!body.start_date) {
+    return res.status(400).json({ error: '缺少必填字段: start_date（開始收款日期）' });
   }
   if (!body.billing_cycle_type || !['monthly', 'biannually', 'yearly'].includes(body.billing_cycle_type)) {
     return res.status(400).json({ error: '收費週期必須是 monthly, biannually 或 yearly' });
@@ -86,14 +81,14 @@ telegramGroupsRouter.post('/', (req, res) => {
   const now = new Date().toISOString();
 
   db.prepare(
-    'INSERT INTO telegram_groups (id, name, telegram_link, billing_day, billing_cycle_type, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(id, body.name, body.telegram_link || null, body.billing_day, body.billing_cycle_type, body.notes || null, now);
+    'INSERT INTO telegram_groups (id, name, telegram_link, start_date, billing_cycle_type, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, body.name, body.telegram_link || null, body.start_date, body.billing_cycle_type, body.notes || null, now);
 
   logAudit({
     actionType: 'CREATE',
     entityType: 'telegram_group',
     entityId: id,
-    newValue: { name: body.name, billing_day: body.billing_day, billing_cycle_type: body.billing_cycle_type },
+    newValue: { name: body.name, start_date: body.start_date, billing_cycle_type: body.billing_cycle_type },
   });
 
   const group = db.prepare('SELECT * FROM telegram_groups WHERE id = ?').get(id);
@@ -108,21 +103,18 @@ telegramGroupsRouter.put('/', (req, res) => {
   const existingGroup = db.prepare('SELECT * FROM telegram_groups WHERE id = ?').get(id) as any;
   if (!existingGroup) return res.status(404).json({ error: '群組不存在' });
 
-  if (body.billing_day && (body.billing_day < 1 || body.billing_day > 31)) {
-    return res.status(400).json({ error: '扣費日必須在 1-31 之間' });
-  }
   if (body.billing_cycle_type && !['monthly', 'biannually', 'yearly'].includes(body.billing_cycle_type)) {
     return res.status(400).json({ error: '收費週期必須是 monthly, biannually 或 yearly' });
   }
 
   db.prepare(`
     UPDATE telegram_groups
-    SET name = ?, telegram_link = ?, billing_day = ?, billing_cycle_type = ?, notes = ?
+    SET name = ?, telegram_link = ?, start_date = ?, billing_cycle_type = ?, notes = ?
     WHERE id = ?
   `).run(
     body.name || existingGroup.name,
     body.telegram_link || existingGroup.telegram_link,
-    body.billing_day || existingGroup.billing_day,
+    body.start_date || existingGroup.start_date,
     body.billing_cycle_type || existingGroup.billing_cycle_type,
     body.notes || existingGroup.notes,
     id

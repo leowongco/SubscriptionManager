@@ -565,9 +565,24 @@ export default function Accounts() {
                         </VStack>
                         <VStack align="start" gap={0}>
                             <Text fontSize="sm" color="fg.muted">總餘額</Text>
-                            <Text fontSize="2xl" fontWeight="bold" color="fg.success">
-                                ${accounts.reduce((sum, a) => sum + (a.balance || 0), 0).toFixed(2)}
-                            </Text>
+                            {(() => {
+                                const totalsByCurrency = Object.entries(
+                                    accounts.reduce((acc, a) => {
+                                        const cur = a.currency || 'HKD';
+                                        acc[cur] = (acc[cur] || 0) + (a.balance || 0);
+                                        return acc;
+                                    }, {} as Record<string, number>)
+                                );
+                                // 不同帳號可能設定不同地區/貨幣，直接把原始數字加總沒有意義（例如 TRY + HKD），
+                                // 所以按貨幣分開列出，而不是硬套一個「$」符號當成同一種貨幣加總。
+                                return (
+                                    <Text fontSize={totalsByCurrency.length > 1 ? 'lg' : '2xl'} fontWeight="bold" color="fg.success">
+                                        {totalsByCurrency.length === 0
+                                            ? formatCurrency(0)
+                                            : totalsByCurrency.map(([cur, sum]) => formatCurrency(sum, cur)).join(' · ')}
+                                    </Text>
+                                );
+                            })()}
                         </VStack>
                         <VStack align="start" gap={0}>
                             <Text fontSize="sm" color="fg.muted">餘額不足</Text>

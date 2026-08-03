@@ -14,6 +14,20 @@ db.pragma('foreign_keys = ON');
 const schemaPath = path.join(__dirname, 'schema.sql');
 db.exec(fs.readFileSync(schemaPath, 'utf-8'));
 
+// schema.sql 只用 CREATE TABLE IF NOT EXISTS，對已經部署過、資料表已存在的機器不會生效，
+// 所以後續新增欄位要在這裡用 ALTER TABLE 補上，才能套用到已經在跑的正式環境資料庫。
+function columnExists(table: string, column: string): boolean {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  return columns.some((c) => c.name === column);
+}
+
+function migrate() {
+  if (!columnExists('telegram_groups', 'start_date')) {
+    db.exec('ALTER TABLE telegram_groups ADD COLUMN start_date TEXT');
+  }
+}
+migrate();
+
 export function newId(): string {
   return randomUUID();
 }

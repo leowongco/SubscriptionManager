@@ -782,6 +782,8 @@ export default function Mapping() {
                             position="relative"
                             zIndex={10}
                             bg="bg.subtle"
+                            maxH="560px"
+                            overflowY="auto"
                         >
                             {(account.subscriptions?.length || 0) === 0 && (
                                 <Text color="fg.muted" fontSize="xs" textAlign="center" py={4}>

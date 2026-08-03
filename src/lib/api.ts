@@ -124,9 +124,8 @@ export const api = {
     }, '移除訂閱失敗'),
 
     // Telegram Groups
-    getTelegramGroups: (filters?: { billing_day?: number; billing_cycle_type?: string }) => {
+    getTelegramGroups: (filters?: { billing_cycle_type?: string }) => {
         const params = new URLSearchParams();
-        if (filters?.billing_day) params.append('billing_day', filters.billing_day.toString());
         if (filters?.billing_cycle_type) params.append('billing_cycle_type', filters.billing_cycle_type);
         const queryString = params.toString();
         return fetchWithErrorHandling(

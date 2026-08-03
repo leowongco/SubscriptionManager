@@ -100,7 +100,7 @@ export default function TelegramGroupDetail() {
       `📱 ${group.name} 收款通知`,
       '',
       `📅 收費週期：${cycleLabel[group.billing_cycle_type]}`,
-      `💳 扣費日：每月 ${group.billing_day} 日`,
+      `💳 開始收款日期：${new Date(group.start_date).toLocaleDateString()}`,
       '',
       '👥 成員付款狀態：',
     ];
@@ -264,10 +264,10 @@ export default function TelegramGroupDetail() {
               <Box as={Calendar} w={8} h={8} color="focus.ring" />
               <VStack align="start" gap={1}>
                 <Text fontSize="sm" color="fg.muted">
-                  扣費日
+                  開始收款日期
                 </Text>
                 <Text fontSize="xl" fontWeight="bold" color="fg.default">
-                  每月 {group.billing_day} 日
+                  {new Date(group.start_date).toLocaleDateString()}
                 </Text>
               </VStack>
             </HStack>
