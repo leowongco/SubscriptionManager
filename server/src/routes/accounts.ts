@@ -115,20 +115,31 @@ accountsRouter.delete('/', (req, res) => {
   if (!id) return res.status(400).json({ error: 'Missing Account ID' });
 
   const existing = db.prepare('SELECT * FROM accounts WHERE id = ?').get(id) as any;
+  if (!existing) return res.status(404).json({ error: '帳號不存在' });
 
-  db.prepare('DELETE FROM accounts WHERE id = ?').run(id);
-
-  if (existing) {
-    logAudit({
-      actionType: 'account_delete',
-      entityType: 'account',
-      entityId: id,
-      oldValue: { apple_id: existing.apple_id, balance: existing.balance },
-      reason: 'Account deleted',
-      ipAddress: getClientIP(req),
-      userAgent: getUserAgent(req),
-    });
+  const subscriptionCount = (db.prepare('SELECT COUNT(*) as c FROM subscriptions WHERE account_id = ?').get(id) as any).c;
+  if (subscriptionCount > 0) {
+    return res.status(400).json({ error: `無法刪除帳號，仍有 ${subscriptionCount} 筆訂閱關聯到此帳號，請先移除訂閱。` });
   }
+
+  const tx = db.transaction(() => {
+    // history、balance_adjustments 是這個帳號自己的歷史紀錄（不是獨立業務資料），
+    // 帳號都要刪了就一併清掉，避免外鍵限制卡住刪除。
+    db.prepare('DELETE FROM history WHERE account_id = ?').run(id);
+    db.prepare('DELETE FROM balance_adjustments WHERE account_id = ?').run(id);
+    db.prepare('DELETE FROM accounts WHERE id = ?').run(id);
+  });
+  tx();
+
+  logAudit({
+    actionType: 'account_delete',
+    entityType: 'account',
+    entityId: id,
+    oldValue: { apple_id: existing.apple_id, balance: existing.balance },
+    reason: 'Account deleted',
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req),
+  });
 
   res.json({ message: 'Account deleted successfully' });
 });

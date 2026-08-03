@@ -35,6 +35,11 @@ servicesRouter.delete('/', (req, res) => {
   const id = req.query.id as string | undefined;
   if (!id) return res.status(400).send('Missing Service ID');
 
+  const subscriptionCount = (db.prepare('SELECT COUNT(*) as c FROM subscriptions WHERE service_id = ?').get(id) as any).c;
+  if (subscriptionCount > 0) {
+    return res.status(400).json({ error: `無法刪除服務，仍有 ${subscriptionCount} 筆訂閱使用這個服務，請先移除訂閱。` });
+  }
+
   db.prepare('DELETE FROM services WHERE id = ?').run(id);
   res.json({ message: 'Service deleted successfully' });
 });

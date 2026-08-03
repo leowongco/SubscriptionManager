@@ -44,6 +44,11 @@ membersRouter.delete('/', (req, res) => {
   const id = req.query.id as string | undefined;
   if (!id) return res.status(400).send('Missing Member ID');
 
+  const paymentCount = (db.prepare('SELECT COUNT(*) as c FROM member_payments WHERE member_id = ?').get(id) as any).c;
+  if (paymentCount > 0) {
+    return res.status(400).json({ error: `無法刪除成員，仍有 ${paymentCount} 筆繳費紀錄，請先在收款週期裡處理。` });
+  }
+
   db.prepare('DELETE FROM members WHERE id = ?').run(id);
   res.json({ message: 'Member deleted successfully' });
 });
