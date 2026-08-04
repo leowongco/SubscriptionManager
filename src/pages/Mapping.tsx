@@ -16,7 +16,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp, MessageCircle } from 'lucide-react';
+import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp, MessageCircle, AlertCircle } from 'lucide-react';
 import {
     Box,
     VStack,
@@ -31,6 +31,7 @@ import {
     Field,
     NativeSelectRoot,
     NativeSelectField,
+    Icon,
 } from '@chakra-ui/react';
 import {
     DialogRoot,
@@ -229,7 +230,7 @@ export default function Mapping() {
                     gap={6}
                 >
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.emphasized" textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.emphasized">
                             訂閱關係對應
                         </Text>
                         <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
@@ -248,7 +249,7 @@ export default function Mapping() {
                         w={{ base: 'full', md: 'auto' }}
                         position="relative"
                         zIndex={10}
-                        colorPalette="green"
+                        colorPalette="accent"
                         rounded="xl"
                         h={{ base: 11, md: 12 }}
                         px={6}
@@ -401,7 +402,7 @@ export default function Mapping() {
                         overflow="hidden"
                         position="relative"
                         rounded="xl"
-                        _hover={{ shadow: '2xl', borderColor: 'emerald.500/30' }}
+                        _hover={{ shadow: '2xl', borderColor: 'green.500/30' }}
                         transition="all"
                         display="flex"
                         flexDirection="column"
@@ -410,7 +411,7 @@ export default function Mapping() {
                         <Box
                             position="absolute"
                             inset={0}
-                            bg="emerald.500/5"
+                            bg="green.500/5"
                             opacity={0}
                             _groupHover={{ opacity: 1 }}
                             transition="opacity"
@@ -418,7 +419,7 @@ export default function Mapping() {
                         />
                         
                         {/* Top gradient bar */}
-                        <Box h={1} w="full" bgGradient="to-r" gradientFrom="emerald.500" gradientTo="teal.500" />
+                        <Box h={1} w="full" bgGradient="to-r" gradientFrom="green.500" gradientTo="teal.500" />
 
                         {/* Header */}
                         <Box
@@ -437,7 +438,7 @@ export default function Mapping() {
                                         <Box as={getAccountTypeMeta(account.account_type).icon} w={3} h={3} mr={1} display="inline-block" verticalAlign="middle" />
                                         {getAccountTypeMeta(account.account_type).label}
                                     </Badge>
-                                    <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" color="fg.default" display="flex" alignItems="center" gap={2} textShadow="md" truncate>
+                                    <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" color="fg.default" display="flex" alignItems="center" gap={2} truncate>
                                         {account.apple_id}
                                     </Text>
                                     <Box mt={1}>
@@ -472,9 +473,9 @@ export default function Mapping() {
                                         fontWeight="black"
                                         color="fg.default"
                                         fontFamily="mono"
-                                        textShadow="sm"
+                                       
                                         cursor="pointer"
-                                        _hover={{ color: 'emerald.400' }}
+                                        _hover={{ color: 'green.400' }}
                                         transition="color"
                                         onClick={() => {
                                             const newBal = prompt('Update Balance:', account.balance.toString());
@@ -497,9 +498,9 @@ export default function Mapping() {
                                     size="sm"
                                     h={7}
                                     px={2}
-                                    borderColor="emerald.500/20"
-                                    color="emerald.400"
-                                    _hover={{ bg: 'emerald.500/10' }}
+                                    borderColor="green.500/20"
+                                    color="green.400"
+                                    _hover={{ bg: 'green.500/10' }}
                                     fontSize="10px"
                                     onClick={() => {
                                         setSelectedSubAccountId(account.id);
@@ -549,7 +550,7 @@ export default function Mapping() {
                                                             _last={{ mb: 0 }}
                                                         >
                                                             <Box>
-                                                                <Text fontSize="sm" fontWeight="semibold" color="emerald.300">
+                                                                <Text fontSize="sm" fontWeight="semibold" color="green.300">
                                                                     {sub.service_name}{' '}
                                                                     <Text as="span" fontSize="10px" color="fg.muted" fontWeight="normal">
                                                                         ({sub.group_name})
@@ -585,7 +586,7 @@ export default function Mapping() {
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     color="fg.muted"
-                                                                    _hover={{ color: 'emerald.400', bg: 'emerald.500/10' }}
+                                                                    _hover={{ color: 'green.400', bg: 'green.500/10' }}
                                                                     onClick={() => setSubscriptionForm({ ...sub })}
                                                                     aria-label="編輯訂閱"
                                                                 >
@@ -649,9 +650,12 @@ export default function Mapping() {
                                                                 僅顯示 {getRegionLabel(account.currency)} 計價的服務，此帳號地區決定扣款貨幣
                                                             </Text>
                                                             {services && services.filter(s => s.currency === (account.currency || 'HKD')).length === 0 && (
-                                                                <Text fontSize="10px" color="fg.warning" mt={0.5}>
-                                                                    ⚠ 目前沒有 {getRegionLabel(account.currency)} 計價的服務，請先到「服務與定價管理」新增
-                                                                </Text>
+                                                                <HStack gap={1} color="fg.warning" mt={0.5} align="start">
+                                                                    <Icon as={AlertCircle} boxSize={3} mt="1px" flexShrink={0} />
+                                                                    <Text fontSize="10px">
+                                                                        目前沒有 {getRegionLabel(account.currency)} 計價的服務，請先到「服務與定價管理」新增
+                                                                    </Text>
+                                                                </HStack>
                                                             )}
                                                         </Field.Root>
 
@@ -787,11 +791,11 @@ export default function Mapping() {
                                                         <Button
                                                             type="submit"
                                                             flex={1}
-                                                            bg="emerald.600/20"
-                                                            color="emerald.400"
+                                                            bg="green.600/20"
+                                                            color="green.400"
                                                             border="1px solid"
-                                                            borderColor="emerald.500/30"
-                                                            _hover={{ bg: 'emerald.500', color: 'white' }}
+                                                            borderColor="green.500/30"
+                                                            _hover={{ bg: 'green.500', color: 'white' }}
                                                             rounded="xl"
                                                             h={10}
                                                             fontSize="sm"
@@ -832,7 +836,7 @@ export default function Mapping() {
                                             <Text fontSize="sm" fontWeight="bold" color="fg.default" letterSpacing="wide">
                                                 {sub.service_name}
                                             </Text>
-                                            <Text fontSize="10px" color="emerald.400" fontFamily="mono">
+                                            <Text fontSize="10px" color="green.400" fontFamily="mono">
                                                 {sub.group_name}
                                             </Text>
                                             {sub.service_account && (
@@ -862,8 +866,8 @@ export default function Mapping() {
                                             size="sm"
                                             h={6}
                                             px={2}
-                                            color="emerald.400"
-                                            _hover={{ color: 'emerald.300', bg: 'emerald.500/10' }}
+                                            color="green.400"
+                                            _hover={{ color: 'green.300', bg: 'green.500/10' }}
                                             fontSize="10px"
                                             onClick={() => {
                                                 setSelectedSubscriptionId(sub.id);
@@ -976,7 +980,7 @@ export default function Mapping() {
                                                 rounded="lg"
                                                 border="1px solid"
                                                 borderColor="border.default"
-                                                _hover={{ borderColor: 'emerald.500/30', bg: 'bg.hover' }}
+                                                _hover={{ borderColor: 'green.500/30', bg: 'bg.hover' }}
                                                 transition="all"
                                             >
                                                 <HStack gap={2} overflow="hidden">
@@ -986,8 +990,8 @@ export default function Mapping() {
                                                         p={0}
                                                         minW="auto"
                                                         h="auto"
-                                                        color={member.payment_status ? 'emerald.500' : 'gray.600'}
-                                                        _hover={{ color: member.payment_status ? 'emerald.400' : 'gray.500' }}
+                                                        color={member.payment_status ? 'green.500' : 'gray.600'}
+                                                        _hover={{ color: member.payment_status ? 'green.400' : 'gray.500' }}
                                                         onClick={() => togglePaymentStatus(member)}
                                                         aria-label={member.payment_status ? '標記為未繳費' : '標記為已繳費'}
                                                     >
@@ -1042,8 +1046,8 @@ export default function Mapping() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                color="emerald.400"
-                                _hover={{ color: 'emerald.300', bg: 'emerald.500/10' }}
+                                color="green.400"
+                                _hover={{ color: 'green.300', bg: 'green.500/10' }}
                                 fontSize={{ base: '10px', md: 'xs' }}
                                 fontWeight="bold"
                                 letterSpacing="wider"

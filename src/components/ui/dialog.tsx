@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Dialog, Portal, Box } from "@chakra-ui/react"
 import { keyframes } from "@emotion/react"
+import { X } from "lucide-react"
 import { useColorModeValue } from "@/components/ui/color-mode"
 
 // 動畫關鍵幀定義
@@ -137,9 +138,7 @@ const DialogCloseTrigger = React.forwardRef<
       asChild
     >
       {props.children || (
-        <Box as="span" fontSize="lg" fontWeight="bold" lineHeight="1">
-          ✕
-        </Box>
+        <Box as={X} w={4} h={4} />
       )}
     </Dialog.CloseTrigger>
   )

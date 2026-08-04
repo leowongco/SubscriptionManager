@@ -303,7 +303,7 @@ export default function Recharge() {
             <Box p={2} bg="bg.subtle" rounded="xl">
               <Icon as={CreditCard} color="blue.400" boxSize={6} />
             </Box>
-            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default">
               批次加值中心
             </Text>
           </HStack>
@@ -523,7 +523,7 @@ export default function Recharge() {
           {/* 預覽按鈕 */}
           <HStack justify="flex-end">
             <Button
-              colorPalette="blue"
+              colorPalette="accent"
               onClick={handlePreview}
               disabled={isProcessing || selectedAccountIds.length === 0}
             >

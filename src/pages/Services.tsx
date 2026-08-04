@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowRight } from 'lucide-react';
 import {
     Box,
     VStack,
@@ -17,6 +17,7 @@ import {
     NativeSelectField,
     Table,
     Spinner,
+    Icon,
 } from '@chakra-ui/react';
 import {
     DialogRoot,
@@ -98,7 +99,7 @@ export default function Services() {
             >
                 <Flex justify="space-between" alignItems="center">
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.emphasized" textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.emphasized">
                             服務與定價維護
                         </Text>
                         <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium">
@@ -110,7 +111,7 @@ export default function Services() {
                         onClick={openNew}
                         position="relative"
                         zIndex={10}
-                        colorPalette="blue"
+                        colorPalette="accent"
                         rounded="xl"
                         h={12}
                         px={6}
@@ -392,8 +393,8 @@ export default function Services() {
                                                 border="1px solid"
                                                 borderColor="border.default"
                                             >
-                                                <Text color="fg.warning" fontWeight="black" fontFamily="mono" fontSize="sm" display="flex" alignItems="center" gap={1}>
-                                                    <Text as="span" opacity={0.5} fontSize="xs">➔</Text> {service.currency} {service.next_price.toFixed(2)}
+                                                <Text color="fg.warning" fontWeight="black" fontFamily="mono" fontVariantNumeric="tabular-nums" fontSize="sm" display="flex" alignItems="center" gap={1}>
+                                                    <Icon as={ArrowRight} boxSize={3} opacity={0.5} /> {service.currency} {service.next_price.toFixed(2)}
                                                 </Text>
                                                 <Text color="fg.muted" fontSize="10px" textTransform="uppercase" fontWeight="semibold" letterSpacing="wider">
                                                     生效日: {new Date(service.effective_date).toLocaleDateString()}

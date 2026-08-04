@@ -1,5 +1,6 @@
 import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react"
 import { semanticTokensConfig } from "./semantic-tokens"
+import { tokensConfig } from "./tokens"
 import {
   cardRecipe,
   inputRecipe,
@@ -74,6 +75,7 @@ const recipesConfig = defineConfig({
 // 建立完整的 theme system
 export const system = createSystem(
   defaultConfig,
+  tokensConfig,
   semanticTokensConfig,
   recipesConfig
 )

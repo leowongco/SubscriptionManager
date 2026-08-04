@@ -143,7 +143,7 @@ export default function TelegramGroups() {
       >
         <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
           <Box position="relative" zIndex={10}>
-            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
+            <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default">
               Telegram 群組管理
             </Text>
             <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
@@ -151,7 +151,7 @@ export default function TelegramGroups() {
             </Text>
           </Box>
           <Button
-            colorPalette="blue"
+            colorPalette="accent"
             onClick={handleCreate}
             rounded="xl"
             h={12}

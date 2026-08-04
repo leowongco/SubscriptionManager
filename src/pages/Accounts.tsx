@@ -237,7 +237,7 @@ export default function Accounts() {
             >
                 <Flex justify="space-between" alignItems="center" flexWrap="wrap" gap={4}>
                     <Box position="relative" zIndex={10}>
-                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
+                        <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default">
                             Apple ID 管理
                         </Text>
                         <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
@@ -256,7 +256,7 @@ export default function Accounts() {
                                 setNewAccountForm({ balance: 0, account_type: 'apple', currency: 'HKD' });
                                 setCreateDialogOpen(true);
                             }}
-                            colorPalette="blue"
+                            colorPalette="accent"
                             rounded="xl"
                             h={12}
                             px={6}
@@ -455,9 +455,12 @@ export default function Accounts() {
                                             </NativeSelectRoot>
                                             {(editAccountForm.subscriptions?.length || 0) > 0 &&
                                                 editAccountForm.currency !== accounts.find(a => a.id === editAccountForm.id)?.currency && (
-                                                <Text fontSize="xs" color="fg.warning" mt={1.5}>
-                                                    ⚠ 此帳號已有訂閱服務，變更地區不會自動換算現有訂閱的貨幣，請確認底下訂閱項目的計價貨幣一致。
-                                                </Text>
+                                                <HStack gap={1} color="fg.warning" mt={1.5} align="start">
+                                                    <Icon as={AlertCircle} boxSize={3.5} mt="1px" flexShrink={0} />
+                                                    <Text fontSize="xs">
+                                                        此帳號已有訂閱服務，變更地區不會自動換算現有訂閱的貨幣，請確認底下訂閱項目的計價貨幣一致。
+                                                    </Text>
+                                                </HStack>
                                             )}
                                         </Field.Root>
 

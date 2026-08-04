@@ -113,7 +113,7 @@ export default function Dashboard() {
                 transition="all 0.3s"
             >
                 <Box position="relative" zIndex={10}>
-                    <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default" textShadow="md">
+                    <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="black" letterSpacing="tight" color="fg.default">
                         數據中心儀表板
                     </Text>
                     <Text color="fg.muted" mt={2} fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" maxW="2xl">
@@ -157,8 +157,8 @@ export default function Dashboard() {
                         </Box>
                     </Flex>
                     <Box p={6} pt={0} position="relative" zIndex={10}>
-                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="fg.default" textShadow="sm" alignItems="baseline" gap={1.5}>
-                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="fg.muted" fontWeight="medium">HK$</Text>
+                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontFamily="mono" fontVariantNumeric="tabular-nums" fontWeight="bold" color="fg.default" alignItems="baseline" gap={1.5}>
+                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="fg.muted" fontWeight="medium" fontFamily="body">HK$</Text>
                             {totalBalanceHKD.toFixed(2)}
                         </Flex>
                         <Text fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" mt={2} fontWeight="medium">
@@ -197,9 +197,8 @@ export default function Dashboard() {
                         </Box>
                     </Flex>
                     <Box p={6} pt={0} position="relative" zIndex={10}>
-                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontWeight="black" color="fg.default" textShadow="sm" alignItems="baseline" gap={1.5}>
-                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="fg.muted" fontWeight="medium">≈</Text>
-                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="fg.muted" fontWeight="medium">HK$</Text>
+                        <Flex fontSize={{ base: '3xl', md: '4xl' }} fontFamily="mono" fontVariantNumeric="tabular-nums" fontWeight="bold" color="fg.default" alignItems="baseline" gap={1.5}>
+                            <Text fontSize={{ base: 'xl', md: '2xl' }} color="fg.muted" fontWeight="medium" fontFamily="body">≈ HK$</Text>
                             {monthlyExpenseHKD.toFixed(2)}
                         </Flex>
                         <Text fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" mt={2} fontWeight="medium">
@@ -304,10 +303,10 @@ export default function Dashboard() {
                                         </Text>
                                     </Flex>
                                     <Flex justify="space-between" alignItems="center" bg="bg.muted" p={2} rounded="lg" border="1px solid" borderColor="border.muted">
-                                        <Text fontSize="xs" color="fg.muted" textDecoration="line-through">
+                                        <Text fontSize="xs" fontFamily="mono" fontVariantNumeric="tabular-nums" color="fg.muted" textDecoration="line-through">
                                             {s.currency} {(s.base_price ?? 0).toFixed(2)}
                                         </Text>
-                                        <Flex alignItems="center" gap={1.5} color="fg.warning" fontWeight="black" fontSize={{ base: 'sm', md: 'md' }}>
+                                        <Flex alignItems="center" gap={1.5} color="fg.warning" fontWeight="bold" fontFamily="mono" fontVariantNumeric="tabular-nums" fontSize={{ base: 'sm', md: 'md' }}>
                                             <Box as={TrendingUp} w={3.5} h={3.5} />
                                             {s.currency} {s.next_price ? s.next_price.toFixed(2) : '0.00'}
                                         </Flex>

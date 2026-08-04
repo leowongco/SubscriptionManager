@@ -28,13 +28,15 @@ export default function Layout() {
     const textColor = useColorModeValue('gray.900', 'white');
     const sidebarBg = useColorModeValue('white', 'gray.800');
     const sidebarBorder = useColorModeValue('gray.200', 'gray.700');
-    const navItemBgActive = useColorModeValue('rgba(37, 99, 235, 0.1)', 'rgba(37, 99, 235, 0.1)');
-    const navItemColorActive = useColorModeValue('blue.600', 'blue.400');
+    const navItemBgActive = useColorModeValue('blue.50', 'blue.950');
+    const navItemColorActive = useColorModeValue('blue.600', 'blue.300');
+    const navItemBorderActive = useColorModeValue('blue.200', 'blue.800');
     const navItemColor = useColorModeValue('gray.600', 'gray.300');
     const navItemHoverBg = useColorModeValue('gray.100', 'gray.700');
     const navItemHoverColor = useColorModeValue('gray.900', 'white');
     const mobileHeaderBg = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(31, 41, 55, 0.8)');
     const drawerBg = useColorModeValue('white', 'gray.800');
+    const focusRingColor = useColorModeValue('blue.500', 'blue.400');
 
     // Close menu when route changes
     useEffect(() => {
@@ -111,11 +113,15 @@ export default function Layout() {
                                 bg={isActive(item.href) ? navItemBgActive : 'transparent'}
                                 color={isActive(item.href) ? navItemColorActive : navItemColor}
                                 border={isActive(item.href) ? '1px solid' : 'none'}
-                                borderColor={isActive(item.href) ? 'rgba(59, 130, 246, 0.2)' : 'transparent'}
-                                shadow={isActive(item.href) ? '0 0 15px rgba(59,130,246,0.1)' : 'none'}
+                                borderColor={isActive(item.href) ? navItemBorderActive : 'transparent'}
                                 _hover={{
                                     color: isActive(item.href) ? navItemColorActive : navItemHoverColor,
                                     bg: isActive(item.href) ? navItemBgActive : navItemHoverBg,
+                                }}
+                                _focusVisible={{
+                                    outline: '2px solid',
+                                    outlineColor: focusRingColor,
+                                    outlineOffset: '2px',
                                 }}
                             >
                                 <Box as={item.icon} w={5} h={5} />
@@ -126,7 +132,7 @@ export default function Layout() {
                 </VStack>
                 <Box p={6} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
                     <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
-                        Version 1.0 Pro Max
+                        Version 1.0.0
                     </Text>
                 </Box>
             </Box>
@@ -223,7 +229,7 @@ export default function Layout() {
                                                 bg={isActive(item.href) ? navItemBgActive : 'transparent'}
                                                 color={isActive(item.href) ? navItemColorActive : navItemColor}
                                                 border={isActive(item.href) ? '1px solid' : 'none'}
-                                                borderColor={isActive(item.href) ? 'rgba(59, 130, 246, 0.3)' : 'transparent'}
+                                                borderColor={isActive(item.href) ? navItemBorderActive : 'transparent'}
                                                 _hover={{
                                                     color: isActive(item.href) ? navItemColorActive : navItemHoverColor,
                                                     bg: isActive(item.href) ? navItemBgActive : navItemHoverBg,
@@ -238,7 +244,7 @@ export default function Layout() {
                             </DrawerBody>
                             <DrawerFooter p={6} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
                                 <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
-                                    Version 1.0 Pro Max
+                                    Version 1.0.0
                                 </Text>
                             </DrawerFooter>
                         </DrawerContent>
