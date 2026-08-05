@@ -272,7 +272,7 @@ export default function Mapping() {
                             <form onSubmit={handleAccountSubmit}>
                                 <VStack gap={{ base: 4, md: 5 }}>
                                     <Field.Root required>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: 'xs', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             帳號類型
                                         </Field.Label>
                                         <HStack gap={2} w="full">
@@ -296,7 +296,7 @@ export default function Mapping() {
                                     </Field.Root>
 
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: 'xs', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             {getAccountTypeMeta(accountForm.account_type).fieldLabel}
                                         </Field.Label>
                                         <Input
@@ -319,7 +319,7 @@ export default function Mapping() {
                                     </Field.Root>
 
                                     <Field.Root required>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: 'xs', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             帳號地區(決定往後加值/扣款貨幣)
                                         </Field.Label>
                                         <NativeSelectRoot>
@@ -340,7 +340,7 @@ export default function Mapping() {
                                     </Field.Root>
 
                                     <Field.Root>
-                                        <Field.Label fontSize={{ base: '10px', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                        <Field.Label fontSize={{ base: 'xs', md: 'sm' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                             初始餘額
                                         </Field.Label>
                                         <Input
@@ -449,7 +449,7 @@ export default function Mapping() {
                                                         key={sub.id}
                                                         colorPalette="green"
                                                         variant="subtle"
-                                                        fontSize="10px"
+                                                        fontSize="xs"
                                                         px={1.5}
                                                         py={0.5}
                                                     >
@@ -458,14 +458,14 @@ export default function Mapping() {
                                                 ))}
                                             </Flex>
                                         ) : (
-                                            <Text color="fg.muted" fontSize="10px">
+                                            <Text color="fg.muted" fontSize="xs">
                                                 無啟用中訂閱
                                             </Text>
                                         )}
                                     </Box>
                                 </Box>
                                 <VStack align="end" flexShrink={0}>
-                                    <Text fontSize="10px" color="fg.muted" fontWeight="semibold" letterSpacing="wider" fontFamily="mono">
+                                    <Text fontSize="xs" color="fg.muted" fontWeight="semibold" letterSpacing="wider" fontFamily="mono">
                                         {account.subscriptions?.[0]?.currency || '$'}
                                     </Text>
                                     <Text
@@ -501,7 +501,7 @@ export default function Mapping() {
                                     borderColor="green.500/20"
                                     color="green.400"
                                     _hover={{ bg: 'green.500/10' }}
-                                    fontSize="10px"
+                                    fontSize="xs"
                                     onClick={() => {
                                         setSelectedSubAccountId(account.id);
                                         setSubscriptionForm({ start_date: getTodayString() });
@@ -552,30 +552,30 @@ export default function Mapping() {
                                                             <Box>
                                                                 <Text fontSize="sm" fontWeight="semibold" color="green.300">
                                                                     {sub.service_name}{' '}
-                                                                    <Text as="span" fontSize="10px" color="fg.muted" fontWeight="normal">
+                                                                    <Text as="span" fontSize="xs" color="fg.muted" fontWeight="normal">
                                                                         ({sub.group_name})
                                                                     </Text>
                                                                 </Text>
-                                                                <Text fontSize="10px" color="fg.muted" fontFamily="mono">
+                                                                <Text fontSize="xs" color="fg.muted" fontFamily="mono">
                                                                     {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'}
-                                                                    <Badge ml={2} bg="bg.muted" fontSize="10px" color="fg.muted">
+                                                                    <Badge ml={2} bg="bg.muted" fontSize="xs" color="fg.muted">
                                                                         每月 {new Date(sub.start_date).getDate()} 日扣
                                                                     </Badge>
                                                                 </Text>
                                                                 {sub.service_account && (
-                                                                    <Badge mt={1} colorPalette="orange" fontSize="10px" fontFamily="mono">
+                                                                    <Badge mt={1} colorPalette="orange" fontSize="xs" fontFamily="mono">
                                                                         <Box as={KeyRound} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
                                                                         登入用：{sub.service_account}
                                                                     </Badge>
                                                                 )}
                                                                 {sub.next_price && sub.effective_date && (
-                                                                    <Badge mt={1} ml={1} colorPalette="yellow" fontSize="10px" fontFamily="mono">
+                                                                    <Badge mt={1} ml={1} colorPalette="yellow" fontSize="xs" fontFamily="mono">
                                                                         <Box as={TrendingUp} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
                                                                         {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
                                                                     </Badge>
                                                                 )}
                                                                 {(sub as any).telegram_group_name && (
-                                                                    <Badge mt={1} ml={1} colorPalette="blue" fontSize="10px" fontFamily="mono">
+                                                                    <Badge mt={1} ml={1} colorPalette="blue" fontSize="xs" fontFamily="mono">
                                                                         <Box as={MessageCircle} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
                                                                         {(sub as any).telegram_group_name}
                                                                     </Badge>
@@ -616,7 +616,7 @@ export default function Mapping() {
                                                 <VStack gap={4} pt={2} borderTop="1px solid" borderColor="border.default">
                                                     <Grid templateColumns="2" gap={4}>
                                                         <Field.Root disabled={!!subscriptionForm.id}>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 {subscriptionForm.id ? '服務(不可變更)' : '新增服務'}
                                                             </Field.Label>
                                                             <NativeSelectRoot disabled={!!subscriptionForm.id}>
@@ -646,13 +646,13 @@ export default function Mapping() {
                                                                         ))}
                                                                 </NativeSelectField>
                                                             </NativeSelectRoot>
-                                                            <Text fontSize="10px" color="fg.muted" mt={1}>
+                                                            <Text fontSize="xs" color="fg.muted" mt={1}>
                                                                 僅顯示 {getRegionLabel(account.currency)} 計價的服務，此帳號地區決定扣款貨幣
                                                             </Text>
                                                             {services && services.filter(s => s.currency === (account.currency || 'HKD')).length === 0 && (
                                                                 <HStack gap={1} color="fg.warning" mt={0.5} align="start">
                                                                     <Icon as={AlertCircle} boxSize={3} mt="1px" flexShrink={0} />
-                                                                    <Text fontSize="10px">
+                                                                    <Text fontSize="xs">
                                                                         目前沒有 {getRegionLabel(account.currency)} 計價的服務，請先到「服務與定價管理」新增
                                                                     </Text>
                                                                 </HStack>
@@ -660,7 +660,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 群組名稱
                                                             </Field.Label>
                                                             <Input
@@ -677,7 +677,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 Telegram 收款群組(選填)
                                                             </Field.Label>
                                                             <NativeSelectRoot>
@@ -696,13 +696,13 @@ export default function Mapping() {
                                                                     ))}
                                                                 </NativeSelectField>
                                                             </NativeSelectRoot>
-                                                            <Text fontSize="10px" color="fg.muted" mt={1}>
+                                                            <Text fontSize="xs" color="fg.muted" mt={1}>
                                                                 關聯後，這筆訂閱的成員才會出現在「Telegram 群組管理」的收款週期裡
                                                             </Text>
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 服務登入帳號(選填)
                                                             </Field.Label>
                                                             <Input
@@ -719,7 +719,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 扣款起始日
                                                             </Field.Label>
                                                             <Input
@@ -736,7 +736,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 調漲後價格(選填)
                                                             </Field.Label>
                                                             <Input
@@ -755,7 +755,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 調漲生效日(選填)
                                                             </Field.Label>
                                                             <Input
@@ -770,7 +770,7 @@ export default function Mapping() {
                                                             />
                                                         </Field.Root>
                                                     </Grid>
-                                                    <Text fontSize="10px" color="fg.muted" alignSelf="start">
+                                                    <Text fontSize="xs" color="fg.muted" alignSelf="start">
                                                         不同帳號訂閱同一服務的調漲時間可能不同，這裡設定的是「這個帳號」自己的調價計畫，跟「服務與定價管理」裡的預設值互相獨立。
                                                     </Text>
 
@@ -830,54 +830,42 @@ export default function Mapping() {
                                 </Text>
                             )}
                             {account.subscriptions?.map(sub => (
-                                <Box key={sub.id} mb={6} _last={{ mb: 0 }}>
-                                    <Flex justify="space-between" alignItems="center" borderBottom="1px solid" borderColor="border.default" pb={2} mb={3}>
-                                        <VStack align="start" gap={0.5}>
-                                            <Text fontSize="sm" fontWeight="bold" color="fg.default" letterSpacing="wide">
-                                                {sub.service_name}
+                                <Box key={sub.id} mb={5} pb={5} _last={{ mb: 0, pb: 0, borderBottom: 'none' }} borderBottom="1px solid" borderColor="border.muted">
+                                    <Flex justify="space-between" alignItems="start" gap={2} mb={2}>
+                                        <Box minW={0}>
+                                            <Flex alignItems="baseline" gap={2} flexWrap="wrap">
+                                                <Text fontSize="md" fontWeight="bold" color="fg.default">
+                                                    {sub.service_name}
+                                                </Text>
+                                                <Text fontSize="xs" color="fg.muted">
+                                                    {sub.group_name}
+                                                </Text>
+                                            </Flex>
+                                            <Text fontSize="sm" color="fg.muted" fontFamily="mono" fontVariantNumeric="tabular-nums" mt={0.5}>
+                                                {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'} · 每月{new Date(sub.start_date).getDate()}日扣款
                                             </Text>
-                                            <Text fontSize="10px" color="green.400" fontFamily="mono">
-                                                {sub.group_name}
-                                            </Text>
-                                            {sub.service_account && (
-                                                <Badge colorPalette="orange" fontSize="10px" fontFamily="mono" px={1.5}>
-                                                    <Box as={KeyRound} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
-                                                    登入用：{sub.service_account}
-                                                </Badge>
-                                            )}
-                                            {sub.next_price && sub.effective_date && (
-                                                <Badge colorPalette="yellow" fontSize="10px" fontFamily="mono" px={1.5}>
-                                                    <Box as={TrendingUp} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
-                                                    {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
-                                                </Badge>
-                                            )}
-                                            {(sub as any).telegram_group_name && (
-                                                <Badge colorPalette="blue" fontSize="10px" fontFamily="mono" px={1.5}>
-                                                    <Box as={MessageCircle} w={2.5} h={2.5} mr={1} display="inline-block" verticalAlign="middle" />
-                                                    {(sub as any).telegram_group_name}
-                                                </Badge>
-                                            )}
-                                        </VStack>
+                                        </Box>
                                         {/* ──────────────────────────────────────────────────────────────── */}
                                         {/* Member Dialog - 新增成員 */}
                                         {/* ──────────────────────────────────────────────────────────────── */}
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            h={6}
+                                            h={7}
                                             px={2}
+                                            flexShrink={0}
                                             color="green.400"
                                             _hover={{ color: 'green.300', bg: 'green.500/10' }}
-                                            fontSize="10px"
+                                            fontSize="xs"
                                             onClick={() => {
                                                 setSelectedSubscriptionId(sub.id);
                                                 setMemberForm({ payment_status: 0 });
                                                 setIsMemberOpen(true);
                                             }}
                                         >
-                                            <Box as={UserPlus} w={3} h={3} mr={1} /> 加人
+                                            <Box as={UserPlus} w={3.5} h={3.5} mr={1} /> 加人
                                         </Button>
-                                        
+
                                         <DialogRoot
                                             open={isMemberOpen && selectedSubscriptionId === sub.id}
                                             onOpenChange={(e) => {
@@ -894,7 +882,7 @@ export default function Mapping() {
                                                 <form onSubmit={handleMemberSubmit}>
                                                     <VStack gap={{ base: 4, md: 5 }}>
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 電子郵件 (Email) / 代號
                                                             </Field.Label>
                                                             <Input
@@ -916,7 +904,7 @@ export default function Mapping() {
                                                         </Field.Root>
 
                                                         <Field.Root>
-                                                            <Field.Label fontSize={{ base: '10px', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                                                            <Field.Label fontSize={{ base: 'xs', md: 'xs' }} color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                                 備註 (選填)
                                                             </Field.Label>
                                                             <Input
@@ -963,9 +951,45 @@ export default function Mapping() {
                                         </DialogRoot>
                                     </Flex>
 
-                                    <VStack gap={1.5}>
+                                    {(sub.service_account || (sub as any).telegram_group_name || (sub.next_price && sub.effective_date)) && (
+                                        <VStack align="start" gap={1} mb={3}>
+                                            {sub.service_account && (
+                                                <HStack gap={1.5} fontSize="xs" color="fg.muted">
+                                                    <Icon as={KeyRound} boxSize={3} flexShrink={0} />
+                                                    <Text>登入用：<Text as="span" fontFamily="mono">{sub.service_account}</Text></Text>
+                                                </HStack>
+                                            )}
+                                            {(sub as any).telegram_group_name && (
+                                                <HStack gap={1.5} fontSize="xs" color="fg.muted">
+                                                    <Icon as={MessageCircle} boxSize={3} flexShrink={0} />
+                                                    <Text>{(sub as any).telegram_group_name}</Text>
+                                                </HStack>
+                                            )}
+                                            {sub.next_price && sub.effective_date && (
+                                                <HStack
+                                                    gap={1.5}
+                                                    fontSize="xs"
+                                                    fontWeight="semibold"
+                                                    color="fg.warning"
+                                                    bg="orange.subtle"
+                                                    px={2}
+                                                    py={1}
+                                                    rounded="md"
+                                                    border="1px solid"
+                                                    borderColor="orange.emphasized"
+                                                >
+                                                    <Icon as={TrendingUp} boxSize={3} flexShrink={0} />
+                                                    <Text fontFamily="mono" fontVariantNumeric="tabular-nums">
+                                                        {new Date(sub.effective_date).toLocaleDateString()} 起調至 {sub.currency} {sub.next_price}
+                                                    </Text>
+                                                </HStack>
+                                            )}
+                                        </VStack>
+                                    )}
+
+                                    <VStack gap={1.5} align="stretch">
                                         {sub.members?.length === 0 && (
-                                            <Text fontSize="9px" color="fg.muted" textAlign="center" py={2} bg="bg.muted" rounded="lg" border="1px solid" borderColor="border.default">
+                                            <Text fontSize="xs" color="fg.muted" textAlign="center" py={2} bg="bg.muted" rounded="lg" border="1px solid" borderColor="border.default">
                                                 尚無成員
                                             </Text>
                                         )}
@@ -974,7 +998,7 @@ export default function Mapping() {
                                                 key={member.id}
                                                 justify="space-between"
                                                 alignItems="center"
-                                                py={1.5}
+                                                py={2}
                                                 px={3}
                                                 bg="bg.muted"
                                                 rounded="lg"
@@ -983,13 +1007,14 @@ export default function Mapping() {
                                                 _hover={{ borderColor: 'green.500/30', bg: 'bg.hover' }}
                                                 transition="all"
                                             >
-                                                <HStack gap={2} overflow="hidden">
+                                                <HStack gap={2.5} overflow="hidden" minW={0}>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
                                                         p={0}
                                                         minW="auto"
                                                         h="auto"
+                                                        flexShrink={0}
                                                         color={member.payment_status ? 'green.500' : 'gray.600'}
                                                         _hover={{ color: member.payment_status ? 'green.400' : 'gray.500' }}
                                                         onClick={() => togglePaymentStatus(member)}
@@ -997,16 +1022,16 @@ export default function Mapping() {
                                                     >
                                                         <Box
                                                             as={member.payment_status ? CheckCircle2 : Circle}
-                                                            w={4}
-                                                            h={4}
+                                                            w={5}
+                                                            h={5}
                                                         />
                                                     </Button>
-                                                    <VStack align="start" gap={0} truncate>
-                                                        <Text fontSize="xs" fontWeight="bold" color="fg.muted" fontFamily="mono" letterSpacing="tighter" truncate>
+                                                    <VStack align="start" gap={0} minW={0} flex={1}>
+                                                        <Text fontSize="sm" fontWeight="semibold" color="fg.default" fontFamily="mono" truncate w="full">
                                                             {member.email}
                                                         </Text>
                                                         {member.memo && (
-                                                            <Text fontSize="9px" color="fg.muted" truncate>
+                                                            <Text fontSize="xs" color="fg.muted" truncate w="full">
                                                                 {member.memo}
                                                             </Text>
                                                         )}
@@ -1048,7 +1073,7 @@ export default function Mapping() {
                                 size="sm"
                                 color="green.400"
                                 _hover={{ color: 'green.300', bg: 'green.500/10' }}
-                                fontSize={{ base: '10px', md: 'xs' }}
+                                fontSize={{ base: 'xs', md: 'xs' }}
                                 fontWeight="bold"
                                 letterSpacing="wider"
                                 onClick={() => {
@@ -1063,7 +1088,7 @@ export default function Mapping() {
                                 size="sm"
                                 color="fg.muted"
                                 _hover={{ color: 'red.400', bg: 'red.500/10' }}
-                                fontSize={{ base: '10px', md: 'xs' }}
+                                fontSize={{ base: 'xs', md: 'xs' }}
                                 fontWeight="bold"
                                 letterSpacing="wider"
                                 onClick={() => deleteAccount(account.id)}
