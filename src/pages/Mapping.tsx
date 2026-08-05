@@ -842,7 +842,9 @@ export default function Mapping() {
                                                 </Text>
                                             </Flex>
                                             <Text fontSize="sm" color="fg.muted" fontFamily="mono" fontVariantNumeric="tabular-nums" mt={0.5}>
-                                                {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'} · 每月{new Date(sub.start_date).getDate()}日扣款
+                                                {sub.currency} {sub.base_price} / {sub.cycle === 'yearly' ? '年' : '月'} · {sub.cycle === 'yearly'
+                                                    ? `每年${new Date(sub.start_date).getMonth() + 1}月${new Date(sub.start_date).getDate()}日扣款`
+                                                    : `每月${new Date(sub.start_date).getDate()}日扣款`}
                                             </Text>
                                         </Box>
                                         {/* ──────────────────────────────────────────────────────────────── */}
