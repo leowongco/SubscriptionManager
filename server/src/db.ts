@@ -25,6 +25,9 @@ function migrate() {
   if (!columnExists('telegram_groups', 'start_date')) {
     db.exec('ALTER TABLE telegram_groups ADD COLUMN start_date TEXT');
   }
+  if (!columnExists('subscriptions', 'last_deducted_date')) {
+    db.exec('ALTER TABLE subscriptions ADD COLUMN last_deducted_date TEXT');
+  }
 }
 migrate();
 

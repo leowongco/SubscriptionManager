@@ -51,6 +51,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   service_account TEXT,
   next_price REAL,
   effective_date DATETIME,
+  -- 記錄這筆訂閱最後一次被自動扣款的日期(YYYY-MM-DD)，讓 runSync 可以判斷「今天是否已經扣過」，
+  -- 避免手動觸發 /api/sync 跟每日排程在同一天各扣一次、變成重複扣款。
+  last_deducted_date TEXT,
   FOREIGN KEY (account_id) REFERENCES accounts(id),
   FOREIGN KEY (service_id) REFERENCES services(id)
 );
@@ -62,7 +65,8 @@ CREATE TABLE IF NOT EXISTS members (
   subscription_id TEXT,
   email TEXT NOT NULL,
   payment_status BOOLEAN DEFAULT 0,
-  memo TEXT
+  memo TEXT,
+  FOREIGN KEY (subscription_id) REFERENCES subscriptions(id)
 );
 
 CREATE TABLE IF NOT EXISTS telegram_groups (

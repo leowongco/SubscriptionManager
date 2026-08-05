@@ -92,16 +92,20 @@ accountsRouter.put('/', (req, res) => {
 
   const accountType = body.account_type || existing.account_type || 'apple';
 
+  // 餘額不透過這支「編輯帳號基本資料」端點修改——餘額異動一律要走
+  // PATCH /:id/balance 或 POST /balance-adjustments，才會留下原因、操作者、
+  // 專屬的 balance_adjustments 歷史紀錄。這裡即使 body 裡帶了 balance 也一律忽略，
+  // 避免「編輯帳號」表單變成一個沒有原因、沒有調整紀錄就能改餘額的後門。
   db.prepare(
-    'UPDATE accounts SET apple_id = ?, account_type = ?, balance = ?, currency = ? WHERE id = ?'
-  ).run(body.apple_id, accountType, body.balance, body.currency || 'HKD', id);
+    'UPDATE accounts SET apple_id = ?, account_type = ?, currency = ? WHERE id = ?'
+  ).run(body.apple_id, accountType, body.currency || 'HKD', id);
 
   logAudit({
     actionType: 'account_update',
     entityType: 'account',
     entityId: id,
-    oldValue: { apple_id: existing.apple_id, account_type: existing.account_type, balance: existing.balance, currency: existing.currency },
-    newValue: { apple_id: body.apple_id, account_type: accountType, balance: body.balance, currency: body.currency || 'HKD' },
+    oldValue: { apple_id: existing.apple_id, account_type: existing.account_type, currency: existing.currency },
+    newValue: { apple_id: body.apple_id, account_type: accountType, currency: body.currency || 'HKD' },
     reason: 'Account updated',
     ipAddress: getClientIP(req),
     userAgent: getUserAgent(req),

@@ -123,6 +123,11 @@ subscriptionsRouter.delete('/', (req, res) => {
 
   const existing = db.prepare('SELECT * FROM subscriptions WHERE id = ?').get(id) as any;
 
+  const memberCount = (db.prepare('SELECT COUNT(*) as c FROM members WHERE subscription_id = ?').get(id) as any).c;
+  if (memberCount > 0) {
+    return res.status(400).json({ error: `無法刪除訂閱，仍有 ${memberCount} 位成員關聯到此訂閱，請先移除成員。` });
+  }
+
   db.prepare('DELETE FROM subscriptions WHERE id = ?').run(id);
 
   if (existing) {

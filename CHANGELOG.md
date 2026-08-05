@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-05
+
+系統邏輯全面審視後的修正：起因是發現「編輯帳號」表單可以不留原因、不留紀錄地直接改掉餘額，順勢檢查了整套後端邏輯，一併修掉發現的其他資料正確性與安全問題。
+
+### Fixed
+- **「編輯帳號」不再能直接改餘額**：餘額欄位改成唯讀顯示，只能透過「調整餘額」留下原因與操作者，後端 `PUT /api/accounts` 也直接忽略 body 裡的 `balance`，避免帳目跟 `balance_adjustments` 歷史脫鉤
+- **自動扣款（sync）新增防重複機制**：手動觸發 `/api/sync` 若剛好跟每日排程落在同一天，過去會對同一筆訂閱重複扣款；現在每筆訂閱記錄 `last_deducted_date`，同一天只扣一次
+- **月費起扣日在短月份（29/30/31 號）不會再整月被跳過**：改成扣款日超過當月天數時，自動改在當月最後一天扣款
+- `services`（服務定價）、`members`（成員）的新增/修改/刪除補上完整的欄位驗證與 `audit_logs` 稽核紀錄——先前這兩張表完全沒有審計軌跡，改價格、加減成員查不到是誰、何時、改了什麼
+- 刪除「訂閱」時，若底下仍有成員會擋下來（先前會靜默留下孤兒成員紀錄）
+- 帳單週期建立後才加入的成員，現在會自動補上這一期的待繳紀錄，不會被漏掉催繳
+- 登入的帳密比對、Basic Auth 比對改用固定長度雜湊後再比較，避免明碼字串比較留下時序側信道
+- 移除未使用、且會讓歷史紀錄跟實際餘額脫鉤的 `POST /api/history` 端點
+
+### Added
+- 補上 6 個後端整合測試涵蓋以上修正（餘額編輯防護、sync 防重複扣款、服務驗證、訂閱刪除防護、帳單週期補登）
+
 ## [1.1.0] - 2026-08-05
 
 ### Added

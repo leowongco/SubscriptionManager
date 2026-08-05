@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createSessionToken, parseCookies, verifySessionToken, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from '../lib/session';
+import { createSessionToken, parseCookies, verifySessionToken, safeCompare, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from '../lib/session';
 
 export const authRouter = Router();
 
@@ -25,7 +25,8 @@ authRouter.post('/login', (req, res) => {
   }
 
   const { username, password } = req.body || {};
-  if (username !== appUser || password !== appPassword) {
+  if (typeof username !== 'string' || typeof password !== 'string' ||
+      !safeCompare(username, appUser) || !safeCompare(password, appPassword)) {
     return res.status(401).json({ error: '帳號或密碼錯誤' });
   }
 

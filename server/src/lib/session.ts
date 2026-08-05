@@ -45,6 +45,14 @@ export function verifySessionToken(token: string | undefined): boolean {
   return true;
 }
 
+// 用 hash 過的固定長度值再比對，避免用明碼字串直接 === 比較時，
+// 字串長度或前綴差異洩漏出「猜中前幾個字元」的時序側信道。
+export function safeCompare(a: string, b: string): boolean {
+  const aHash = crypto.createHash('sha256').update(a).digest();
+  const bHash = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(aHash, bHash);
+}
+
 export function parseCookies(header: string | undefined): Record<string, string> {
   const cookies: Record<string, string> = {};
   if (!header) return cookies;

@@ -468,18 +468,25 @@ export default function Accounts() {
                                             <Field.Label fontSize="xs" color="fg.muted" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
                                                 餘額
                                             </Field.Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={editAccountForm.balance ?? ''}
-                                                onChange={e => setEditAccountForm({ ...editAccountForm, balance: parseFloat(e.target.value) })}
+                                            <HStack
                                                 bg="bg.subtle"
                                                 borderColor="border.default"
+                                                border="1px solid"
                                                 rounded="xl"
                                                 h={12}
-                                                fontFamily="mono"
-                                                transition="all 0.2s"
-                                            />
+                                                px={4}
+                                                justify="space-between"
+                                            >
+                                                <Text fontFamily="mono" fontWeight="bold" color="fg.default">
+                                                    {formatCurrency(editAccountForm.balance || 0, editAccountForm.currency)}
+                                                </Text>
+                                                <Text fontSize="xs" color="fg.muted">
+                                                    請用「調整餘額」變更
+                                                </Text>
+                                            </HStack>
+                                            <Text fontSize="xs" color="fg.muted" mt={1.5}>
+                                                餘額不能在這裡直接改，需透過「調整餘額」留下原因與紀錄，避免帳目對不上。
+                                            </Text>
                                         </Field.Root>
 
                                         <Button

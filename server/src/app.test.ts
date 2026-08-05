@@ -15,6 +15,8 @@ process.env.APP_PASSWORD = 'testpass';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createApp } = require('./app');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+const { runSync } = require('./routes/sync');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const request = require('supertest');
 
 const app = createApp();
@@ -134,4 +136,89 @@ test('新增 Telegram 群組沒填開始收款日期要擋下來', async () => {
     .send({ name: 'No Start Date Group', billing_cycle_type: 'monthly' });
   assert.equal(res.status, 400);
   assert.match(res.body.error, /start_date/);
+});
+
+test('編輯帳號不能透過 PUT 直接改餘額，只有「調整餘額」流程可以改', async () => {
+  const accRes = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'no-balance-edit@icloud.com', currency: 'HKD', balance: 50 });
+  assert.equal(accRes.status, 201);
+
+  const putRes = await request(app).put('/api/accounts').auth(...AUTH)
+    .send({ id: accRes.body.id, apple_id: 'no-balance-edit@icloud.com', currency: 'HKD', balance: 99999 });
+  assert.equal(putRes.status, 200);
+
+  const listRes = await request(app).get('/api/accounts').auth(...AUTH);
+  const acc = listRes.body.find((a: any) => a.id === accRes.body.id);
+  assert.equal(acc.balance, 50);
+
+  const adjustRes = await request(app).patch(`/api/accounts/${accRes.body.id}/balance`).auth(...AUTH)
+    .send({ adjustment_amount: 10, reason: '測試調整', operator: 'tester' });
+  assert.equal(adjustRes.status, 200);
+  assert.equal(adjustRes.body.new_balance, 60);
+});
+
+test('同一天重複執行 sync 不會對同一筆訂閱重複扣款', async () => {
+  const accRes = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'sync-idem@icloud.com', currency: 'HKD', balance: 1000 });
+  const svcRes = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Idempotent Service', base_price: 100, currency: 'HKD', cycle: 'monthly' });
+  const subRes = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accRes.body.id, service_id: svcRes.body.id, group_name: 'test' });
+  assert.equal(subRes.status, 201);
+
+  await runSync();
+  const afterFirst = await request(app).get('/api/accounts').auth(...AUTH);
+  const balanceAfterFirst = afterFirst.body.find((a: any) => a.id === accRes.body.id).balance;
+  assert.equal(balanceAfterFirst, 900);
+
+  await runSync();
+  const afterSecond = await request(app).get('/api/accounts').auth(...AUTH);
+  const balanceAfterSecond = afterSecond.body.find((a: any) => a.id === accRes.body.id).balance;
+  assert.equal(balanceAfterSecond, 900);
+});
+
+test('新增服務時 cycle/currency/base_price 不合法要擋下來', async () => {
+  const res = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Weekly Service', base_price: 10, currency: 'HKD', cycle: 'weekly' });
+  assert.equal(res.status, 400);
+});
+
+test('刪除仍有成員的訂閱要擋下來', async () => {
+  const accRes = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'sub-del-member@icloud.com', currency: 'HKD', balance: 0 });
+  const svcRes = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Sub Delete Member Service', base_price: 10, currency: 'HKD', cycle: 'monthly' });
+  const subRes = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accRes.body.id, service_id: svcRes.body.id, group_name: 'test' });
+  const memRes = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: subRes.body.id, email: 'member@test.com' });
+  assert.equal(memRes.status, 201);
+
+  const delRes = await request(app).delete(`/api/subscriptions?id=${subRes.body.id}`).auth(...AUTH);
+  assert.equal(delRes.status, 400);
+  assert.match(delRes.body.error, /無法刪除訂閱/);
+});
+
+test('帳單週期建立後才加入的成員，也要自動補上待繳紀錄', async () => {
+  const accRes = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'backfill@icloud.com', currency: 'HKD', balance: 0 });
+  const svcRes = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Backfill Service', base_price: 10, currency: 'HKD', cycle: 'monthly' });
+  const groupRes = await request(app).post('/api/telegram-groups').auth(...AUTH)
+    .send({ name: 'Backfill Group', billing_cycle_type: 'monthly', start_date: '2026-01-01' });
+  const subRes = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accRes.body.id, service_id: svcRes.body.id, telegram_group_id: groupRes.body.id, group_name: 'test' });
+
+  const cycleRes = await request(app).post('/api/billing-cycles').auth(...AUTH)
+    .send({ telegram_group_id: groupRes.body.id, start_date: '2026-01-01', end_date: '2026-01-31', amount_per_member: 20 });
+  assert.equal(cycleRes.status, 201);
+  assert.equal(cycleRes.body.member_count, 0);
+
+  const memRes = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: subRes.body.id, email: 'late-joiner@test.com' });
+  assert.equal(memRes.status, 201);
+
+  const paymentsRes = await request(app).get(`/api/member-payments?billing_cycle_id=${cycleRes.body.id}`).auth(...AUTH);
+  assert.equal(paymentsRes.body.length, 1);
+  assert.equal(paymentsRes.body[0].amount, 20);
 });
