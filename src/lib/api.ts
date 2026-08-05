@@ -13,6 +13,13 @@ function handleApiError(error: Error, title: string = '操作失敗') {
     });
 }
 
+// session 過期時（API 回 401）呼叫，讓上層的 AuthProvider 把畫面切回登入頁。
+// 這裡用一個可註冊的 callback 而不是直接 import AuthContext，避免 lib/ 反過來依賴 React context。
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: (() => void) | null) {
+    onUnauthorized = fn;
+}
+
 // 包裝 fetch 調用，自動處理錯誤
 async function fetchWithErrorHandling<T = any>(
     url: string,
@@ -20,7 +27,11 @@ async function fetchWithErrorHandling<T = any>(
     errorTitle?: string
 ): Promise<T> {
     try {
-        const response = await fetch(url, options);
+        const response = await fetch(url, { credentials: 'same-origin', ...options });
+        if (response.status === 401) {
+            onUnauthorized?.();
+            throw new Error('登入已過期，請重新登入');
+        }
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: '網絡錯誤' }));
             throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -28,12 +39,33 @@ async function fetchWithErrorHandling<T = any>(
         return await response.json();
     } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
-        handleApiError(err, errorTitle);
+        // 401 已經用切回登入頁的方式提示使用者了，不用再多跳一個 toast
+        if (err.message !== '登入已過期，請重新登入') {
+            handleApiError(err, errorTitle);
+        }
         throw err;
     }
 }
 
 export const api = {
+    // Auth
+    // login 故意不走 fetchWithErrorHandling：帳密錯誤時的 401 是「這裡本來就該回的正常回應」，
+    // 要讓登入頁自己顯示錯誤訊息，不是觸發全站的「session 過期」流程。
+    login: async (username: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+        if (response.ok) return { ok: true };
+        const data = await response.json().catch(() => ({}));
+        return { ok: false, error: data.error || '登入失敗' };
+    },
+    logout: () => fetchWithErrorHandling(`${API_BASE}/auth/logout`, { method: 'POST' }),
+    getAuthStatus: (): Promise<{ authenticated: boolean; username: string | null }> =>
+        fetch(`${API_BASE}/auth/me`, { credentials: 'same-origin' }).then(r => r.json()),
+
     // Services
     getServices: () => fetchWithErrorHandling(`${API_BASE}/services`, undefined, '獲取服務列表失敗'),
     createService: (data: any) => fetchWithErrorHandling(`${API_BASE}/services`, {

@@ -10,7 +10,12 @@ http://<你的VPS>:3000/api
 
 ## 認證
 
-所有 `/api/*` 端點都受 HTTP Basic Auth 保護（帳密為 `.env` 裡的 `APP_USERNAME` / `APP_PASSWORD`）。未設定 `APP_PASSWORD` 時（僅限本機開發）不要求認證。
+所有 `/api/*` 端點都受保護，支援兩種方式（擇一即可）：
+
+1. **Session cookie**（給瀏覽器用）：`POST /api/auth/login` 帶 `{ username, password }`，成功後伺服器會設一個 7 天效期、HttpOnly 的 `sm_session` cookie，之後同一瀏覽器的請求都會自動帶上。`POST /api/auth/logout` 登出、`GET /api/auth/me` 查詢目前登入狀態。
+2. **HTTP Basic Auth**（給 curl / 腳本用）：帳密為 `.env` 裡的 `APP_USERNAME` / `APP_PASSWORD`，例如 `curl -u admin:your-password http://.../api/accounts`。
+
+未設定 `APP_PASSWORD` 時（僅限本機開發）不要求認證。
 
 ---
 

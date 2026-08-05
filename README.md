@@ -13,7 +13,7 @@ Subscription Master 是一個自架（self-hosted）的全端訂閱與帳號餘�
 * **💳 禮品卡批次加值**：批次輸入多張 Apple Gift Card 序號與金額，寫入對應帳號餘額，附帶歷史紀錄。
 * **🛠️ 服務定價管理**：維護各項服務的價格、計費週期，可設定預設調漲計畫（新增訂閱時作為預設值繼承）。
 * **🤖 自動扣款與 Telegram 通知**：容器內建 `node-cron` 每日排程，依每筆訂閱的起始扣款日與月/年費自動分攤扣款，餘額觸底時透過 Telegram Bot 通知。
-* **🔒 基本存取控制**：整站以 HTTP Basic Auth 保護（`APP_PASSWORD`），避免部署到公開 VPS 後任何人都能讀寫財務資料。
+* **🔒 登入保護**：進站要先過一個網頁登入表單（帳密即 `.env` 的 `APP_USERNAME`/`APP_PASSWORD`），登入後用 session cookie 維持 7 天，避免部署到公開 VPS 後任何人都能讀寫財務資料；`/api/*` 也同時支援 HTTP Basic Auth，方便 curl/腳本呼叫。
 
 ---
 
@@ -167,7 +167,7 @@ cd server && npm test   # 後端：node:test + supertest，測認證、刪除防
 
 ## 🔌 API 文檔
 
-詳見 [docs/API.md](docs/API.md)。所有 `/api/*` 端點都受 `APP_PASSWORD` 的 Basic Auth 保護。
+詳見 [docs/API.md](docs/API.md)。所有 `/api/*` 端點都受保護：瀏覽器走 `/api/auth/login` 拿到的 session cookie，或 curl/腳本可直接用 `APP_USERNAME`/`APP_PASSWORD` 的 Basic Auth。
 
 ---
 

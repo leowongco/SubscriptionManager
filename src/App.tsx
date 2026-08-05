@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Box, Heading, Text, Button, Spinner, Center } from '@chakra-ui/react';
 import Layout from './components/Layout';
+import Login from './pages/Login';
+import { AuthProvider, useAuth } from './context/AuthContext';
 // 各頁面改用 lazy 載入，首次進站只需要下載當前頁面的程式碼，
 // 而不是把 Dashboard/Mapping/Services/Recharge/TelegramGroups 全部打包進同一個 JS 檔。
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -59,23 +61,41 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+function Gate() {
+  const { status } = useAuth();
+
+  if (status === 'loading') {
+    return <PageLoading />;
+  }
+
+  if (status === 'unauthenticated') {
+    return <Login />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="accounts" element={<Accounts />} />
+        <Route path="mapping" element={<Mapping />} />
+        <Route path="services" element={<Services />} />
+        <Route path="recharge" element={<Recharge />} />
+        <Route path="groups" element={<TelegramGroups />} />
+        <Route path="groups/:id" element={<TelegramGroupDetail />} />
+      </Route>
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <Suspense fallback={<PageLoading />}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="accounts" element={<Accounts />} />
-              <Route path="mapping" element={<Mapping />} />
-              <Route path="services" element={<Services />} />
-              <Route path="recharge" element={<Recharge />} />
-              <Route path="groups" element={<TelegramGroups />} />
-              <Route path="groups/:id" element={<TelegramGroupDetail />} />
-            </Route>
-          </Routes>
-        </Suspense>
+        <AuthProvider>
+          <Suspense fallback={<PageLoading />}>
+            <Gate />
+          </Suspense>
+        </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
   );

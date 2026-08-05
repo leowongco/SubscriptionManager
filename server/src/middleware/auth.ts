@@ -1,13 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
+import { parseCookies, verifySessionToken, SESSION_COOKIE_NAME } from '../lib/session';
 
 // 這是內部單人/小團隊使用的工具，不做多帳號系統，只用一組共用帳密擋住整台 API。
 // 沒設定 APP_PASSWORD 時視為開發模式，不擋（並在啟動時警告），避免忘記設定就直接鎖死本機開發。
-export function basicAuth(req: Request, res: Response, next: NextFunction) {
+//
+// 同時接受兩種登入方式：
+// 1. Session cookie（瀏覽器走 /api/auth/login 網頁表單登入後拿到的）
+// 2. HTTP Basic Auth（給 curl / 腳本這類非瀏覽器的 API 呼叫用，維持向下相容）
+export function sessionOrBasicAuth(req: Request, res: Response, next: NextFunction) {
   const appUser = process.env.APP_USERNAME || 'admin';
   const appPassword = process.env.APP_PASSWORD;
 
   if (!appPassword) return next();
-  if (req.path === '/health') return next();
+
+  const cookies = parseCookies(req.headers.cookie);
+  if (verifySessionToken(cookies[SESSION_COOKIE_NAME])) return next();
 
   const header = req.headers.authorization;
   if (header && header.startsWith('Basic ')) {
@@ -18,6 +25,5 @@ export function basicAuth(req: Request, res: Response, next: NextFunction) {
     if (user === appUser && pass === appPassword) return next();
   }
 
-  res.set('WWW-Authenticate', 'Basic realm="SubscriptionManager"');
   res.status(401).json({ error: 'Unauthorized' });
 }

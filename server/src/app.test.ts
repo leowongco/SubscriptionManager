@@ -42,6 +42,37 @@ test('API 帶正確密碼可以正常存取', async () => {
   assert.deepEqual(res.body, []);
 });
 
+test('登入帳密錯誤要回 401', async () => {
+  const res = await request(app).post('/api/auth/login').send({ username: 'admin', password: 'wrong' });
+  assert.equal(res.status, 401);
+});
+
+test('/api/auth/me 沒登入時回 authenticated=false', async () => {
+  const res = await request(app).get('/api/auth/me');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.authenticated, false);
+});
+
+test('網頁表單登入成功後,靠 session cookie 就能存取 API,登出後失效', async () => {
+  const agent = request.agent(app);
+
+  const loginRes = await agent.post('/api/auth/login').send({ username: 'admin', password: 'testpass' });
+  assert.equal(loginRes.status, 200);
+
+  const meRes = await agent.get('/api/auth/me');
+  assert.equal(meRes.body.authenticated, true);
+
+  // 不帶 Basic Auth header，純靠 cookie 也要能存取
+  const apiRes = await agent.get('/api/accounts');
+  assert.equal(apiRes.status, 200);
+
+  const logoutRes = await agent.post('/api/auth/logout');
+  assert.equal(logoutRes.status, 200);
+
+  const afterLogout = await agent.get('/api/accounts');
+  assert.equal(afterLogout.status, 401);
+});
+
 test('訂閱的貨幣必須跟帳號地區一致，不一致要擋下來', async () => {
   const accRes = await request(app).post('/api/accounts').auth(...AUTH)
     .send({ apple_id: 'currency-test@icloud.com', currency: 'HKD', balance: 0 });

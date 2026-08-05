@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-05
+
+### Added
+- **網頁登入表單取代瀏覽器原生 Basic Auth 彈窗**：`/api/auth/login`（session cookie，7 天效期）+ 前端 [`Login.tsx`](src/pages/Login.tsx)；`/api/*` 仍同時支援 Basic Auth，curl/腳本呼叫方式不變
+- 側邊欄新增「登出」按鈕
+- 全站套用新的 Chakra v3 設計系統（Fira Sans/Fira Code 字體、accent 強調色、金額統一等寬對齊）
+- 修正「訂閱關係對應」頁可讀性：卡片內文字從普遍 9-10px 加大、資訊改用清楚的分行呈現取代堆疊的彩色徽章
+
+### Fixed
+- Mapping.tsx 裡 18 處使用了 Chakra v3 不存在的 `emerald` 色名，實際上從未正確渲染，改回 `green`
+- `trust proxy` 設定過於寬鬆，可被偽造 X-Forwarded-For 繞過登入限流
+
 ## [1.0.0] - 2026-08-03
 
 第一個正式自架版本：整個系統從 Cloudflare Pages Functions + D1 完全遷移到自架 Docker（Node/Express + better-sqlite3），修復了大量遷移過程中發現的資料邏輯錯誤，並補上原本完全缺乏的存取控制。

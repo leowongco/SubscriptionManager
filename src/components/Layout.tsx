@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, Users, Settings, CreditCard, Menu, X, Apple, MessageCircle, Moon, Sun } from 'lucide-react';
+import { Home, Users, Settings, CreditCard, Menu, X, Apple, MessageCircle, Moon, Sun, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -17,12 +17,14 @@ import {
   Portal,
 } from '@chakra-ui/react';
 import { useColorMode, useColorModeValue } from '@/components/ui/color-mode';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Layout() {
     const [open, setOpen] = useState(false);
     const location = useLocation();
     const { colorMode, toggleColorMode } = useColorMode();
-    
+    const { logout } = useAuth();
+
     // Color mode values
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.900', 'white');
@@ -130,8 +132,27 @@ export default function Layout() {
                         </Link>
                     ))}
                 </VStack>
-                <Box p={6} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
-                    <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
+                <Box p={4} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
+                    <Box
+                        as="button"
+                        onClick={logout}
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        w="full"
+                        px={3}
+                        py={2}
+                        rounded="lg"
+                        fontSize="sm"
+                        fontWeight="semibold"
+                        color={navItemColor}
+                        _hover={{ color: 'red.400', bg: navItemHoverBg }}
+                        transition="all 0.2s"
+                    >
+                        <Box as={LogOut} w={4} h={4} />
+                        登出
+                    </Box>
+                    <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black" mt={3}>
                         Version 1.0.0
                     </Text>
                 </Box>
@@ -242,8 +263,27 @@ export default function Layout() {
                                     ))}
                                 </VStack>
                             </DrawerBody>
-                            <DrawerFooter p={6} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')}>
-                                <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black">
+                            <DrawerFooter p={4} borderTop="1px" borderColor={sidebarBorder} bg={useColorModeValue('gray.50', 'rgba(3, 7, 18, 0.2)')} flexDirection="column">
+                                <Box
+                                    as="button"
+                                    onClick={logout}
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={2}
+                                    w="full"
+                                    px={4}
+                                    py={2.5}
+                                    rounded="xl"
+                                    fontSize="sm"
+                                    fontWeight="bold"
+                                    color={navItemColor}
+                                    _hover={{ color: 'red.400', bg: navItemHoverBg }}
+                                    transition="all 0.2s"
+                                >
+                                    <Box as={LogOut} w={4} h={4} />
+                                    登出
+                                </Box>
+                                <Text fontSize="10px" color={navItemColor} textAlign="center" textTransform="uppercase" letterSpacing="widest" fontWeight="black" mt={3}>
                                     Version 1.0.0
                                 </Text>
                             </DrawerFooter>

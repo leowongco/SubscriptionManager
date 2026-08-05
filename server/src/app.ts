@@ -4,7 +4,8 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 
-import { basicAuth } from './middleware/auth';
+import { sessionOrBasicAuth } from './middleware/auth';
+import { authRouter } from './routes/auth';
 import { accountsRouter } from './routes/accounts';
 import { accountBalanceRouter } from './routes/accountBalance';
 import { servicesRouter } from './routes/services';
@@ -48,7 +49,12 @@ export function createApp() {
     message: { error: '登入失敗次數過多，請稍後再試。' },
   });
   app.use(loginLimiter);
-  app.use(basicAuth);
+
+  // /api/auth/* 本身要能在還沒登入時呼叫（登入、查詢登入狀態），不能被下面的認證擋住；
+  // 其餘所有 /api/* 才需要 session cookie 或 Basic Auth。前端靜態檔案（HTML/JS）不擋，
+  // 讓瀏覽器先把 React app 載出來，由前端自己判斷要顯示登入頁還是實際內容。
+  app.use('/api/auth', authRouter);
+  app.use('/api', sessionOrBasicAuth);
 
   app.use('/api/accounts', accountBalanceRouter); // /:id/balance — must come before the plain accounts router
   app.use('/api/accounts', accountsRouter);
