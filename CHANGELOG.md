@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-08-06
+
+### Added
+- **Telegram 繳費提醒 Bot**：成員可以綁定自己的 Telegram（在「Apple ID 管理」/「訂閱關係對應」頁面的成員旁邊按紙飛機圖示產生一次性綁定連結），未繳費且帳單週期仍進行中的成員會定期收到私訊提醒（預設每 3 天一次，可用 `TELEGRAM_REMINDER_INTERVAL_DAYS` 調整）
+  - 成員可在提醒訊息按「✅ 我已繳費」回報，但這只會標記「待確認」（`payment_reported_at`），**不會**自動變成已繳費——一定要管理員在「Telegram 群組」的帳單週期卡片按「確認收款」才算數，避免任何人隨口一按就讓系統誤判收到錢
+  - Bot 用長輪詢（long polling）接收訊息，不需要對外開放額外的 webhook 端點；跟現有的低餘額通知共用同一個 `TELEGRAM_BOT_TOKEN`
+  - 新增 [`server/src/lib/telegramBot.ts`](server/src/lib/telegramBot.ts)（綁定/回報邏輯）、[`server/src/reminders.ts`](server/src/reminders.ts)（提醒排程邏輯），新增 2 個後端整合測試
+
 ## [1.2.0] - 2026-08-05
 
 系統邏輯全面審視後的修正：起因是發現「編輯帳號」表單可以不留原因、不留紀錄地直接改掉餘額，順勢檢查了整套後端邏輯，一併修掉發現的其他資料正確性與安全問題。

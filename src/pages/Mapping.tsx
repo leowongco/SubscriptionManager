@@ -16,7 +16,8 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
-import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp, MessageCircle, AlertCircle } from 'lucide-react';
+import { Plus, UserPlus, Trash2, CheckCircle2, Circle, ListPlus, KeyRound, Pencil, TrendingUp, MessageCircle, AlertCircle, Send, Unlink } from 'lucide-react';
+import { toaster } from '@/components/ui/toaster';
 import {
     Box,
     VStack,
@@ -81,6 +82,8 @@ interface Member {
     email: string;
     payment_status: number;
     memo: string | null;
+    telegram_chat_id: string | null;
+    telegram_bound_at: string | null;
 }
 
 // ============================================================================
@@ -196,6 +199,31 @@ export default function Mapping() {
 
     const togglePaymentStatus = async (member: Member) => {
         await api.updateMember({ ...member, payment_status: member.payment_status ? 0 : 1 });
+        mutateAccounts();
+    };
+
+    const handleGenerateBindLink = async (member: Member) => {
+        const { bind_url } = await api.getMemberTelegramBindLink(member.id);
+        try {
+            await navigator.clipboard.writeText(bind_url);
+            toaster.create({
+                title: '綁定連結已複製',
+                description: `請傳給「${member.email}」，對方在 Telegram 點開並按 Start 即可完成綁定`,
+                type: 'success',
+            });
+        } catch {
+            toaster.create({
+                title: '連結已產生，但複製失敗，請手動複製',
+                description: bind_url,
+                type: 'info',
+                duration: 10000,
+            });
+        }
+    };
+
+    const handleRemoveTelegramBind = async (member: Member) => {
+        if (!confirm(`確定要解除「${member.email}」的 Telegram 綁定嗎？`)) return;
+        await api.removeMemberTelegramBind(member.id);
         mutateAccounts();
     };
 
@@ -1039,19 +1067,35 @@ export default function Mapping() {
                                                         )}
                                                     </VStack>
                                                 </HStack>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    p={1.5}
-                                                    minW="auto"
-                                                    h="auto"
-                                                    color="fg.muted"
-                                                    _hover={{ color: 'red.400', bg: 'red.500/10' }}
-                                                    onClick={() => deleteMember(member.id)}
-                                                    aria-label="刪除成員"
-                                                >
-                                                    <Box as={Trash2} w={3.5} h={3.5} />
-                                                </Button>
+                                                <HStack gap={0.5} flexShrink={0}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        p={1.5}
+                                                        minW="auto"
+                                                        h="auto"
+                                                        color={member.telegram_chat_id ? 'blue.400' : 'fg.muted'}
+                                                        _hover={{ color: member.telegram_chat_id ? 'red.400' : 'blue.400', bg: member.telegram_chat_id ? 'red.500/10' : 'blue.500/10' }}
+                                                        onClick={() => member.telegram_chat_id ? handleRemoveTelegramBind(member) : handleGenerateBindLink(member)}
+                                                        aria-label={member.telegram_chat_id ? '已綁定 Telegram，點擊解除' : '產生 Telegram 綁定連結'}
+                                                        title={member.telegram_chat_id ? '已綁定 Telegram，點擊解除' : '產生 Telegram 綁定連結（用於繳費提醒）'}
+                                                    >
+                                                        <Box as={member.telegram_chat_id ? Unlink : Send} w={3.5} h={3.5} />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        p={1.5}
+                                                        minW="auto"
+                                                        h="auto"
+                                                        color="fg.muted"
+                                                        _hover={{ color: 'red.400', bg: 'red.500/10' }}
+                                                        onClick={() => deleteMember(member.id)}
+                                                        aria-label="刪除成員"
+                                                    >
+                                                        <Box as={Trash2} w={3.5} h={3.5} />
+                                                    </Button>
+                                                </HStack>
                                             </Flex>
                                         ))}
                                     </VStack>

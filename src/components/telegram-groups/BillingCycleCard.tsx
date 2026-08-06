@@ -1,16 +1,18 @@
-import { Calendar, DollarSign, Users, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, DollarSign, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 import {
   Box,
   Text,
   VStack,
   HStack,
   Badge,
+  Button,
 } from '@chakra-ui/react';
 import type { BillingCycle, MemberPayment } from '../../types/telegram-groups';
 
 interface BillingCycleCardProps {
   cycle: BillingCycle;
   memberPayments?: MemberPayment[];
+  onConfirmPayment?: (payment: MemberPayment) => void;
 }
 
 const statusLabels = {
@@ -25,7 +27,7 @@ const statusColors = {
   refunded: 'orange',
 };
 
-export default function BillingCycleCard({ cycle, memberPayments = [] }: BillingCycleCardProps) {
+export default function BillingCycleCard({ cycle, memberPayments = [], onConfirmPayment }: BillingCycleCardProps) {
   const paidCount = memberPayments.filter((p) => p.paid).length;
   const totalCount = memberPayments.length;
   const progressPercent = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
@@ -139,21 +141,40 @@ export default function BillingCycleCard({ cycle, memberPayments = [] }: Billing
                 <Text fontSize="sm" color="fg.default">
                   {payment.member?.email || `成員 ${payment.member_id}`}
                 </Text>
-                <HStack gap={1}>
+                <HStack gap={2}>
                   {payment.paid ? (
-                    <>
+                    <HStack gap={1}>
                       <Box as={CheckCircle} w={4} h={4} color="fg.success" />
                       <Text fontSize="xs" color="fg.success">
                         已付款
                       </Text>
+                    </HStack>
+                  ) : payment.payment_reported_at ? (
+                    <>
+                      <HStack gap={1}>
+                        <Box as={Clock} w={4} h={4} color="fg.warning" />
+                        <Text fontSize="xs" color="fg.warning">
+                          已回報，待確認
+                        </Text>
+                      </HStack>
+                      {onConfirmPayment && (
+                        <Button
+                          size="xs"
+                          colorPalette="green"
+                          variant="subtle"
+                          onClick={() => onConfirmPayment(payment)}
+                        >
+                          確認收款
+                        </Button>
+                      )}
                     </>
                   ) : (
-                    <>
+                    <HStack gap={1}>
                       <Box as={XCircle} w={4} h={4} color="fg.error" />
                       <Text fontSize="xs" color="fg.error">
                         未付款
                       </Text>
-                    </>
+                    </HStack>
                   )}
                 </HStack>
               </HStack>

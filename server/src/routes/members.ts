@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db, newId } from '../db';
 import { logAudit, getClientIP, getUserAgent } from '../lib/audit';
+import { getBotUsername } from '../lib/telegram';
 
 export const membersRouter = Router();
 
@@ -68,6 +69,50 @@ membersRouter.post('/', (req, res) => {
   });
 
   res.status(201).json({ id, message: 'Member created successfully' });
+});
+
+// POST /api/members/:id/telegram-bind-link — 產生一次性綁定連結，管理員複製後傳給成員本人，
+// 成員在 Telegram 點開連結、按 Start，bot 就會把他的 chat_id 綁到這筆成員紀錄上。
+membersRouter.post('/:id/telegram-bind-link', async (req, res) => {
+  const id = req.params.id;
+  const existing = db.prepare('SELECT * FROM members WHERE id = ?').get(id) as any;
+  if (!existing) return res.status(404).json({ error: 'Member not found' });
+
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    return res.status(400).json({ error: '伺服器未設定 TELEGRAM_BOT_TOKEN，無法產生綁定連結' });
+  }
+
+  const username = await getBotUsername();
+  if (!username) {
+    return res.status(502).json({ error: '無法連上 Telegram，請確認 TELEGRAM_BOT_TOKEN 是否正確' });
+  }
+
+  const token = newId();
+  db.prepare('UPDATE members SET telegram_bind_token = ? WHERE id = ?').run(token, id);
+
+  res.json({ bind_url: `https://t.me/${username}?start=${token}` });
+});
+
+// DELETE /api/members/:id/telegram-bind — 解除綁定（例如成員換了 Telegram 帳號）。
+membersRouter.delete('/:id/telegram-bind', (req, res) => {
+  const id = req.params.id;
+  const existing = db.prepare('SELECT * FROM members WHERE id = ?').get(id) as any;
+  if (!existing) return res.status(404).json({ error: 'Member not found' });
+
+  db.prepare(
+    'UPDATE members SET telegram_chat_id = NULL, telegram_bind_token = NULL, telegram_bound_at = NULL WHERE id = ?'
+  ).run(id);
+
+  logAudit({
+    actionType: 'member_telegram_unbind',
+    entityType: 'member',
+    entityId: id,
+    reason: 'Telegram binding removed',
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req),
+  });
+
+  res.json({ message: 'Telegram binding removed' });
 });
 
 membersRouter.put('/', (req, res) => {

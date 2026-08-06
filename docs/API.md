@@ -221,7 +221,20 @@ http://<你的VPS>:3000/api
 
 ### DELETE /api/members?id={uuid}
 
-刪除成員。
+刪除成員。若該成員仍有繳費紀錄（`member_payments`）會被擋下來，需先在收款週期裡處理。
+
+### POST /api/members/{id}/telegram-bind-link
+
+產生一次性的 Telegram 綁定連結，複製傳給成員本人，對方在 Telegram 點開並按 Start 即完成綁定。需要伺服器已設定 `TELEGRAM_BOT_TOKEN`。
+
+**響應示例：**
+```json
+{ "bind_url": "https://t.me/your_bot?start=<token>" }
+```
+
+### DELETE /api/members/{id}/telegram-bind
+
+解除該成員的 Telegram 綁定（例如成員換了帳號）。
 
 ---
 
@@ -429,7 +442,7 @@ http://<你的VPS>:3000/api
 
 ### GET /api/member-payments
 
-獲取成員付款記錄。
+獲取成員付款記錄。`payment_reported_at` 是成員在 Telegram bot 裡自己按「我已繳費」回報的時間——這只是回報，不代表已收款；要靠 `PUT /api/member-payments?id=` 帶 `paid: true` 才是管理員確認收款，`paid` 才會變成 `1`。
 
 **響應示例：**
 ```json
@@ -439,8 +452,10 @@ http://<你的VPS>:3000/api
     "member_id": "member-uuid",
     "billing_cycle_id": "cycle-uuid",
     "amount": 15.00,
-    "status": "paid",
-    "paid_at": "2024-01-15T10:30:00Z"
+    "paid": 0,
+    "paid_at": null,
+    "payment_reported_at": "2024-01-15T10:00:00Z",
+    "last_reminded_at": "2024-01-14T01:00:00Z"
   }
 ]
 ```

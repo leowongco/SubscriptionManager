@@ -28,6 +28,21 @@ function migrate() {
   if (!columnExists('subscriptions', 'last_deducted_date')) {
     db.exec('ALTER TABLE subscriptions ADD COLUMN last_deducted_date TEXT');
   }
+  if (!columnExists('members', 'telegram_chat_id')) {
+    db.exec('ALTER TABLE members ADD COLUMN telegram_chat_id TEXT');
+  }
+  if (!columnExists('members', 'telegram_bind_token')) {
+    db.exec('ALTER TABLE members ADD COLUMN telegram_bind_token TEXT');
+  }
+  if (!columnExists('members', 'telegram_bound_at')) {
+    db.exec('ALTER TABLE members ADD COLUMN telegram_bound_at TEXT');
+  }
+  if (!columnExists('member_payments', 'payment_reported_at')) {
+    db.exec('ALTER TABLE member_payments ADD COLUMN payment_reported_at TEXT');
+  }
+  if (!columnExists('member_payments', 'last_reminded_at')) {
+    db.exec('ALTER TABLE member_payments ADD COLUMN last_reminded_at TEXT');
+  }
 }
 migrate();
 

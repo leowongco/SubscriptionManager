@@ -11,11 +11,31 @@ const dbPath = path.join(os.tmpdir(), `sm-test-${process.pid}-${Math.random().to
 process.env.DB_PATH = dbPath;
 process.env.APP_USERNAME = 'admin';
 process.env.APP_PASSWORD = 'testpass';
+process.env.TELEGRAM_BOT_TOKEN = 'test-bot-token';
+
+// Telegram bot 的送訊息/getMe 都是真的打 api.telegram.org，測試環境沒有真的 bot，
+// 攔截這些呼叫回傳假資料，讓綁定/提醒流程可以在不連網路的情況下測試。
+const realFetch = global.fetch;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).fetch = async (url: any, options: any) => {
+  const urlStr = String(url);
+  if (urlStr.includes('api.telegram.org')) {
+    if (urlStr.includes('/getMe')) {
+      return { ok: true, json: async () => ({ ok: true, result: { username: 'test_bot' } }) } as any;
+    }
+    return { ok: true, json: async () => ({ ok: true, result: { message_id: 1 } }) } as any;
+  }
+  return realFetch(url, options);
+};
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { createApp } = require('./app');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { runSync } = require('./routes/sync');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { handleTelegramUpdate } = require('./lib/telegramBot');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { runReminderCheck } = require('./reminders');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const request = require('supertest');
 
@@ -23,6 +43,7 @@ const app = createApp();
 const AUTH: [string, string] = ['admin', 'testpass'];
 
 after(() => {
+  (global as any).fetch = realFetch;
   for (const suffix of ['', '-wal', '-shm']) {
     fs.rmSync(dbPath + suffix, { force: true });
   }
@@ -197,6 +218,85 @@ test('刪除仍有成員的訂閱要擋下來', async () => {
   const delRes = await request(app).delete(`/api/subscriptions?id=${subRes.body.id}`).auth(...AUTH);
   assert.equal(delRes.status, 400);
   assert.match(delRes.body.error, /無法刪除訂閱/);
+});
+
+test('產生 Telegram 綁定連結，成員 /start 後完成綁定，可再解除', async () => {
+  const accRes = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'tg-bind@icloud.com', currency: 'HKD', balance: 0 });
+  const svcRes = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'TG Bind Service', base_price: 10, currency: 'HKD', cycle: 'monthly' });
+  const subRes = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accRes.body.id, service_id: svcRes.body.id, group_name: 'test' });
+  const memRes = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: subRes.body.id, email: 'bind-member@test.com' });
+  assert.equal(memRes.status, 201);
+
+  const linkRes = await request(app).post(`/api/members/${memRes.body.id}/telegram-bind-link`).auth(...AUTH);
+  assert.equal(linkRes.status, 200);
+  assert.match(linkRes.body.bind_url, /^https:\/\/t\.me\/test_bot\?start=/);
+
+  const token = linkRes.body.bind_url.split('start=')[1];
+
+  await handleTelegramUpdate({
+    update_id: 1,
+    message: { text: `/start ${token}`, chat: { id: 999888777 } },
+  });
+
+  const membersRes = await request(app).get('/api/members').auth(...AUTH);
+  const bound = membersRes.body.find((m: any) => m.id === memRes.body.id);
+  assert.equal(bound.telegram_chat_id, '999888777');
+  assert.equal(bound.telegram_bind_token, null);
+
+  const unbindRes = await request(app).delete(`/api/members/${memRes.body.id}/telegram-bind`).auth(...AUTH);
+  assert.equal(unbindRes.status, 200);
+
+  const afterUnbind = await request(app).get('/api/members').auth(...AUTH);
+  assert.equal(afterUnbind.body.find((m: any) => m.id === memRes.body.id).telegram_chat_id, null);
+});
+
+test('繳費提醒：發送有節流、成員回報只是待確認、要管理員確認才算已繳', async () => {
+  const accRes = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'reminder@icloud.com', currency: 'HKD', balance: 0 });
+  const svcRes = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Reminder Service', base_price: 10, currency: 'HKD', cycle: 'monthly' });
+  const groupRes = await request(app).post('/api/telegram-groups').auth(...AUTH)
+    .send({ name: 'Reminder Group', billing_cycle_type: 'monthly', start_date: '2026-01-01' });
+  const subRes = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accRes.body.id, service_id: svcRes.body.id, telegram_group_id: groupRes.body.id, group_name: 'test' });
+  const memRes = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: subRes.body.id, email: 'reminder-member@test.com' });
+
+  const linkRes = await request(app).post(`/api/members/${memRes.body.id}/telegram-bind-link`).auth(...AUTH);
+  const token = linkRes.body.bind_url.split('start=')[1];
+  await handleTelegramUpdate({ update_id: 2, message: { text: `/start ${token}`, chat: { id: 111222333 } } });
+
+  const cycleRes = await request(app).post('/api/billing-cycles').auth(...AUTH)
+    .send({ telegram_group_id: groupRes.body.id, start_date: '2026-01-01', end_date: '2026-01-31', amount_per_member: 20 });
+  assert.equal(cycleRes.body.member_count, 1);
+
+  const firstRun = await runReminderCheck();
+  assert.equal(firstRun.sent, 1);
+
+  const secondRun = await runReminderCheck();
+  assert.equal(secondRun.sent, 0);
+
+  const paymentsRes = await request(app).get(`/api/member-payments?billing_cycle_id=${cycleRes.body.id}`).auth(...AUTH);
+  const payment = paymentsRes.body[0];
+  assert.ok(payment.last_reminded_at);
+
+  await handleTelegramUpdate({
+    update_id: 3,
+    callback_query: { id: 'cb1', data: `report_paid:${payment.id}`, message: { chat: { id: 111222333 } } },
+  });
+
+  const afterReport = await request(app).get(`/api/member-payments?id=${payment.id}`).auth(...AUTH);
+  assert.ok(afterReport.body.payment_reported_at);
+  assert.equal(afterReport.body.paid, 0);
+
+  const confirmRes = await request(app).put(`/api/member-payments?id=${payment.id}`).auth(...AUTH)
+    .send({ paid: true });
+  assert.equal(confirmRes.status, 200);
+  assert.equal(confirmRes.body.paid, 1);
 });
 
 test('帳單週期建立後才加入的成員，也要自動補上待繳紀錄', async () => {

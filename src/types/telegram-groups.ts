@@ -26,10 +26,15 @@ export interface MemberPayment {
   id: string;
   billing_cycle_id: string;
   member_id: string;
+  amount: number;
   paid: boolean;
   paid_at: string | null;
   refund_amount: number | null;
   refund_at: string | null;
+  // 成員在 Telegram bot 裡自己按「我已繳費」回報的時間；只是回報，不代表已確認收款，
+  // 要靠管理員按「確認收款」才會真的變成 paid。
+  payment_reported_at: string | null;
+  last_reminded_at: string | null;
   created_at: string;
   // 關聯數據
   member?: {
@@ -66,6 +71,8 @@ export interface Member {
   email: string;
   payment_status: boolean;
   memo: string | null;
+  telegram_chat_id: string | null;
+  telegram_bound_at: string | null;
 }
 
 // API 請求類型

@@ -17,7 +17,8 @@ import { ArrowLeft, Edit, ExternalLink, Calendar, Users, DollarSign, CheckCircle
 import BillingCycleCard from '../components/telegram-groups/BillingCycleCard';
 import CreateGroupDialog from '../components/telegram-groups/CreateGroupDialog';
 import { toaster } from '../components/ui/toaster';
-import type { TelegramGroupDetail, CreateGroupRequest } from '../types/telegram-groups';
+import type { TelegramGroupDetail, CreateGroupRequest, MemberPayment } from '../types/telegram-groups';
+import { api } from '../lib/api';
 
 export default function TelegramGroupDetail() {
   const { id } = useParams<{ id: string }>();
@@ -83,6 +84,22 @@ export default function TelegramGroupDetail() {
         type: 'error',
       });
       throw error;
+    }
+  };
+
+  // 管理員確認收款：成員在 Telegram bot 回報「我已繳費」後只是待確認狀態，
+  // 這裡按下去才會真的把 member_payments.paid 改成 1。
+  const handleConfirmPayment = async (payment: MemberPayment) => {
+    try {
+      await api.updateMemberPayment(payment.id, { paid: true });
+      toaster.create({
+        title: '已確認收款',
+        description: payment.member?.email ? `「${payment.member.email}」的付款已確認` : '付款已確認',
+        type: 'success',
+      });
+      await loadGroup();
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
     }
   };
 
@@ -434,7 +451,7 @@ export default function TelegramGroupDetail() {
             </Text>
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
               {group.billing_cycles.map((cycle) => (
-                <BillingCycleCard key={cycle.id} cycle={cycle} memberPayments={cycle.member_payments} />
+                <BillingCycleCard key={cycle.id} cycle={cycle} memberPayments={cycle.member_payments} onConfirmPayment={handleConfirmPayment} />
               ))}
             </SimpleGrid>
           </VStack>

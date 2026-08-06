@@ -13,6 +13,7 @@ Subscription Master 是一個自架（self-hosted）的全端訂閱與帳號餘�
 * **💳 禮品卡批次加值**：批次輸入多張 Apple Gift Card 序號與金額，寫入對應帳號餘額，附帶歷史紀錄。
 * **🛠️ 服務定價管理**：維護各項服務的價格、計費週期，可設定預設調漲計畫（新增訂閱時作為預設值繼承）。
 * **🤖 自動扣款與 Telegram 通知**：容器內建 `node-cron` 每日排程，依每筆訂閱的起始扣款日與月/年費自動分攤扣款，餘額觸底時透過 Telegram Bot 通知。
+* **💬 Telegram 繳費提醒 Bot**：成員綁定自己的 Telegram 後，未繳費且帳單週期仍進行中會定期收到私訊提醒，可在對話裡按「我已繳費」回報——回報只是待確認狀態，仍要管理員在後台按「確認收款」才會真的標記為已繳費，避免任何人隨口一按就讓系統誤判收到錢。
 * **🔒 登入保護**：進站要先過一個網頁登入表單（帳密即 `.env` 的 `APP_USERNAME`/`APP_PASSWORD`），登入後用 session cookie 維持 7 天，避免部署到公開 VPS 後任何人都能讀寫財務資料；`/api/*` 也同時支援 HTTP Basic Auth，方便 curl/腳本呼叫。
 
 ---
@@ -58,10 +59,14 @@ cp .env.example .env
 |------|------|
 | `APP_USERNAME` | 登入帳號，預設 `admin` |
 | `APP_PASSWORD` | 登入密碼，**強烈建議一定要設定**，未設定時整站不會要求密碼（僅適合本機開發） |
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（選填，@BotFather 申請）|
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（選填，跟 [@BotFather](https://t.me/BotFather) 申請）。同一個 bot 同時用於低餘額通知、繳費提醒、成員綁定 |
 | `TELEGRAM_CHAT_ID` | 接收低餘額通知的 chat ID（選填）|
+| `TELEGRAM_REMINDER_CRON_SCHEDULE` | 繳費提醒排程，預設 `0 1 * * *`（UTC 01:00，約台灣/香港早上 9 點）|
+| `TELEGRAM_REMINDER_INTERVAL_DAYS` | 同一筆未繳款項兩次提醒間隔幾天，預設 `3` |
 | `SYNC_SECRET` | 手動觸發 `/api/sync` 端點用的密鑰（選填，每日自動扣款不需要這個）|
 | `SYNC_CRON_SCHEDULE` | 每日扣款排程，預設 `10 0 * * *`（UTC 00:10）|
+
+設定好 `TELEGRAM_BOT_TOKEN` 後，到「Apple ID 管理」或「訂閱關係對應」頁面，每個成員旁邊會出現一個紙飛機圖示——按下去會產生一個一次性的綁定連結（`https://t.me/你的bot/?start=...`），複製傳給該成員本人，對方在 Telegram 點開、按 Start 就完成綁定，之後繳費提醒會私訊發給他。
 
 ### 4. 啟動
 

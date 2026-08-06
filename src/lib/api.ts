@@ -119,6 +119,13 @@ export const api = {
     deleteMember: (id: string) => fetchWithErrorHandling(`${API_BASE}/members?id=${id}`, {
         method: 'DELETE'
     }, '刪除成員失敗'),
+    getMemberTelegramBindLink: (id: string): Promise<{ bind_url: string }> =>
+        fetchWithErrorHandling(`${API_BASE}/members/${id}/telegram-bind-link`, {
+            method: 'POST'
+        }, '產生 Telegram 綁定連結失敗'),
+    removeMemberTelegramBind: (id: string) => fetchWithErrorHandling(`${API_BASE}/members/${id}/telegram-bind`, {
+        method: 'DELETE'
+    }, '解除 Telegram 綁定失敗'),
 
     // History
     getHistory: () => fetchWithErrorHandling(`${API_BASE}/history`, undefined, '獲取歷史記錄失敗'),

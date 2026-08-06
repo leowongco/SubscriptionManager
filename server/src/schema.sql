@@ -66,6 +66,11 @@ CREATE TABLE IF NOT EXISTS members (
   email TEXT NOT NULL,
   payment_status BOOLEAN DEFAULT 0,
   memo TEXT,
+  -- Telegram 繳費提醒 bot：成員綁定後才收得到催繳訊息。telegram_bind_token 是
+  -- 一次性的綁定連結 token，成員點過 /start 連結成功綁定後就會被清空。
+  telegram_chat_id TEXT,
+  telegram_bind_token TEXT,
+  telegram_bound_at TEXT,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id)
 );
 
@@ -109,6 +114,12 @@ CREATE TABLE IF NOT EXISTS member_payments (
   refund_amount REAL,
   notes TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  -- Telegram bot 催繳用：payment_reported_at 是成員自己在 bot 裡按「我已繳費」的時間，
+  -- 這只是「自己回報」，不會自動變成 paid=1——一定要管理員在後台確認過才算數，
+  -- 避免任何人隨口按一下就讓系統認定已收款。last_reminded_at 用來讓催繳排程知道
+  -- 上次已經提醒過，不用每天洗版式重複發送。
+  payment_reported_at TEXT,
+  last_reminded_at TEXT,
   FOREIGN KEY (billing_cycle_id) REFERENCES billing_cycles(id),
   FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
