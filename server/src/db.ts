@@ -43,6 +43,12 @@ function migrate() {
   if (!columnExists('member_payments', 'last_reminded_at')) {
     db.exec('ALTER TABLE member_payments ADD COLUMN last_reminded_at TEXT');
   }
+  if (!columnExists('telegram_groups', 'chat_id')) {
+    db.exec('ALTER TABLE telegram_groups ADD COLUMN chat_id TEXT');
+  }
+  if (!columnExists('billing_cycles', 'last_group_reminded_at')) {
+    db.exec('ALTER TABLE billing_cycles ADD COLUMN last_group_reminded_at TEXT');
+  }
 }
 migrate();
 

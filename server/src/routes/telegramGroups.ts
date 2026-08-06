@@ -81,8 +81,8 @@ telegramGroupsRouter.post('/', (req, res) => {
   const now = new Date().toISOString();
 
   db.prepare(
-    'INSERT INTO telegram_groups (id, name, telegram_link, start_date, billing_cycle_type, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(id, body.name, body.telegram_link || null, body.start_date, body.billing_cycle_type, body.notes || null, now);
+    'INSERT INTO telegram_groups (id, name, telegram_link, start_date, billing_cycle_type, chat_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, body.name, body.telegram_link || null, body.start_date, body.billing_cycle_type, body.chat_id || null, body.notes || null, now);
 
   logAudit({
     actionType: 'CREATE',
@@ -109,13 +109,16 @@ telegramGroupsRouter.put('/', (req, res) => {
 
   db.prepare(`
     UPDATE telegram_groups
-    SET name = ?, telegram_link = ?, start_date = ?, billing_cycle_type = ?, notes = ?
+    SET name = ?, telegram_link = ?, start_date = ?, billing_cycle_type = ?, chat_id = ?, notes = ?
     WHERE id = ?
   `).run(
     body.name || existingGroup.name,
     body.telegram_link || existingGroup.telegram_link,
     body.start_date || existingGroup.start_date,
     body.billing_cycle_type || existingGroup.billing_cycle_type,
+    // chat_id 用 !== undefined 判斷（而不是跟其他欄位一樣用 ||），
+    // 這樣才能把已設定的 chat_id 清空（例如 bot 被踢出群組後要解除）。
+    body.chat_id !== undefined ? (body.chat_id || null) : existingGroup.chat_id,
     body.notes || existingGroup.notes,
     id
   );

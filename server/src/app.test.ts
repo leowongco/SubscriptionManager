@@ -394,3 +394,60 @@ test('帳單週期建立後才加入的成員，也要自動補上待繳紀錄',
   assert.equal(paymentsRes.body.length, 1);
   assert.equal(paymentsRes.body[0].amount, 20);
 });
+
+test('Telegram 群組可以設定 chat_id，也可以清空', async () => {
+  const groupRes = await request(app).post('/api/telegram-groups').auth(...AUTH)
+    .send({ name: 'Chat ID Test Group', billing_cycle_type: 'monthly', start_date: '2026-01-01', chat_id: '-1009876543210' });
+  assert.equal(groupRes.status, 201);
+  assert.equal(groupRes.body.chat_id, '-1009876543210');
+
+  const clearRes = await request(app).put(`/api/telegram-groups?id=${groupRes.body.id}`).auth(...AUTH)
+    .send({ chat_id: '' });
+  assert.equal(clearRes.status, 200);
+  assert.equal(clearRes.body.chat_id, null);
+});
+
+test('群組設定 chat_id 後，繳費提醒會發到群組聊天室、列出未繳名單，且有節流', async () => {
+  const acc1 = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'group-broadcast-1@icloud.com', currency: 'HKD', balance: 0 });
+  const acc2 = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'group-broadcast-2@icloud.com', currency: 'HKD', balance: 0 });
+  const svc = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Group Broadcast Service', base_price: 10, currency: 'HKD', cycle: 'monthly' });
+  const group = await request(app).post('/api/telegram-groups').auth(...AUTH)
+    .send({ name: 'Broadcast Group', billing_cycle_type: 'monthly', start_date: '2026-01-01', chat_id: 'group-chat-999' });
+
+  const sub1 = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: acc1.body.id, service_id: svc.body.id, telegram_group_id: group.body.id, group_name: 'test' });
+  const sub2 = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: acc2.body.id, service_id: svc.body.id, telegram_group_id: group.body.id, group_name: 'test' });
+
+  const mem1 = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: sub1.body.id, email: 'broadcast-unpaid@test.com' });
+  const mem2 = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: sub2.body.id, email: 'broadcast-paid@test.com' });
+
+  const cycle = await request(app).post('/api/billing-cycles').auth(...AUTH)
+    .send({ telegram_group_id: group.body.id, start_date: '2026-01-01', end_date: '2026-01-31', amount_per_member: 30 });
+  assert.equal(cycle.body.member_count, 2);
+
+  const paymentsRes = await request(app).get(`/api/member-payments?billing_cycle_id=${cycle.body.id}`).auth(...AUTH);
+  const paymentForMem2 = paymentsRes.body.find((p: any) => p.member_id === mem2.body.id);
+  await request(app).put(`/api/member-payments?id=${paymentForMem2.id}`).auth(...AUTH).send({ paid: true });
+
+  telegramSendCalls.length = 0;
+  const firstRun = await runReminderCheck();
+  assert.equal(firstRun.sent, 1);
+
+  const groupCall = telegramSendCalls.find((c) => c.chat_id === 'group-chat-999');
+  assert.ok(groupCall, '應該送一則訊息到群組聊天室');
+  assert.match(groupCall!.text, /Broadcast Group/);
+  assert.match(groupCall!.text, /broadcast-unpaid@test\.com/);
+  assert.doesNotMatch(groupCall!.text, /broadcast-paid@test\.com/);
+
+  // 節流：同一天再跑一次不會重複發送到群組
+  telegramSendCalls.length = 0;
+  const secondRun = await runReminderCheck();
+  assert.equal(telegramSendCalls.filter((c) => c.chat_id === 'group-chat-999').length, 0);
+  assert.equal(secondRun.sent, 0);
+});

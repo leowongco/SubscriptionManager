@@ -13,9 +13,10 @@ import {
   Table,
   Flex,
 } from '@chakra-ui/react';
-import { ArrowLeft, Edit, ExternalLink, Calendar, Users, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Edit, ExternalLink, Calendar, Users, DollarSign, CheckCircle, XCircle, Link2 } from 'lucide-react';
 import BillingCycleCard from '../components/telegram-groups/BillingCycleCard';
 import CreateGroupDialog from '../components/telegram-groups/CreateGroupDialog';
+import ManageGroupSubscriptionsDialog from '../components/telegram-groups/ManageGroupSubscriptionsDialog';
 import { toaster } from '../components/ui/toaster';
 import type { TelegramGroupDetail, CreateGroupRequest, MemberPayment } from '../types/telegram-groups';
 import { api } from '../lib/api';
@@ -26,6 +27,7 @@ export default function TelegramGroupDetail() {
   const [group, setGroup] = useState<TelegramGroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [manageSubsOpen, setManageSubsOpen] = useState(false);
 
   // 載入群組詳情
   const loadGroup = async () => {
@@ -236,6 +238,19 @@ export default function TelegramGroupDetail() {
               </VStack>
             </HStack>
             <HStack gap={3}>
+              <Button
+                colorPalette="blue"
+                variant="outline"
+                rounded="xl"
+                h={12}
+                px={6}
+                onClick={() => setManageSubsOpen(true)}
+              >
+                <HStack gap={2}>
+                  <Box as={Link2} w={4} h={4} />
+                  <Text>管理關聯訂閱</Text>
+                </HStack>
+              </Button>
               <Button
                 colorPalette="blue"
                 variant="outline"
@@ -479,6 +494,15 @@ export default function TelegramGroupDetail() {
           onOpenChange={setDialogOpen}
           onSubmit={handleUpdate}
           editingGroup={group}
+        />
+
+        {/* 管理關聯訂閱對話框 */}
+        <ManageGroupSubscriptionsDialog
+          open={manageSubsOpen}
+          onOpenChange={setManageSubsOpen}
+          groupId={group.id}
+          groupName={group.name}
+          onSaved={loadGroup}
         />
       </VStack>
     </Container>

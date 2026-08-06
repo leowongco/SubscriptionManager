@@ -6,6 +6,8 @@ export interface TelegramGroup {
   telegram_link: string | null;
   start_date: string; // 開始收款日期（錨點），跟 billing_cycle_type 一起決定往後的收款週期
   billing_cycle_type: 'monthly' | 'biannually' | 'yearly';
+  // 這個群組實際聊天室的 chat_id，設定後繳費提醒會直接發到群組裡（不需要每個成員各自綁定）
+  chat_id: string | null;
   notes: string | null;
   created_at: string;
   account_count?: number;
@@ -19,6 +21,7 @@ export interface BillingCycle {
   amount_per_member: number;
   status: 'active' | 'completed' | 'refunded';
   created_at: string;
+  last_group_reminded_at?: string | null;
   member_payments?: MemberPayment[];
 }
 
@@ -81,6 +84,7 @@ export interface CreateGroupRequest {
   telegram_link?: string;
   start_date: string;
   billing_cycle_type: 'monthly' | 'biannually' | 'yearly';
+  chat_id?: string;
   notes?: string;
 }
 
@@ -89,6 +93,7 @@ export interface UpdateGroupRequest {
   telegram_link?: string;
   start_date?: string;
   billing_cycle_type?: 'monthly' | 'biannually' | 'yearly';
+  chat_id?: string;
   notes?: string;
 }
 

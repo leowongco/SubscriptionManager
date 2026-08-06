@@ -7,12 +7,12 @@ export interface CheckboxProps
 const Checkbox = forwardRef<
   React.ElementRef<typeof ChakraCheckbox.Root>,
   CheckboxProps
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <ChakraCheckbox.Root ref={ref} {...props}>
     <ChakraCheckbox.Control>
       <ChakraCheckbox.Indicator />
     </ChakraCheckbox.Control>
-    <ChakraCheckbox.Label />
+    {children && <ChakraCheckbox.Label>{children}</ChakraCheckbox.Label>}
   </ChakraCheckbox.Root>
 ))
 Checkbox.displayName = "Checkbox"

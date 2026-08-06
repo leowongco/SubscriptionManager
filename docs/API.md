@@ -242,7 +242,7 @@ http://<你的VPS>:3000/api
 
 ### GET /api/telegram-groups
 
-獲取所有 Telegram 群組。
+獲取所有 Telegram 群組。`chat_id` 是群組聊天室本身的 chat_id（選填），設定後繳費提醒會整批發到這個群組，不需要每個成員各自綁定。
 
 **響應示例：**
 ```json
@@ -250,7 +250,11 @@ http://<你的VPS>:3000/api
   {
     "id": "uuid",
     "name": "家庭群組",
+    "telegram_link": "https://t.me/your-group",
+    "start_date": "2024-01-01",
+    "billing_cycle_type": "monthly",
     "chat_id": "-1001234567890",
+    "notes": null,
     "created_at": "2024-01-01T00:00:00Z"
   }
 ]
@@ -264,9 +268,13 @@ http://<你的VPS>:3000/api
 ```json
 {
   "name": "家庭群組",
+  "start_date": "2024-01-01",
+  "billing_cycle_type": "monthly",
   "chat_id": "-1001234567890"
 }
 ```
+
+要指定哪些訂閱屬於這個群組，用 `PUT /api/subscriptions?id={uuid}` 帶 `{ "telegram_group_id": "<這個群組的 id>" }`（前端「Telegram 群組」詳情頁的「管理關聯訂閱」就是包了這支端點）。
 
 ---
 

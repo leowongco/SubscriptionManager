@@ -9,10 +9,10 @@ function reminderIntervalMs(): number {
 }
 
 // 找出所有「還沒繳費、成員已綁定 Telegram、帳單週期還在進行中」的紀錄，
-// 依 last_reminded_at 節流（同一筆不會每天洗版式重複提醒），發訊息並附上
+// 依 last_reminded_at 節流（同一筆不會每天洗版式重複提醒），私訊並附上
 // 「我已繳費」按鈕讓成員回報——回報只會寫入 payment_reported_at，
 // 真正標記為已繳費仍要管理員在後台確認。
-export async function runReminderCheck(): Promise<{ checked: number; sent: number }> {
+async function sendMemberReminders(): Promise<{ checked: number; sent: number }> {
   const rows = db.prepare(`
     SELECT mp.id, mp.amount, mp.last_reminded_at,
            bc.end_date, tg.name as group_name,
@@ -57,4 +57,67 @@ export async function runReminderCheck(): Promise<{ checked: number; sent: numbe
   }
 
   return { checked: rows.length, sent };
+}
+
+// 群組層級的整批催繳：只要 telegram_groups.chat_id 有設定，就直接把「這期還沒繳費的人」
+// 整理成一則訊息發到群組聊天室裡，不需要每個成員都個別綁定 bot 私訊。
+// 用 email 列名單（不是每個人的 chat_id），跟成員個人 DM 提醒各自獨立節流。
+async function sendGroupReminders(): Promise<{ checked: number; sent: number }> {
+  const cycles = db.prepare(`
+    SELECT bc.id, bc.end_date, bc.last_group_reminded_at, bc.amount_per_member,
+           tg.name as group_name, tg.chat_id
+    FROM billing_cycles bc
+    JOIN telegram_groups tg ON bc.telegram_group_id = tg.id
+    WHERE bc.status = 'active' AND tg.chat_id IS NOT NULL
+  `).all() as any[];
+
+  const now = Date.now();
+  const intervalMs = reminderIntervalMs();
+  let sent = 0;
+
+  for (const cycle of cycles) {
+    const lastRemindedMs = cycle.last_group_reminded_at ? new Date(cycle.last_group_reminded_at).getTime() : null;
+    if (lastRemindedMs !== null && now - lastRemindedMs < intervalMs) continue;
+
+    const unpaid = db.prepare(`
+      SELECT m.email
+      FROM member_payments mp
+      JOIN members m ON mp.member_id = m.id
+      WHERE mp.billing_cycle_id = ? AND mp.paid = 0
+    `).all(cycle.id) as any[];
+
+    if (unpaid.length === 0) continue;
+
+    const text = [
+      '💰 繳費提醒',
+      '',
+      `群組：${cycle.group_name}`,
+      `每人金額：${cycle.amount_per_member}`,
+      `截止日：${cycle.end_date}`,
+      '',
+      '尚未繳費名單：',
+      ...unpaid.map((m) => `• ${m.email}`),
+      '',
+      '請盡快完成繳費，謝謝！',
+    ].join('\n');
+
+    const ok = await sendTelegramMessageTo(cycle.chat_id, text);
+
+    if (ok) {
+      db.prepare('UPDATE billing_cycles SET last_group_reminded_at = ? WHERE id = ?')
+        .run(new Date().toISOString(), cycle.id);
+      sent++;
+    }
+  }
+
+  return { checked: cycles.length, sent };
+}
+
+export async function runReminderCheck(): Promise<{ checked: number; sent: number }> {
+  const memberResult = await sendMemberReminders();
+  const groupResult = await sendGroupReminders();
+  return {
+    checked: memberResult.checked + groupResult.checked,
+    sent: memberResult.sent + groupResult.sent,
+  };
 }

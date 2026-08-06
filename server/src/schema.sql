@@ -82,6 +82,10 @@ CREATE TABLE IF NOT EXISTS telegram_groups (
   -- 取代舊的「每月第 X 號」欄位——那個概念只適用月費，套用到半年/年費上會矛盾。
   start_date TEXT,
   billing_cycle_type TEXT DEFAULT 'biannual',
+  -- 這個 Telegram 群組實際聊天室的 chat_id（管理員手動輸入，例如把 bot 加進群組後
+  -- 用 @userinfobot 查到的數字）。設定後繳費提醒會直接發到群組裡，
+  -- 不用每個成員都個別綁定 bot 私訊。
+  chat_id TEXT,
   notes TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -96,6 +100,9 @@ CREATE TABLE IF NOT EXISTS billing_cycles (
   total_amount REAL,
   amount_per_member REAL DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  -- 群組層級提醒（發到 telegram_groups.chat_id）上次發送時間，節流用，
+  -- 跟成員個人 DM 的 member_payments.last_reminded_at 是各自獨立的節流。
+  last_group_reminded_at TEXT,
   FOREIGN KEY (telegram_group_id) REFERENCES telegram_groups(id)
 );
 

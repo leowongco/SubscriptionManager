@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-08-06
+
+### Added
+- **Telegram 群組可以設定 chat_id，繳費提醒直接發到群組聊天室**：新增/編輯群組時填「Telegram 群組 Chat ID」（取得方式：bot 加進群組後轉發訊息給 @userinfobot 或 @RawDataBot 查詢），設定後每次提醒會把「這期還沒繳費的人」整理成一則訊息發到群組，不需要每個成員各自綁定 bot——跟 v1.3.0 的個人綁定提醒可以並用，各自獨立節流
+- **Telegram 群組詳情頁新增「管理關聯訂閱」**：直接勾選哪些 Apple ID / 訂閱屬於這個群組，不用再跑去「訂閱關係對應」頁面逐筆設定，勾選會顯示該訂閱目前已經屬於哪個群組（避免誤改）
+- 新增 2 個後端測試（chat_id 設定與清空、群組整批提醒的節流與名單正確性）
+
+### Fixed
+- `components/ui/checkbox.tsx` 共用元件會把傳入的 `children`（label 文字）整個丟棄，導致任何帶文字內容的 checkbox 都顯示不出文字——這次新增「管理關聯訂閱」時才發現，一併修正（連帶修好「訂閱關係對應」頁新增成員對話框裡「初始狀態為已繳費」那個 checkbox 原本看不到文字的問題）
+
 ## [1.3.0] - 2026-08-06
 
 ### Added

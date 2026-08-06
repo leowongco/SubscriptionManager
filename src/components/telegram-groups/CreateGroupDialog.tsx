@@ -29,6 +29,7 @@ interface CreateGroupDialogProps {
     telegram_link: string | null;
     start_date: string;
     billing_cycle_type: 'monthly' | 'biannually' | 'yearly';
+    chat_id?: string | null;
     notes: string | null;
   } | null;
 }
@@ -50,6 +51,7 @@ export default function CreateGroupDialog({
     editingGroup?.billing_cycle_type || 'monthly'
   );
   const [notes, setNotes] = useState(editingGroup?.notes || '');
+  const [chatId, setChatId] = useState(editingGroup?.chat_id || '');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -64,6 +66,9 @@ export default function CreateGroupDialog({
         telegram_link: telegramLink.trim() || undefined,
         start_date: startDate,
         billing_cycle_type: billingCycleType,
+        // 這裡故意永遠帶著這個欄位（就算是空字串），這樣後端才分得出「使用者把它清空了」
+        // 跟「這次請求根本沒提到這個欄位」的差別，才能支援清空已設定的 chat_id。
+        chat_id: chatId.trim(),
         notes: notes.trim() || undefined,
       });
       onOpenChange(false);
@@ -142,6 +147,40 @@ export default function CreateGroupDialog({
                 }}
                 transition="all 0.2s"
               />
+            </VStack>
+
+            {/* Telegram Chat ID */}
+            <VStack align="start" gap={2}>
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="fg.muted"
+              >
+                Telegram 群組 Chat ID
+              </Text>
+              <Input
+                value={chatId}
+                onChange={(e) => setChatId(e.target.value)}
+                placeholder="例如：-1001234567890"
+                fontFamily="mono"
+                bg="bg.subtle"
+                border="1px"
+                borderColor="border.default"
+                rounded="xl"
+                h={12}
+                _placeholder={{ color: 'fg.muted' }}
+                _focus={{
+                  borderColor: 'blue.400',
+                  boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+                }}
+                transition="all 0.2s"
+              />
+              <Text fontSize="10px" color="fg.muted">
+                填了才會把繳費提醒直接發到這個群組聊天室（不用每個成員各自綁定 bot 私訊）。取得方式：把 bot 加進群組，
+                在群組裡傳一則訊息，轉發（forward）給 @userinfobot 或 @RawDataBot 查詢，會回傳這個群組的 chat_id（通常是負數）。
+              </Text>
             </VStack>
 
             {/* 開始收款日期和計費週期 - 使用 Grid */}
