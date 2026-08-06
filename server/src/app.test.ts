@@ -15,6 +15,9 @@ process.env.TELEGRAM_BOT_TOKEN = 'test-bot-token';
 
 // Telegram bot 的送訊息/getMe 都是真的打 api.telegram.org，測試環境沒有真的 bot，
 // 攔截這些呼叫回傳假資料，讓綁定/提醒流程可以在不連網路的情況下測試。
+// telegramSendCalls 記錄每次 sendMessage 實際帶的 chat_id/text，讓測試可以驗證
+// 「不同群組的成員有沒有真的送到各自的 chat_id，而不是送錯人」。
+const telegramSendCalls: { chat_id: string; text: string }[] = [];
 const realFetch = global.fetch;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).fetch = async (url: any, options: any) => {
@@ -22,6 +25,14 @@ const realFetch = global.fetch;
   if (urlStr.includes('api.telegram.org')) {
     if (urlStr.includes('/getMe')) {
       return { ok: true, json: async () => ({ ok: true, result: { username: 'test_bot' } }) } as any;
+    }
+    if (urlStr.includes('/sendMessage') && options?.body) {
+      try {
+        const body = JSON.parse(options.body);
+        telegramSendCalls.push({ chat_id: String(body.chat_id), text: String(body.text) });
+      } catch {
+        // ignore malformed body in test double
+      }
     }
     return { ok: true, json: async () => ({ ok: true, result: { message_id: 1 } }) } as any;
   }
@@ -297,6 +308,67 @@ test('繳費提醒：發送有節流、成員回報只是待確認、要管理�
     .send({ paid: true });
   assert.equal(confirmRes.status, 200);
   assert.equal(confirmRes.body.paid, 1);
+});
+
+test('不同 Telegram 群組的成員各自綁定自己的 chat_id，提醒不會送錯群組', async () => {
+  const accA = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'multi-group-a@icloud.com', currency: 'HKD', balance: 0 });
+  const accB = await request(app).post('/api/accounts').auth(...AUTH)
+    .send({ apple_id: 'multi-group-b@icloud.com', currency: 'HKD', balance: 0 });
+  const svc = await request(app).post('/api/services').auth(...AUTH)
+    .send({ name: 'Multi Group Service', base_price: 10, currency: 'HKD', cycle: 'monthly' });
+
+  const groupA = await request(app).post('/api/telegram-groups').auth(...AUTH)
+    .send({ name: 'Group Alpha', billing_cycle_type: 'monthly', start_date: '2026-01-01' });
+  const groupB = await request(app).post('/api/telegram-groups').auth(...AUTH)
+    .send({ name: 'Group Beta', billing_cycle_type: 'monthly', start_date: '2026-01-01' });
+
+  const subA = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accA.body.id, service_id: svc.body.id, telegram_group_id: groupA.body.id, group_name: 'test' });
+  const subB = await request(app).post('/api/subscriptions').auth(...AUTH)
+    .send({ account_id: accB.body.id, service_id: svc.body.id, telegram_group_id: groupB.body.id, group_name: 'test' });
+
+  const memA = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: subA.body.id, email: 'member-a@test.com' });
+  const memB = await request(app).post('/api/members').auth(...AUTH)
+    .send({ subscription_id: subB.body.id, email: 'member-b@test.com' });
+
+  const linkA = await request(app).post(`/api/members/${memA.body.id}/telegram-bind-link`).auth(...AUTH);
+  const linkB = await request(app).post(`/api/members/${memB.body.id}/telegram-bind-link`).auth(...AUTH);
+  const tokenA = linkA.body.bind_url.split('start=')[1];
+  const tokenB = linkB.body.bind_url.split('start=')[1];
+
+  // 兩個成員各自用「自己的」Telegram chat_id 綁定——刻意選兩個不會混淆的假 ID
+  await handleTelegramUpdate({ update_id: 10, message: { text: `/start ${tokenA}`, chat: { id: 'chat-AAA-111' } } });
+  await handleTelegramUpdate({ update_id: 11, message: { text: `/start ${tokenB}`, chat: { id: 'chat-BBB-222' } } });
+
+  const cycleA = await request(app).post('/api/billing-cycles').auth(...AUTH)
+    .send({ telegram_group_id: groupA.body.id, start_date: '2026-01-01', end_date: '2026-01-31', amount_per_member: 15 });
+  const cycleB = await request(app).post('/api/billing-cycles').auth(...AUTH)
+    .send({ telegram_group_id: groupB.body.id, start_date: '2026-01-01', end_date: '2026-01-31', amount_per_member: 25 });
+  assert.equal(cycleA.body.member_count, 1);
+  assert.equal(cycleB.body.member_count, 1);
+
+  telegramSendCalls.length = 0; // 只看這次提醒觸發的呼叫，排除前面測試留下的紀錄
+  const result = await runReminderCheck();
+  assert.equal(result.sent, 2);
+
+  const callToA = telegramSendCalls.find((c) => c.chat_id === 'chat-AAA-111');
+  const callToB = telegramSendCalls.find((c) => c.chat_id === 'chat-BBB-222');
+
+  assert.ok(callToA, 'Group Alpha 的成員應該收到自己 chat_id 的提醒');
+  assert.match(callToA!.text, /Group Alpha/);
+  assert.doesNotMatch(callToA!.text, /Group Beta/);
+  assert.match(callToA!.text, /15/);
+
+  assert.ok(callToB, 'Group Beta 的成員應該收到自己 chat_id 的提醒');
+  assert.match(callToB!.text, /Group Beta/);
+  assert.doesNotMatch(callToB!.text, /Group Alpha/);
+  assert.match(callToB!.text, /25/);
+
+  // 沒有任何一筆送到對方的 chat_id 上
+  assert.equal(telegramSendCalls.filter((c) => c.chat_id === 'chat-AAA-111').length, 1);
+  assert.equal(telegramSendCalls.filter((c) => c.chat_id === 'chat-BBB-222').length, 1);
 });
 
 test('帳單週期建立後才加入的成員，也要自動補上待繳紀錄', async () => {
